@@ -40,6 +40,8 @@ jobs:
         run: npm run test:order
       - if: runner.os == 'Windows'
         run: npm run test:design
+      - if: runner.os == 'Windows'
+        run: npm run test:i18n
       - run: npm run ${{ matrix.command }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'

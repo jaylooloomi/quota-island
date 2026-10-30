@@ -3,6 +3,7 @@ const fs=require('node:fs');
 const result=spawnSync(process.execPath,[
   '--test','--experimental-test-coverage',
   '--test-coverage-include=dist/**','--test-coverage-include=src/ui/presentation.js',
+  '--test-coverage-include=src/ui/i18n.js',
   '--test-coverage-lines=85','--test-coverage-branches=80','--test-coverage-functions=85',
   'test/*.test.cjs'
 ],{encoding:'utf8'});

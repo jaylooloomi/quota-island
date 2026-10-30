@@ -176,6 +176,9 @@ function render(next){
   $('google-source').value=state.settings.googleSource;$('google-source').disabled=!!state.auth.gemini?.pending;
   for(const input of document.querySelectorAll('[data-enable]'))input.checked=state.settings.enabled[input.dataset.enable];
   ids.forEach(renderCard);
+  $('language').value=state.settings.locale??'zh-TW';
+  window.QuotaI18n.localizeDocument(document,state.settings.locale);
+  if(state.settings.locale==='en')$('compact-mode').textContent=state.settings.remaining?'Left':'Used';
 }
 makeCards();
 document.querySelectorAll('[data-expand]').forEach(button=>{
@@ -189,6 +192,7 @@ $('settings-toggle').addEventListener('click',()=>{settingsOpen=!settingsOpen;$(
 $('mode-remaining').addEventListener('click',()=>api.settings({remaining:true}));$('mode-used').addEventListener('click',()=>api.settings({remaining:false}));
 $('hide').addEventListener('click',()=>api.hide());$('quit').addEventListener('click',()=>api.quit());
 $('google-source').addEventListener('change',event=>api.settings({googleSource:event.target.value}));
+$('language').addEventListener('change',event=>api.settings({locale:event.target.value}));
 for(const key of ['alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
 document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings').hidden=true;$('settings-toggle').setAttribute('aria-expanded','false');}else api.expand(false);});

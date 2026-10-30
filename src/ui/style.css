@@ -65,3 +65,11 @@ h1{font-size:20px}
 .empty-message{font-size:11px;line-height:1.6;margin:5px 0}
 footer{height:44px;padding:0 18px;font-size:11px}
 .connection-details{padding:12px}
+html:not([lang="zh-TW"]) .mini-value.unknown,html:not([lang="zh-TW"]) .compact-provider.stale .mini-value{font-size:9px}
+html:not([lang="zh-TW"]) .compact-mode{font-size:9px;max-width:36px;overflow:hidden;text-overflow:ellipsis}
+html:not([lang="zh-TW"]) .connection-label{font-size:10px;gap:5px}
+html:not([lang="zh-TW"]) .updated{font-size:9px}
+html:not([lang="zh-TW"]) .context-line h2{font-size:13px}
+html:not([lang="zh-TW"]) .connection-status{max-width:98px}
+.mini-info{max-width:100%}.mini-value.unknown,.compact-provider.stale .mini-value{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+html[lang="en"] .segmented button{width:66px;font-size:11px}

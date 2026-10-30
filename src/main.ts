@@ -10,13 +10,16 @@ import { homedir } from 'node:os';
 import { ProviderError, ProviderId, providerIds, Reading } from './model';
 const demo = process.argv.includes('--demo');
 const testing = process.argv.includes('--test-mode');
+const { translate, normalizeLocale } = require('./ui/i18n');
+const t = (value: string) => translate(value, settings.locale);
+let updateTrayMenu = () => {};
 if (testing) {
   const testData = process.env.QUOTA_TEST_DATA;
   if (!testData) throw new Error('QUOTA_TEST_DATA required');
   app.setPath('userData', testData);
 }
-type Settings = { remaining: boolean; alwaysOnTop: boolean; notifications: boolean; enabled: Record<ProviderId, boolean>; order: ProviderId[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; x?: number; y?: number };
-let settings: Settings = { remaining: true, alwaysOnTop: true, notifications: false, enabled: { claude: true, gemini: true, codex: true }, order: [...providerIds], googleSource:'antigravity', presentationVersion:2 };
+type Settings = { locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; alwaysOnTop: boolean; notifications: boolean; enabled: Record<ProviderId, boolean>; order: ProviderId[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; x?: number; y?: number };
+let settings: Settings = { locale:'zh-TW', remaining: true, alwaysOnTop: true, notifications: false, enabled: { claude: true, gemini: true, codex: true }, order: [...providerIds], googleSource:'antigravity', presentationVersion:2 };
 function validOrder(raw: unknown): raw is ProviderId[] {
   return Array.isArray(raw) && raw.length === providerIds.length && new Set(raw).size === providerIds.length && raw.every(id => providerIds.includes(id));
 }
@@ -51,6 +54,7 @@ function readSettings() {
   try {
     const s = JSON.parse(readFileSync(path.join(app.getPath('userData'), 'preferences.json'), 'utf8'));
     if (validOrder(s.order)) settings.order = [...s.order];
+    settings.locale=normalizeLocale(s.locale);
     if (s.googleSource === 'antigravity' || s.googleSource === 'code_assist') settings.googleSource=s.googleSource;
     for (const key of ['remaining', 'alwaysOnTop', 'notifications'] as const) if (typeof s[key] === 'boolean' && (key!=='remaining'||s.presentationVersion===2)) settings[key] = s[key];
     for (const id of providerIds) if (typeof s.enabled?.[id] === 'boolean') settings.enabled[id] = s.enabled[id];
@@ -70,7 +74,7 @@ function publish() {
         if (w.usedPercent < 85) warned.delete(key);
         if (w.usedPercent >= 90 && warned.get(key) !== reset) {
           warned.set(key, reset);
-          new Notification({ title: `${s.provider} 配額即將用完`, body: `${w.label} 已使用 ${Math.round(w.usedPercent)}%` }).show();
+          new Notification({ title: t(`${s.provider} 配額即將用完`), body: t(`${w.label} 已使用 ${Math.round(w.usedPercent)}%`) }).show();
         }
       }
     }
@@ -117,6 +121,7 @@ function installHandlers() {
     'open-provider': async (_event: any, id: unknown) => { if (typeof id === 'string' && external[id]) await shell.openExternal(external[id]!); },
     'settings': (_event: any, patch: any) => {
       if (!patch || typeof patch !== 'object') return;
+      if (['zh-TW','en','ja','ko'].includes(patch.locale)) { settings.locale=patch.locale; updateTrayMenu(); }
       if (validOrder(patch.order)) settings.order = [...patch.order];
       const sourceChanged = !connections.states.gemini?.pending && (patch.googleSource === 'antigravity' || patch.googleSource === 'code_assist') && patch.googleSource !== settings.googleSource;
       if (sourceChanged) { settings.googleSource=patch.googleSource; delete connections.states.gemini; }
@@ -152,11 +157,12 @@ function makeTray() {
   tray = new Tray(nativeImage.createFromBitmap(pixels, { width: 32, height: 32 }));
   tray.setToolTip('Quota Island · Claude / Gemini / Codex');
   const updateMenu = () => tray.setContextMenu(Menu.buildFromTemplate([
-    { label: '顯示動態島', click: () => { win.show(); win.focus(); } },
-    { label: '展開配額面板', click: () => { setExpanded(true); win.show(); win.focus(); } },
-    { label: paused ? '繼續更新' : '暫停更新', click: () => { paused = !paused; updateMenu(); publish(); if (!paused) void poller.tick(); } },
-    { type: 'separator' }, { label: '結束 Quota Island', click: () => { quitting = true; app.quit(); } }
+    { label: t('顯示動態島'), click: () => { win.show(); win.focus(); } },
+    { label: t('展開配額面板'), click: () => { setExpanded(true); win.show(); win.focus(); } },
+    { label: t(paused ? '繼續更新' : '暫停更新'), click: () => { paused = !paused; updateMenu(); publish(); if (!paused) void poller.tick(); } },
+    { type: 'separator' }, { label: t('結束 Quota Island'), click: () => { quitting = true; app.quit(); } }
   ]));
+  updateTrayMenu=updateMenu;
   updateMenu(); tray.on('click', () => { win.show(); win.focus(); });
 }
 if (!app.requestSingleInstanceLock()) app.quit();

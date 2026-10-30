@@ -4,10 +4,10 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/version-0.2.2-informational" alt="Version 0.2.2">
+  <img src="https://img.shields.io/badge/version-0.3.0-informational" alt="Version 0.3.0">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
-  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-42%20passing-brightgreen" alt="42 core tests passed locally"></a>
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-46%20passing-brightgreen" alt="46 core tests passed locally"></a>
   <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/lang-繁體中文-green" alt="Traditional Chinese"></a>
 </p>
 
@@ -59,6 +59,10 @@ Click a quota or chevron to expand. Drag the left grip to move the island. Drag 
 
 ## Everyday controls
 
+**Languages:** Settings → Language → 繁體中文 / English / 日本語 / 한국어.
+Switches immediately and remembers your choice after restart. The tray menu,
+quota countdowns, account controls and accessibility labels are localized too.
+
 | Control | Action |
 |---|---|
 | Remaining / Used | Switch the percentage view; your choice is saved |
@@ -85,8 +89,8 @@ These are **subscription quotas and reset windows**, not network traffic, API bi
 
 | Check | Latest local result |
 |---|---|
-| Core tests | **42 passed** |
-| Measured Node modules | **85.97% lines · 84.08% branches · 87.16% functions** |
+| Core tests | **46 passed** |
+| Measured Node modules | **87.44% lines · 85.88% branches · 89.23% functions** |
 | Windows packaged app | Desktop controls, ordering and design checks passed |
 | Authorization integration | Fixture upstream responses; real local IPC, callbacks and child-process paths |
 | Real accounts | Gemini and Codex reads previously verified; Claude's last real check returned HTTP 429 |
