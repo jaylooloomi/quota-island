@@ -10,6 +10,7 @@ let state,settingsOpen=false,activeDetail=null,draggedProvider=null,suppressClic
 let currentView='quota',confirmLogout=null,logoutBusy=null;
 let footerPopover=null,syncBusy=false;
 let quotaDetailsOpen=false;
+let quotaDetailsProvider='gemini';
 function closeFooterPopover(focus=false){const trigger=footerPopover==='language'?'language-shortcut':'sync-shortcut';footerPopover=null;render(state);if(focus)$(trigger).focus();}
 function openFooterPopover(kind){footerPopover=footerPopover===kind?null:kind;settingsOpen=false;render(state);if(footerPopover==='language')$('language-popover').querySelector('[aria-checked="true"]').focus();else if(footerPopover==='sync')$('sync-popover').focus();}
 function setView(view){currentView=view;settingsOpen=false;activeDetail=null;confirmLogout=null;footerPopover=null;quotaDetailsOpen=false;render(state);}
@@ -110,7 +111,7 @@ function makeCards(){
     card.querySelector('.close-connection').addEventListener('click',()=>{activeDetail=null;render(state);});
       card.querySelector('.connect-primary').addEventListener('click',()=>{const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
     card.querySelector('.login').addEventListener('click',()=>startLogin(id));
-    card.querySelector('.quota-details-link').addEventListener('click',()=>{quotaDetailsOpen=true;activeDetail=null;settingsOpen=false;footerPopover=null;render(state);});
+    card.querySelector('.quota-details-link').addEventListener('click',()=>{quotaDetailsProvider=id;quotaDetailsOpen=true;activeDetail=null;settingsOpen=false;footerPopover=null;render(state);});
     card.querySelector('.account-switch').addEventListener('click',async()=>{
       if(id==='gemini'&&state.settings.googleSource==='antigravity'){
         activeDetail=id;render(state);const result=await api.openAntigravity();
@@ -175,10 +176,12 @@ function renderCard(id){
   const expired=s.updatedAt&&Date.now()-Date.parse(s.updatedAt)>24*3600000;
   const allWindows=s.enabled&&!expired?presentation.groupWindows(s.reading?.windows??[]):[];
   const grouped=allWindows.some(w=>w.group);
-  const windows=grouped?[...allWindows].sort((a,b)=>b.usedPercent-a.usedPercent).slice(0,2):allWindows;
-  card.querySelector('.quota-details-link').hidden=!grouped||currentView==='accounts'||activeDetail===id;
-  card.querySelector('.quota-details-link').textContent=`查看所有配額 (${allWindows.length})`;
-  card.querySelector('.quota-details-link').title=`${allWindows.length} · Antigravity`;
+  const scopedClaude=id==='claude'&&allWindows.some(w=>/^seven_day_/.test(w.id));
+  const primaryClaude=allWindows.filter(w=>['five_hour','seven_day'].includes(w.id));
+  const windows=scopedClaude?(primaryClaude.length?primaryClaude:allWindows.slice(0,1)):grouped?[...allWindows].sort((a,b)=>b.usedPercent-a.usedPercent).slice(0,2):allWindows;
+  card.querySelector('.quota-details-link').hidden=(!grouped&&!scopedClaude)||currentView==='accounts'||activeDetail===id;
+  card.querySelector('.quota-details-link').textContent=scopedClaude?'查看模型配額':`查看所有配額 (${allWindows.length})`;
+  card.querySelector('.quota-details-link').title=scopedClaude?'Claude':`${allWindows.length} · Antigravity`;
   card.querySelector('.provider-identity h2').textContent=id==='gemini'&&grouped?'Antigravity':names[id];
   card.classList.remove('ready','stale','signed_out','loading','unavailable','disabled');card.classList.add(!s.enabled?'disabled':expired?'unavailable':s.status);
   card.classList.toggle('pending',!!auth?.pending);
@@ -234,13 +237,19 @@ function renderCard(id){
 function renderQuotaDetails(){
   const container=$('quota-groups');container.replaceChildren();
   const groups=new Map();
-  for(const window of state.providers.gemini.reading?.windows??[]){if(!window.group)continue;if(!groups.has(window.group))groups.set(window.group,[]);groups.get(window.group).push(window);}
+  const claude=quotaDetailsProvider==='claude';
+  document.querySelector('.quota-details-heading h2').textContent=claude?'Claude 模型配額':'Antigravity 配額';
+  document.querySelector('.quota-details-note').textContent=claude?'模型專屬限制可能與所有模型限制同時適用，兩者不能相加。':'以下都是 Antigravity 內的配額，不是獨立 Claude Code／Codex 訂閱額度。';
+  for(const window of state.providers[quotaDetailsProvider].reading?.windows??[]){
+    const group=claude?(window.id==='five_hour'?null:'每週配額'):window.group;
+    if(!group)continue;if(!groups.has(group))groups.set(group,[]);groups.get(group).push(window);
+  }
   for(const [name,windows] of groups){
     const section=document.createElement('section');section.className='quota-group';
     const title=document.createElement('h3');title.textContent=name;section.append(title);
     for(const window of windows){
       const row=document.createElement('div');row.className='group-limit';
-      const label=document.createElement('span');label.textContent=window.label.split(' · ').at(-1);
+      const label=document.createElement('span');label.textContent=claude?window.label:window.label.split(' · ').at(-1);
       const value=document.createElement('strong');value.className='group-number';value.textContent=`${percent(window)}%`;
       const track=document.createElement('div');track.className='group-track';track.setAttribute('role','progressbar');track.setAttribute('aria-label',`${name} ${window.label}`);track.setAttribute('aria-valuenow',String(percent(window)));track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');
       const fill=document.createElement('span');fill.style.width=`${percent(window)}%`;track.append(fill);
