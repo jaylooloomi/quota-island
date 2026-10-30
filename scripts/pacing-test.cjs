@@ -23,6 +23,8 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
         Object.assign(fixture.providers[id],{status:'ready',updatedAt:new Date().toISOString(),reading:{provider:id,plan:id==='claude'?'Team':'Pro',windows:[{id:'seven_day',label:'每週 · 所有模型',usedPercent:100-remaining,resetsAt:new Date(Date.now()+4*86400000).toISOString()}],source:'Test fixture'}});
       }
       fixture.providers.gemini.reading.windows[0].group='Gemini Models';
+      fixture.providers.claude.reading.windows.unshift({id:'five_hour',label:'本次工作階段',usedPercent:12,resetsAt:new Date(Date.now()+5*3600000).toISOString()});
+      fixture.providers.claude.reading.windows.push({id:'seven_day_fable',label:'Fable · 每週',usedPercent:20,resetsAt:new Date(Date.now()+4*86400000).toISOString()});
       await send(fixture);await page.locator('.card.codex .pace-value').filter({hasText:'17.5'}).waitFor();
       assert.equal(await page.locator('.pacing-content:not([hidden])').count(),3);
       for(const row of await page.locator('.pacing-content').evaluateAll(nodes=>nodes.map(el=>({text:el.textContent,width:el.clientWidth,scroll:el.scrollWidth,segments:[...el.querySelectorAll('.pace-segment')].map(s=>parseFloat(s.style.width))})))){
@@ -39,11 +41,13 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
         {id:'claude-5h',group:'Claude and GPT models',label:'Claude and GPT models · 5 小時',usedPercent:0},
         {id:'argon-weekly',group:'Gemini 4 Argon',label:'Gemini 4 Argon · 每週',usedPercent:75},
       ].map(w=>({...w,resetsAt:new Date(Date.now()+4*86400000).toISOString()}));
-      let groupedShape;
+      let groupedShape,detailAnchors;
       for(const mode of ['remaining','used','pacing','remaining']){
         grouped.settings.pacing=mode==='pacing';grouped.settings.remaining=mode!=='used';
         await send(grouped);await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
         const current=await shape();if(groupedShape)assert.deepEqual(current,groupedShape,`${locale}: real Antigravity groups must keep card, identity and footer coordinates across ${mode}`);else groupedShape=current;
+        const anchors=await page.locator('.card.claude,.card.gemini').evaluateAll((cards,pacing)=>cards.map(card=>{const r=card.getBoundingClientRect(),link=card.querySelector(pacing?'.pace-link':'.quota-details-link'),b=link.getBoundingClientRect();return {right:r.right-b.right,bottom:r.bottom-b.bottom,height:b.height,font:getComputedStyle(link).fontSize};}),mode==='pacing');
+        if(detailAnchors)assert.deepEqual(anchors,detailAnchors,`${locale}: pacing details must share quota/model details anchors in ${mode}`);else detailAnchors=anchors;
         await page.screenshot({path:`test-results/pacing-${locale}-grouped-${mode}.png`});
       }
       await page.locator('#tab-accounts').click();
@@ -56,11 +60,15 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
       await page.evaluate(()=>window.quota.settings({pacing:true}));
       await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
       const beforeAccordion=await shape();
+      const linkBefore=await page.locator('.card.codex .pace-link').boundingBox();
       await page.locator('.card.codex .pace-link').click();await page.locator('#pace-details').waitFor();
       await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
       assert.equal(await page.locator('#pace-details').evaluate(el=>el.parentElement.classList.contains('codex')),true,'Details expand inside selected card');
       assert.equal(await page.locator('.card:visible').count(),3,'Other provider rows stay visible');
       const expanded=await shape();assert.equal(expanded.width,464);assert.ok(expanded.height>beforeAccordion.height);
+      const linkAfter=await page.locator('.card.codex .pace-link').boundingBox();
+      assert.equal(linkAfter.y,linkBefore.y,'Expanded pacing action must stay in the original main row');
+      assert.equal(linkAfter.x+linkAfter.width,linkBefore.x+linkBefore.width,'Expanded pacing action stays right aligned');
       assert.equal(expanded.rows[1].headingY,beforeAccordion.rows[1].headingY,'Codex heading stays in its main row');
       assert.equal(expanded.rows[1].iconY,beforeAccordion.rows[1].iconY,'Codex icon stays in its main row');
       assert.match(await page.locator('#pace-details-title').textContent(),/Codex/,'Detail title must match selected provider');
