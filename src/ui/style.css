@@ -335,6 +335,9 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
 .account-count{position:absolute;top:1px;right:4px;font-size:8px;line-height:12px;min-width:12px;text-align:center;color:#efb597;background:#24201c;border-radius:6px}
 .remove-confirm{flex-basis:100%;font-size:10px;line-height:1.5;text-align:right}.remove-confirm p{margin:6px 0}.remove-confirm button{margin-left:6px}
 #extra-account-settings:empty{display:none}
+.settings #morningHelloTime{appearance:auto;width:100px;height:30px;padding:4px 6px;border:1px solid #4e566c;border-radius:7px;background:#252a38;color:#d1d7e7;position:static;cursor:text;font-size:12px}
+.settings #morningHelloTime:before{display:none}
+#morning-hello-status p{margin:4px 0;font-size:10px;overflow-wrap:anywhere}
 .bar .mini-value.unknown,.bar .compact-provider.stale .mini-value{font-size:10px;line-height:14px;font-weight:500;letter-spacing:0}
 html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar .compact-provider.stale .mini-value{font-size:9px}
 .bar .compact-provider:has(.mini-alert:not([hidden])) .mini-info{margin-right:16px}

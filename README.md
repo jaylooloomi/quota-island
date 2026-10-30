@@ -198,6 +198,14 @@ Choose **Remaining / Used / Pace** without changing the provider row layout. Pac
 
 Pacing details expand inline beneath the selected provider row. Only one provider is expanded at a time; the other provider cards remain visible and the fixed-width window grows to fit. Collapse the same row to restore the original height.
 
+### Morning Hello
+
+Settings provides a daily Morning Hello switch and time picker (Taiwan time, default 08:00). It sends a short Hello using the official Claude CLI and Haiku for every connected, enabled Claude profile. This consumes some quota and can start an idle five-hour session; it cannot reset an active session early or increase weekly allowance. Keep the app running. The app does not wake a sleeping or powered-off computer; it can catch up within four hours after the scheduled time.
+
+Each profile is claimed durably before sending, with at most one attempt per day. Failures, timeouts and uncertain interrupted attempts are not automatically resent. Active sessions are skipped; unavailable, rate-limited, signed-out, stale or exhausted profiles do not send. Settings shows outcomes and quota sync follows success. The isolated CLI run has no tools, MCP, project context or persisted conversation, and no API-key fallback. Automated tests use a fixture CLI, without spending live account quota.
+
+References: [Claude usage limits](https://support.claude.com/en/articles/11647753-how-do-usage-and-length-limits-work), [CLI reference](https://code.claude.com/docs/en/cli-reference).
+
 ### Multiple Claude accounts
 Use **＋ Add account** below the cards to name and sign into an additional Claude account. Each account uses a separate official Claude Code config directory under the local app data folder. Quotas, cooldowns, pacing preferences, visibility, ordering and logout are isolated. Removing an added account deletes only its managed local profile. Credentials stay in the official CLI profile and never enter renderer state or account metadata. Select the intended account in the browser. The fixed-size compact Claude slot rotates visible accounts every five seconds and shows 1/2, 2/2, etc. Hover pauses rotation and shows the account name, weekly quota, reset time and errors; click switches accounts, while drag still reorders providers. Rotation uses cached readings and makes no quota requests. The expanded panel lists every account. This release adds multiple Claude accounts; additional Codex and Antigravity profiles are not offered.
 

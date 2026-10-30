@@ -10,6 +10,7 @@ import { jsonRequest } from './http';
 import { ClaudeLogin, LoginProgress } from './claude-login';
 import { Antigravity } from './antigravity';
 import { ProviderError, ProviderId, parseClaude, parseCodex, parseGemini, Reading } from './model';
+import {sendClaudeHello} from './hello-command';
 const exec = promisify(execFile);
 export class Providers {
   rpc = new CodexRpc(() => findCli('codex'));
@@ -28,6 +29,7 @@ export class Providers {
     for(const key of ['CLAUDE_CODE_OAUTH_TOKEN','ANTHROPIC_API_KEY','ANTHROPIC_AUTH_TOKEN'])delete (env as NodeJS.ProcessEnv)[key];
     return {...command,env};
   }
+  async hello(cwd:string){const dir=this.claudeConfigDir||process.env.CLAUDE_CONFIG_DIR||path.join(homedir(),'.claude');return sendClaudeHello(this.claudeCommand(),dir,cwd);}
   async read(id: ProviderId): Promise<Reading> {
     if (id === 'codex') {
       const account = await this.rpc.call('account/read', { refreshToken: false });

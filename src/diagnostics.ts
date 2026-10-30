@@ -14,6 +14,11 @@ export class Diagnostics {
   startup(version:string,enabled:Record<string,boolean>){this.write({event:'startup',version:version.replace(/[^0-9.]/g,'').slice(0,24),enabled:{claude:enabled.claude,codex:enabled.codex,gemini:enabled.gemini}});}
   sourceToggle(provider:string,enabled:boolean){if(['claude','codex','gemini'].includes(provider))this.write({event:'source_toggle',origin:'settings',provider,enabled});}
   observe(snapshot:any){
+    for(const [id,r] of Object.entries(snapshot.morningHello??{}) as [string,any][]){
+      if(!/^(claude|claude-account-[0-9a-f-]{36})$/.test(id)||!['sending','sent','confirmed','active','error','uncertain'].includes(r?.status))continue;
+      const summary={event:'morning_hello',provider:id,status:r.status,day:/^\d{4}-\d\d-\d\d$/.test(r.day)?r.day:null,code:['auth','network','schema','rate_limit','missing_cli','storage'].includes(r.code)?r.code:null},serialized=JSON.stringify(summary);
+      if(this.previous.get('hello:'+id)!==serialized){this.previous.set('hello:'+id,serialized);this.write(summary);}
+    }
     for(const [id,state] of Object.entries(snapshot.providers??{}) as [string,any][]){
       if(!/^(claude|codex|gemini|claude-account-[0-9a-f-]{36})$/.test(id))continue;
       const stamp=(value:unknown)=>typeof value==='string'&&/^\d{4}-\d\d-\d\dT/.test(value)&&Number.isFinite(Date.parse(value))?new Date(value).toISOString():null;

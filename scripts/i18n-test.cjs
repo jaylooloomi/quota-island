@@ -16,6 +16,10 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
     assert.equal(await page.locator('.panel-header #refresh').count(),0);
     assert.equal(await page.locator('footer #refresh').count(),1);
     await page.locator('#toggle').click();await page.locator('#settings-toggle').click();
+    assert.equal(await page.locator('#morningHelloEnabled').isChecked(),true);
+    assert.equal(await page.locator('#morningHelloTime').inputValue(),'08:00');
+    await page.locator('#morningHelloEnabled').uncheck();await page.locator('#morningHelloTime').fill('07:30');await page.locator('#morningHelloTime').press('Tab');
+    await page.waitForFunction(async()=>{const s=(await window.quota.getState()).settings;return s.morningHelloEnabled===false&&s.morningHelloTime==='07:30';});
     const names={'zh-TW':'剩餘額度',en:'Remaining quota',ja:'残りの利用枠',ko:'남은 할당량'};
     const audit=async label=>{
       const issues=await page.locator('.settings,.settings label,.settings select,.auth-code-form,.auth-code-form button,.auth-message,.connection-actions,.connection-description,.connection-note,.connection-steps,.segmented').evaluateAll(nodes=>nodes.filter(el=>el.getClientRects().length).flatMap(el=>{
@@ -44,6 +48,10 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
       if(footerButtonPositions)assert.deepEqual(positions,footerButtonPositions,`${locale}: footer buttons must not move with language`);else footerButtonPositions=positions;
       await page.locator('#settings-toggle').click();
       assert.equal(await page.locator('html').getAttribute('lang'),locale);
+      const helloFixture=await page.evaluate(()=>window.quota.getState());helloFixture.morningHello={claude:{day:'2026-10-31',status:'active',at:'2026-10-31T00:00:00Z'}};
+      await app.evaluate(({BrowserWindow},s)=>BrowserWindow.getAllWindows()[0].webContents.send('state',s),helloFixture);
+      assert.equal(await page.locator('#morning-hello-status p').count(),1);
+      assert.match(await page.locator('#morning-hello-status p').textContent(),new RegExp({'zh-TW':'今日略過',en:'skipped today',ja:'本日はスキップ',ko:'오늘은 건너뜀'}[locale]));
       await page.waitForFunction(()=>{const body=document.querySelector('.panel-body');return window.innerHeight>520&&body.scrollHeight<=body.clientHeight+1;});
       assert.equal(await page.locator('#quit').evaluate(el=>el.getBoundingClientRect().bottom<=document.querySelector('footer').getBoundingClientRect().top),true,`${locale}: settings actions must be visible without scrolling`);
       await audit(`${locale} settings`);
@@ -217,6 +225,7 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
     }
     await page.locator('#language').selectOption('ko');
     await page.locator('html[lang="ko"]').waitFor();
+    const helloSettings=(await page.evaluate(()=>window.quota.getState())).settings;assert.equal(helloSettings.morningHelloEnabled,false);assert.equal(helloSettings.morningHelloTime,'07:30');
     await page.evaluate(()=>window.quota.antigravityAccount('disconnect'));
     const disconnected=await page.evaluate(()=>window.quota.getState());
     assert.equal(disconnected.settings.enabled.gemini,false);

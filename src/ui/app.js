@@ -416,6 +416,11 @@ function render(next){
   const healthy=!state.paused&&ids.some(id=>ready(state.providers[id]));$('live-dot').classList.toggle('off',!healthy);
   document.querySelector('.footer-dot').classList.toggle('off',!healthy);$('footer-status').textContent=state.paused?'已暫停同步':'自動同步';
   for(const key of ['alwaysOnTop','notifications'])$(key).checked=state.settings[key];
+  $('morningHelloEnabled').checked=state.settings.morningHelloEnabled===true;
+  if(document.activeElement!==$('morningHelloTime'))$('morningHelloTime').value=state.settings.morningHelloTime??'08:00';
+  const helloStatus=$('morning-hello-status');helloStatus.replaceChildren();
+  const helloLabels={sending:'正在送出 Hello',sent:'Hello 已送出，等待配額同步',confirmed:'已確認 5 小時視窗',active:'已有 5 小時視窗，今日略過',error:'Hello 失敗，今日不會自動重送',uncertain:'上次結果未確認，避免重複送出'};
+  for(const [id,result] of Object.entries(state.morningHello??{})){if(!names[id])continue;const line=document.createElement('p');line.setAttribute('data-localized-text','');line.textContent=`${names[id]} · ${result.day} · ${paceText(helloLabels[result.status]??'等待配額資料')}`;helloStatus.append(line);}
   $('google-source').value=state.settings.googleSource;$('google-source').disabled=!!state.auth.gemini?.pending;
   for(const input of document.querySelectorAll('[data-enable]'))input.checked=state.settings.enabled[input.dataset.enable];
   ids.forEach(renderCard);
@@ -502,6 +507,7 @@ $('compact-refresh').addEventListener('click',()=>api.refresh());
 $('close-quota-details').addEventListener('click',()=>{quotaDetailsOpen=false;render(state);});
 $('language').addEventListener('change',event=>api.settings({locale:event.target.value}));
 for(const key of ['alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
+for(const key of ['morningHelloEnabled','morningHelloTime'])$(key).addEventListener('change',event=>api.settings({[key]:key==='morningHelloEnabled'?event.target.checked:event.target.value}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
 for(const input of document.querySelectorAll('[data-visible]'))input.addEventListener('change',()=>api.settings({visible:{[input.dataset.visible]:input.checked}}));
 document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(footerPopover){closeFooterPopover(true);event.preventDefault();}else if(paceDetailsProvider){paceDetailsProvider=null;render(state);}else if(quotaDetailsOpen){quotaDetailsOpen=false;render(state);}else if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});

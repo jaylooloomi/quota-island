@@ -2,6 +2,9 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['早安 Hello','Morning Hello','朝の Hello','모닝 Hello'],['每天啟動 Claude 5 小時視窗','Start the daily Claude 5-hour window','毎日 Claude の5時間枠を開始','매일 Claude 5시간 이용 기간 시작'],['執行時間（台灣）','Time (Taiwan)','実行時刻（台湾）','실행 시간 (대만)'],
+    ['所有已連接的 Claude 帳號，每天最多一次。會消耗少量額度；已有視窗則略過，不能提前重置。App 需保持執行，錯過後 4 小時內可補送。','All connected Claude accounts, at most once daily. Uses some quota; skips active windows and cannot reset them early. Keep the app running; missed runs can catch up within 4 hours.','接続済みの全 Claude アカウントで1日最大1回。少量の利用枠を消費し、開始済みの枠はスキップします。早期リセットはできません。アプリの起動が必要で、予定から4時間以内なら実行できます。','연결된 모든 Claude 계정에서 하루 최대 한 번 실행합니다. 소량의 할당량을 사용하며 이미 시작된 기간은 건너뜁니다. 조기 초기화는 불가합니다. 앱 실행이 필요하며 예정 시간 후 4시간 이내에 실행할 수 있습니다.'],
+    ['正在送出 Hello','Sending Hello','Hello を送信中','Hello 전송 중'],['Hello 已送出，等待配額同步','Hello sent; waiting for quota sync','Hello 送信済み・利用枠の同期待ち','Hello 전송 완료, 할당량 동기화 대기'],['已確認 5 小時視窗','5-hour window confirmed','5時間枠を確認済み','5시간 이용 기간 확인됨'],['已有 5 小時視窗，今日略過','Window already active; skipped today','5時間枠は開始済み・本日はスキップ','이미 이용 기간이 시작되어 오늘은 건너뜀'],['Hello 失敗，今日不會自動重送','Hello failed; no automatic retry today','Hello 失敗・本日の自動再送なし','Hello 실패, 오늘 자동 재전송 없음'],['上次結果未確認，避免重複送出','Previous result unknown; avoiding duplicate send','前回の結果不明・重複送信を防止','이전 결과를 확인할 수 없어 중복 전송 방지'],
     ['切換下一個帳號','Next account','次のアカウント','다음 계정'],
     ['未提供週額度','No weekly quota','週間利用枠なし','주간 할당량 없음'],
     ['重新命名','Rename','名前を変更','이름 변경'],['儲存','Save','保存','저장'],['無法重新命名','Unable to rename','名前を変更できません','이름을 변경할 수 없습니다'],

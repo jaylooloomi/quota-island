@@ -8,6 +8,7 @@ import { Connections } from './connections';
 import { CredentialWatch } from './credential-watch';
 import {Accounts} from './accounts';
 import {Diagnostics} from './diagnostics';
+import {MorningHello} from './morning-hello';
 import {fitWindow,snapWindow,Dock,Rect} from './window-position';
 import { homedir } from 'node:os';
 import { ProviderError, ProviderId, ProviderState, providerIds, Reading } from './model';
@@ -21,8 +22,8 @@ if (testing) {
   if (!testData) throw new Error('QUOTA_TEST_DATA required');
   app.setPath('userData', testData);
 }
-type Settings = { locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; pacing: boolean; reserveDefaultsVersion:3; reservePercent: Record<ProviderId, number>; paceWindows: Partial<Record<ProviderId, string>>; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: string[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; dock?:Dock; x?: number; y?: number };
-let settings: Settings = { locale:'zh-TW', remaining: true, pacing:false, reserveDefaultsVersion:3, reservePercent:{claude:10,codex:10,gemini:10}, paceWindows:{}, alwaysOnTop: true, notifications: false, visible: { claude:true, codex:true, gemini:true }, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
+type Settings = { morningHelloEnabled:boolean; morningHelloTime:string; locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; pacing: boolean; reserveDefaultsVersion:3; reservePercent: Record<ProviderId, number>; paceWindows: Partial<Record<ProviderId, string>>; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: string[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; dock?:Dock; x?: number; y?: number };
+let settings: Settings = { morningHelloEnabled:true, morningHelloTime:'08:00', locale:'zh-TW', remaining: true, pacing:false, reserveDefaultsVersion:3, reservePercent:{claude:10,codex:10,gemini:10}, paceWindows:{}, alwaysOnTop: true, notifications: false, visible: { claude:true, codex:true, gemini:true }, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
 function validOrder(raw: unknown): raw is string[] {
   return Array.isArray(raw) && raw.length >= 3 && raw.length <= 23 && new Set(raw).size === raw.length && providerIds.every(id=>raw.includes(id)) && raw.every(id => providerIds.includes(id) || (typeof id === 'string' && /^claude-account-[0-9a-f-]{36}$/.test(id)));
 }
@@ -57,6 +58,8 @@ function readSettings() {
     const s = JSON.parse(readFileSync(path.join(app.getPath('userData'), 'preferences.json'), 'utf8'));
     if (validOrder(s.order)) settings.order = [...s.order];
     settings.locale=normalizeLocale(s.locale);
+    if(typeof s.morningHelloEnabled==='boolean')settings.morningHelloEnabled=s.morningHelloEnabled;
+    if(typeof s.morningHelloTime==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(s.morningHelloTime))settings.morningHelloTime=s.morningHelloTime;
     if(s.dock&&[null,'left','right'].includes(s.dock.horizontal)&&[null,'top','bottom'].includes(s.dock.vertical))settings.dock={horizontal:s.dock.horizontal,vertical:s.dock.vertical};
     for(const id of providerIds){if(typeof s.reservePercent?.[id]==='number'&&Number.isFinite(s.reservePercent[id])&&s.reservePercent[id]>=0&&s.reservePercent[id]<=100)settings.reservePercent[id]=s.reserveDefaultsVersion===2&&s.reservePercent[id]===5?10:s.reservePercent[id];if(typeof s.paceWindows?.[id]==='string'&&s.paceWindows[id].length<=160)settings.paceWindows[id]=s.paceWindows[id];}
     for (const id of providerIds) if (typeof s.visible?.[id] === 'boolean') settings.visible[id] = s.visible[id];
@@ -68,7 +71,8 @@ function readSettings() {
 }
 let accounts:Accounts;
 let diagnostics:Diagnostics|undefined;
-function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
+let morningHello:MorningHello|undefined;
+function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, morningHello:morningHello?.snapshot()??{}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
 function publish() {
   persistRateLimits();
   if(poller)diagnostics?.observe(snapshot());
@@ -145,6 +149,8 @@ function installHandlers() {
     'open-provider': async (_event: any, id: unknown) => { if (typeof id === 'string' && external[id]) await shell.openExternal(external[id]!); },
     'settings': (_event: any, patch: any) => {
       if (!patch || typeof patch !== 'object') return;
+      if(typeof patch.morningHelloEnabled==='boolean')settings.morningHelloEnabled=patch.morningHelloEnabled;
+      if(typeof patch.morningHelloTime==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(patch.morningHelloTime))settings.morningHelloTime=patch.morningHelloTime;
       accounts.patch(patch);
       for(const id of providerIds){if(typeof patch.reservePercent?.[id]==='number'&&Number.isFinite(patch.reservePercent[id])&&patch.reservePercent[id]>=0&&patch.reservePercent[id]<=100)settings.reservePercent[id]=patch.reservePercent[id];if(typeof patch.paceWindows?.[id]==='string'&&patch.paceWindows[id].length<=160)settings.paceWindows[id]=patch.paceWindows[id];}
       for (const id of providerIds) if (typeof patch.visible?.[id] === 'boolean') settings.visible[id] = patch.visible[id];
@@ -239,6 +245,13 @@ else {
       if(demo)service.read=async()=>demoReading('claude');
       return service;
     },openAuthUrl,publish,()=>{if(!quitting&&win&&!win.isDestroyed()){setExpanded(true);win.show();win.focus();}});
+    morningHello=new MorningHello(path.join(app.getPath('userData'),demo?'demo-morning-hello.json':'morning-hello.json'),async id=>{
+      if(demo)throw new ProviderError('auth','展示模式不會送出 Hello');
+      if(!settings.morningHelloEnabled||paused||(id==='claude'&&(!poller.states.claude.enabled||connections.states.claude?.pending)))throw new ProviderError('auth','Hello 已停用或帳號正在連接');
+      const cwd=path.join(app.getPath('userData'),'hello-workspace');
+      if(id==='claude')await providers.hello(cwd);else await accounts.hello(id,cwd);
+      const timer=setTimeout(()=>{if(!quitting){if(id==='claude')void poller.refresh('claude',true);else void accounts.refreshAccount(id);}},5500);timer.unref();
+    },publish);
     credentialWatch = new CredentialWatch({
       claude: [path.join(process.env.CLAUDE_CONFIG_DIR || path.join(homedir(), '.claude'), '.credentials.json')],
       gemini: [path.join(app.getPath('userData'), 'gemini-session.bin'), path.join(homedir(), '.gemini', 'oauth_creds.json')],
@@ -279,7 +292,9 @@ else {
     if (!demo) await credentialWatch.scan();
     void poller.tick();
     void accounts.tick();
-    interval = setInterval(() => { if (!paused) { if (!demo) void credentialWatch.scan(); if(!demo&&settings.enabled.gemini&&settings.googleSource==='antigravity'&&providers.waitingForAntigravityAccount)void poller.authenticated('gemini'); void poller.tick();void accounts.tick(); } }, 5000);
+    interval = setInterval(() => { if (!paused) { if (!demo) void credentialWatch.scan(); if(!demo&&settings.enabled.gemini&&settings.googleSource==='antigravity'&&providers.waitingForAntigravityAccount)void poller.authenticated('gemini'); void poller.tick();void accounts.tick(); }
+      if(!demo&&morningHello){const current:any=snapshot();void morningHello.tick(settings.morningHelloEnabled,settings.morningHelloTime,['claude',...current.accounts.map((a:any)=>a.id)].map((id:string)=>({id,state:current.providers[id],pending:current.auth[id]?.pending})),paused);}
+    }, 5000);
   });
   app.on('before-quit', () => { quitting = true; clearInterval(interval); clearTimeout(dragTimer); accounts?.close();providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
   app.on('window-all-closed', () => { if (quitting) app.quit(); });
