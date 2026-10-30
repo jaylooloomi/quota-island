@@ -6,3 +6,19 @@
 .card-heading{gap:20px}.provider-subtitle,.gemini .provider-subtitle{font-size:17px}.spinning svg{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.spinning svg{animation:none}}
 .card.details-open>.card-heading,.card.details-open>.quota-windows,.card.details-open>.empty-state{display:none}.card.details-open{min-height:0}.card.details-open .connection-details{margin:0;padding:0;border:0;background:none}.connection-account{display:flex;gap:14px;align-items:center;margin:12px 0 18px}.connection-logo{display:block;width:44px;height:44px;object-fit:contain}.connection-account h4{margin:0;font-size:14px;font-weight:600}.connection-account .connection-description{margin:4px 0 0;line-height:1.7;font-size:12px}
 .connection-steps{background:linear-gradient(90deg,#9eacf2 var(--progress,0%),#596071 var(--progress,0%)) center 10px/calc(100% - 30px) 1px no-repeat}.connection-steps li:before{display:none}.compact-provider.codex.stale .mini-logo{filter:none}.mini-alert{flex-shrink:0;width:14px;height:14px;position:absolute;right:3px;top:14px}.compact-provider.stale .mini-info{margin-right:9px}
+
+/* 00 Original Dark: a quiet black capsule and charcoal quota cards. */
+:root{--border:#ffffff12;--claude:#ffae89;--gemini:#a0a2ff}
+.island{background:#101116;border-color:#363840;box-shadow:0 3px 8px #0006,inset 0 1px 0 #ffffff03}
+.island.expanded{background:linear-gradient(145deg,#191b23,#12141b);border-color:#40424e}
+.panel-header{background:#12141b80}
+.compact-provider+.compact-provider:before{background:#ffffff12}
+.compact-provider:hover{background:#ffffff08}
+.mini-logo{width:34px;height:34px}
+.mini-value{font-size:20px;letter-spacing:-.4px}
+.card{background:linear-gradient(135deg,#1c1e26,#181a22);border-color:#ffffff0d;box-shadow:0 2px 5px #0002}
+.track{background:#2c303c}
+.codex .quota-row:not(.danger) .fill{background:linear-gradient(90deg,#ffd16d,#ffbf50)}
+.panel-header,.context-line,footer{animation:dark-reveal .18s ease-out both}
+@keyframes dark-reveal{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.panel-header,.context-line,footer{animation:none}}
