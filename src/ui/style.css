@@ -73,3 +73,5 @@ html:not([lang="zh-TW"]) .context-line h2{font-size:13px}
 html:not([lang="zh-TW"]) .connection-status{max-width:98px}
 .mini-info{max-width:100%}.mini-value.unknown,.compact-provider.stale .mini-value{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 html[lang="en"] .segmented button{width:66px;font-size:11px}
+.segmented button{display:inline-flex;align-items:center;justify-content:center;padding:0 6px;white-space:nowrap;flex-shrink:0;line-height:1}
+html[lang="ja"] .segmented button{width:66px}

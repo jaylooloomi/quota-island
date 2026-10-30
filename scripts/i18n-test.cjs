@@ -18,6 +18,10 @@ const os=require('node:os');
       await page.locator('#language').selectOption(locale);
       await page.locator('#mode-label').filter({hasText:names[locale]}).waitFor();
       assert.equal(await page.locator('html').getAttribute('lang'),locale);
+      assert.equal(await page.locator('.segmented button').evaluateAll(buttons=>buttons.every(button=>{
+        const style=getComputedStyle(button);
+        return style.whiteSpace==='nowrap'&&button.scrollWidth<=button.clientWidth&&button.scrollHeight<=button.clientHeight;
+      })),true,`${locale}: percentage toggle labels must fit on one line`);
       await page.locator('#settings-toggle').click();
       assert.equal(await page.locator('.panel-body').evaluate(el=>el.scrollHeight<=el.clientHeight+1),true,`${locale}: cards must fit`);
       assert.equal(await page.locator('.quota-number').count(),5);
