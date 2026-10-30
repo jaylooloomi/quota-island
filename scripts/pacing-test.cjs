@@ -54,6 +54,11 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
         grouped.settings.pacing=mode==='pacing';grouped.settings.remaining=mode!=='used';
         await send(grouped);await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
         const current=await shape();if(groupedShape)assert.deepEqual(current,groupedShape,`${locale}: real Antigravity groups must keep card, identity and footer coordinates across ${mode}`);else groupedShape=current;
+        if(mode!=='pacing'){
+          const tracks=await page.locator('.card.claude,.card.gemini').evaluateAll(cards=>cards.map(card=>[...card.querySelectorAll('.track')].map(el=>{const r=el.getBoundingClientRect();return {x:r.x,width:r.width};})));
+          assert.deepEqual(tracks[1],tracks[0],`${locale}: Antigravity and Claude progress tracks must share widths and columns in ${mode}`);
+          assert.ok(tracks[1][1].x-tracks[1][0].x-tracks[1][0].width>=9,`${locale}: quota tracks need a visible gap`);
+        }
         const anchors=await page.locator('.card.claude,.card.gemini').evaluateAll((cards,pacing)=>cards.map(card=>{const r=card.getBoundingClientRect(),link=card.querySelector(pacing?'.pace-link':'.quota-details-link'),b=link.getBoundingClientRect();return {right:r.right-b.right,bottom:r.bottom-b.bottom,height:b.height,font:getComputedStyle(link).fontSize};}),mode==='pacing');
         if(detailAnchors)assert.deepEqual(anchors,detailAnchors,`${locale}: pacing details must share quota/model details anchors in ${mode}`);else detailAnchors=anchors;
         await page.screenshot({path:`test-results/pacing-${locale}-grouped-${mode}.png`});
