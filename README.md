@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/version-0.6.0-informational" alt="Version 0.6.0">
+  <img src="https://img.shields.io/badge/version-0.6.1-informational" alt="Version 0.6.1">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
   <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-58%20passing-brightgreen" alt="58 core tests passed locally"></a>
@@ -65,7 +65,7 @@ with a refresh action; **Settings** opens preferences and returns to the same
 Quota/Accounts tab when closed. Popovers are mutually exclusive and close on
 outside click or Escape. Account management stays in the top Accounts tab.
 
-Version 0.6.0 uses the Compact Double-layer layout: a capsule with mini progress
+Version 0.6.1 uses the Compact Double-layer layout: a capsule with mini progress
 bars, flat provider rows, visible version labels, and **Quota / Accounts** tabs.
 Open Accounts to switch or sign out of Claude/Codex. Signing out requires
 confirmation and also affects the official CLI account on this computer.

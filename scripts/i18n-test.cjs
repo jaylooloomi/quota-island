@@ -13,6 +13,8 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
   let app=await launch();
   try{
     let page=await app.firstWindow();await page.locator('#mini-codex').filter({hasText:'12%'}).waitFor();
+    assert.equal(await page.locator('.panel-header #refresh').count(),0);
+    assert.equal(await page.locator('footer #refresh').count(),1);
     await page.locator('#toggle').click();await page.locator('#settings-toggle').click();
     const names={'zh-TW':'剩餘額度',en:'Remaining quota',ja:'残りの利用枠',ko:'남은 할당량'};
     const audit=async label=>{
@@ -45,6 +47,14 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
       assert.equal(resetLabels.every(row=>/\d/.test(row.text)&&/\d{4}/.test(row.title)&&clock.test(row.title)&&row.scroll<=row.width+1),true,`${locale}: invalid reset countdown ${JSON.stringify(resetLabels)}`);
       assert.equal(await page.locator('.card-heading').evaluateAll(nodes=>nodes.every(el=>el.scrollWidth<=el.clientWidth+1)),true);
       await page.screenshot({path:`test-results/language-${locale}.png`});
+      await page.locator('footer').screenshot({path:`test-results/language-${locale}-footer.png`});
+      assert.equal(await page.locator('.footer-local').isVisible(),true);
+      assert.equal(await page.locator('footer').evaluate(el=>{
+        const local=el.querySelector('.footer-local').getBoundingClientRect();
+        const preferences=el.querySelector('.footer-preferences').getBoundingClientRect();
+        const sync=el.querySelector('.footer-sync-controls').getBoundingClientRect();
+        return local.right<=preferences.left+1&&preferences.right<=sync.left+1&&sync.right<=el.getBoundingClientRect().right;
+      }),true,`${locale}: footer sections must not overlap`);
       await page.locator('#language-shortcut').click();
       assert.equal(await page.locator(`#language-popover [data-locale="${locale}"]`).getAttribute('aria-checked'),'true');
       assert.deepEqual(await page.locator('#language-popover button').allTextContents(),['繁體中文','English','日本語','한국어']);
