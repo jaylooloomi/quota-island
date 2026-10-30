@@ -25,12 +25,15 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
       assert.deepEqual(issues,[],`${label}: horizontal clipping or overflow`);
     };
     await fs.mkdir('test-results',{recursive:true});
+    let footerButtonPositions;
     for(const locale of ['en','ja','ko','zh-TW']){
       await page.locator('#language-shortcut').click();
       await page.locator(`#language-popover [data-locale="${locale}"]`).click();
       await page.locator('#mode-label').filter({hasText:names[locale]}).waitFor();
       assert.equal(await page.locator('#language-popover').isVisible(),false);
       assert.equal(await page.locator('#settings').isVisible(),false);
+      const positions=await page.locator('.footer-preferences .footer-control').evaluateAll(nodes=>nodes.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,width:r.width};}));
+      if(footerButtonPositions)assert.deepEqual(positions,footerButtonPositions,`${locale}: footer buttons must not move with language`);else footerButtonPositions=positions;
       await page.locator('#settings-toggle').click();
       assert.equal(await page.locator('html').getAttribute('lang'),locale);
       await page.waitForFunction(()=>{const body=document.querySelector('.panel-body');return window.innerHeight>520&&body.scrollHeight<=body.clientHeight+1;});
