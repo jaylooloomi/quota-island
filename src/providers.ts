@@ -86,5 +86,6 @@ export class Providers {
     });
   }
   submitCode(id: ProviderId, code: unknown) { if (id !== 'claude') throw new ProviderError('auth', '此來源不接受授權碼'); this.claudeLogin.submitCode(code); }
+  cancelLogin(id: ProviderId) { if (id === 'claude') this.claudeLogin.close(); }
   close() { this.rpc.close(); this.gemini.close(); this.claudeLogin.close(); }
 }

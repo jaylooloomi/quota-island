@@ -78,6 +78,7 @@ function makeCards(){
     card.querySelector('.close-connection').addEventListener('click',()=>{activeDetail=null;render(state);});
       card.querySelector('.connect-primary').addEventListener('click',()=>{const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
     card.querySelector('.login').addEventListener('click',()=>startLogin(id));
+    card.querySelector('.cancel-login').addEventListener('click',()=>api.cancelLogin(id));
     card.querySelector('.provider-link').addEventListener('click',()=>api.openProvider(id));
     card.querySelector('.reopen-login').addEventListener('click',()=>api.reopenLogin(id));
     card.querySelector('.auth-code-form').addEventListener('submit',event=>{event.preventDefault();const input=card.querySelector('.auth-code'),code=input.value.trim();input.value='';if(code)api.submitCode(id,code);});
@@ -93,17 +94,18 @@ function renderConnection(id,s,auth){
   card.querySelector('.connection-description').textContent=id==='codex'?'登入要監控的 ChatGPT 訂閱帳號，可與 Claude、Gemini 使用不同帳號。':antigravity?'沿用 Antigravity 的 Google 帳號，讀取 Gemini 配額資訊。':`連接你的 ${id==='gemini'?'Google':names[id]} 帳號以讀取配額資訊。`;
   card.querySelector('.connection-account h4').textContent=id==='claude'?'Claude Code':id==='codex'?'Codex':antigravity?'Antigravity · Gemini':'Google Code Assist';
   const phase=auth?.phase;
-  const step=connected?4:phase==='syncing'?2:phase==='connecting'?1:0;
+  const step=connected?4:phase==='syncing'||phase==='cooldown'?2:phase==='connecting'||phase==='verifying'?1:0;
   card.querySelector('.connection-steps').style.setProperty('--progress',`${Math.min(100,step/3*100)}%`);
   for(const node of card.querySelectorAll('.connection-steps li')){
     const index=Number(node.dataset.step);node.classList.toggle('done',index<step);node.classList.toggle('active',index===step&&!!auth?.pending);
     node.querySelector('span').textContent=index<step?'✓':String(index+1);
   }
   const message=card.querySelector('.auth-message');
-  message.textContent=auth?.pending||auth?.phase==='error'?auth.message:connected?'已連接，配額已自動同步':s.error||'完成授權後會自動同步配額。';
-  message.classList.toggle('success',!!connected);message.classList.toggle('error',phase==='error'||(!auth?.pending&&['stale','unavailable'].includes(s.status)));
+  message.textContent=auth?.pending||['error','cooldown'].includes(auth?.phase)?auth.message:connected?'已連接，配額已自動同步':s.error||'完成授權後會自動同步配額。';
+  message.classList.toggle('success',!!connected);message.classList.toggle('error',phase==='error'||(!auth?.pending&&phase!=='cooldown'&&['stale','unavailable'].includes(s.status)));
   const text=phase==='syncing'?'自動同步中…':phase==='connecting'?'連接中…':auth?.pending?'等待授權…':id==='codex'?(connected?'切換 Codex 帳號 →':'登入 Codex（ChatGPT） →'):connected?'重新連接':antigravity?'連接 Antigravity 並同步 →':`登入 ${id==='gemini'?'Google':names[id]} 並同步 →`;
   for(const button of [card.querySelector('.login'),card.querySelector('.connect-primary')]){button.textContent=text;button.disabled=!!auth?.pending||!s.enabled;}
+  if(phase==='verifying')card.querySelector('.login').textContent='驗證授權碼中…';
   const limited=/429|限制查詢|查詢頻率/.test(s.error??'');
   card.querySelector('.connect-primary').hidden=false;
   if(limited&&!auth?.pending){for(const button of [card.querySelector('.login'),card.querySelector('.connect-primary')])button.textContent=`登入 ${id==='gemini'?'Google':names[id]}（管理授權） →`;}
@@ -111,6 +113,8 @@ function renderConnection(id,s,auth){
   else if(s.status==='loading'){card.querySelector('.connect-primary').textContent='同步中…';card.querySelector('.connect-primary').disabled=true;}
   card.querySelector('.connection-note').textContent=limited?`目前限制的是配額查詢，不代表已登出。可登入或更新授權；重新登入不會解除限流。${retryLabel(s)||'冷卻後自動重試'}。`:'登入完成後自動更新，不必手動查用量。';
   if(id==='codex')card.querySelector('.connection-note').textContent+=' Codex 使用獨立的 OpenAI／ChatGPT 授權；切換會同步更新本機 Codex CLI 的帳號，不會登出 Claude 或 Gemini。瀏覽器若帶入其他帳號，請選擇使用其他帳號登入。';
+  if(auth?.pending)card.querySelector('.connection-note').textContent=phase==='verifying'?'正在等待官方登入程序完成驗證；配額限流不會阻止帳號授權。':'請在瀏覽器完成登入；若選錯帳號，可取消後重試。';
+  card.querySelector('.cancel-login').hidden=id!=='claude'||!auth?.pending||phase==='syncing';
   card.querySelector('.auth-code-form').hidden=!auth?.pending||!auth?.codeRequired;
   card.querySelector('.reopen-login').hidden=!auth?.pending||!auth?.canReopen||phase==='syncing';
   card.querySelector('.provider-link').hidden=!s.reading;

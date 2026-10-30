@@ -20,6 +20,14 @@ test('successful authorization with unavailable quota reports a sync failure ins
   const c = new Connections({ login: async () => {}, submitCode(){} }, p, async () => {}, () => {}, () => {});
   await c.login('claude'); assert.equal(c.states.claude.phase, 'error'); assert.match(c.states.claude.message, /配額同步失敗.*provider offline/);
 });
+
+test('completed authorization during quota cooldown is distinct from sign-in failure',async()=>{
+  const p=new Poller(async()=>{throw Error('must not query during cooldown')},()=>{});
+  p.restoreRateLimits({claude:{until:Date.now()+600000,message:'HTTP 429'}});
+  const c=new Connections({login:async()=>{},submitCode(){}},p,async()=>{},()=>{},()=>{});
+  await c.login('claude');assert.equal(c.states.claude.phase,'cooldown');
+  assert.equal(c.states.claude.pending,false);assert.match(c.states.claude.message,/授權已完成/);
+});
 test('Claude authorization-code route remains in-app and is refreshed once after CLI completion', async () => {
   let end, provided;
   const p = new Poller(async provider => ({ provider, windows:[], plan:null, source:'fixture' }), () => {});

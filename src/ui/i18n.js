@@ -2,6 +2,13 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['取消登入','Cancel sign-in','ログインをキャンセル','로그인 취소'],
+    ['驗證授權碼中…','Verifying code…','コードを確認中…','코드 확인 중…'],
+    ['正在驗證授權碼，最多等待 60 秒；可取消後重新登入。','Verifying your code (up to 60 seconds). You can cancel and sign in again.','認証コードを確認中（最大60秒）。キャンセルして再ログインできます。','인증 코드 확인 중 (최대 60초). 취소 후 다시 로그인할 수 있습니다.'],
+    ['授權碼驗證逾時，請重新登入取得新授權碼。','Code verification timed out. Sign in again to get a new code.','コードの確認がタイムアウトしました。再ログインして新しいコードを取得してください。','코드 확인 시간이 초과되었습니다. 다시 로그인하여 새 코드를 받으세요.'],
+    ['帳號授權已完成；配額查詢仍在冷卻，期滿後會自動同步。','Account authorized. Quota queries are cooling down and will sync automatically afterward.','アカウント認証は完了しました。利用枠の取得は待機中です。待機後に自動同期します。','계정 인증이 완료되었습니다. 할당량 조회 대기 시간이 끝나면 자동 동기화됩니다.'],
+    ['正在等待官方登入程序完成驗證；配額限流不會阻止帳號授權。','Waiting for the official sign-in process. Quota rate limits do not block account authorization.','公式ログイン処理の完了を待っています。利用枠の制限はアカウント認証を妨げません。','공식 로그인 절차가 완료되기를 기다립니다. 할당량 제한은 계정 인증을 차단하지 않습니다.'],
+    ['請在瀏覽器完成登入；若選錯帳號，可取消後重試。','Finish sign-in in your browser. Wrong account? Cancel and try again.','ブラウザーでログインしてください。アカウントを間違えた場合はキャンセルして再試行できます。','브라우저에서 로그인을 완료하세요. 잘못된 계정이면 취소 후 다시 시도하세요.'],
     ['等待瀏覽器授權，完成後會自動同步配額…','Authorize in the browser; quota will sync automatically.','ブラウザーで認証してください。完了後に利用枠を自動同期します。','브라우저에서 인증하세요. 완료 후 할당량이 자동 동기화됩니다.'],
     ['授權完成，正在自動同步配額…','Authorized. Syncing quota…','認証完了。利用枠を同期中…','인증 완료. 할당량 동기화 중…'],
     ['瀏覽器授權後，將頁面提供的授權碼貼在下方，App 會自動完成連接與同步。','After browser authorization, paste its code below to connect and sync.','ブラウザー認証後、表示されたコードを下に貼り付けると接続して同期します。','브라우저 인증 후 표시된 코드를 아래에 붙여넣으면 연결 및 동기화됩니다.'],

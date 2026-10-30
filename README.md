@@ -4,10 +4,10 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/version-0.3.0-informational" alt="Version 0.3.0">
+  <img src="https://img.shields.io/badge/version-0.3.1-informational" alt="Version 0.3.1">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
-  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-46%20passing-brightgreen" alt="46 core tests passed locally"></a>
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-49%20passing-brightgreen" alt="49 core tests passed locally"></a>
   <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/lang-繁體中文-green" alt="Traditional Chinese"></a>
 </p>
 
@@ -89,8 +89,8 @@ These are **subscription quotas and reset windows**, not network traffic, API bi
 
 | Check | Latest local result |
 |---|---|
-| Core tests | **46 passed** |
-| Measured Node modules | **87.44% lines · 85.88% branches · 89.23% functions** |
+| Core tests | **49 passed** |
+| Measured Node modules | **87.77% lines · 85.91% branches · 89.47% functions** |
 | Windows packaged app | Desktop controls, ordering and design checks passed |
 | Authorization integration | Fixture upstream responses; real local IPC, callbacks and child-process paths |
 | Real accounts | Gemini and Codex reads previously verified; Claude's last real check returned HTTP 429 |

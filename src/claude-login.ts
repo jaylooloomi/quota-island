@@ -20,7 +20,10 @@ export class ClaudeLogin {
   private child: ChildProcessWithoutNullStreams | null = null;
   private codeRequired = false;
   private cancel: (() => void) | null = null;
-  constructor(private command = () => findCli('claude')) {}
+  private verificationTimer: NodeJS.Timeout | null = null;
+  private clearOutput: (() => void) | null = null;
+  private verificationExpired: (() => void) | null = null;
+  constructor(private command = () => findCli('claude'), private verificationTimeoutMs = 60_000) {}
   async start(progress: (value: LoginProgress) => void, timeoutMs = 300_000): Promise<void> {
     if (this.child) throw new ProviderError('auth', 'Claude 登入正在進行中');
     const cmd = this.command();
@@ -30,10 +33,14 @@ export class ClaudeLogin {
       let settled = false, output = '', lastUrl = '';
       const finish = (error?: Error) => {
         if (settled) return; settled = true; clearTimeout(timer);
+        if (this.verificationTimer) clearTimeout(this.verificationTimer);
+        this.verificationTimer = null; this.clearOutput = null; this.verificationExpired = null;
         this.child = null; this.cancel = null; this.codeRequired = false;
         child.kill(); error ? reject(error) : resolve();
       };
       this.cancel = () => finish(new ProviderError('auth', 'Claude 登入已取消'));
+      this.verificationExpired = () => finish(new ProviderError('auth', '授權碼驗證逾時，請重新登入取得新授權碼。'));
+      this.clearOutput = () => { output = ''; };
       const timer = setTimeout(() => finish(new ProviderError('auth', 'Claude 登入逾時，請重新連接')), timeoutMs);
       const receive = (chunk: Buffer) => {
         output = (output + chunk.toString()).slice(-65536);
@@ -52,6 +59,12 @@ export class ClaudeLogin {
     if (!this.child || !this.codeRequired) throw new ProviderError('auth', '目前沒有等待授權碼的 Claude 登入');
     if (typeof raw !== 'string' || raw.length > 4096 || !/^[A-Za-z0-9_.~#\-]+$/.test(raw.trim())) throw new ProviderError('auth', '請貼上授權頁提供的完整授權碼');
     this.child.stdin.write(raw.trim() + '\n');
+    this.codeRequired = false; this.clearOutput?.();
+    if (this.verificationTimer) clearTimeout(this.verificationTimer);
+    this.verificationTimer = setTimeout(() => {
+      // The login promise must settle, instead of leaving a disabled sign-in button.
+      this.verificationExpired?.();
+    }, this.verificationTimeoutMs);
   }
   close() { this.cancel?.(); }
 }

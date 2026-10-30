@@ -139,6 +139,7 @@ function installHandlers() {
       void connections.login(id);
     },
     'reopen-login': (_event: any, raw: unknown) => connections.reopen(validateId(raw)),
+    'cancel-login': (_event: any, raw: unknown) => providers.cancelLogin(validateId(raw)),
     'submit-code': (_event: any, raw: unknown, code: unknown) => connections.submitCode(validateId(raw), code),
   })) {
     ipcMain.handle(channel, (event, ...args) => {

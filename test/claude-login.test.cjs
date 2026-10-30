@@ -34,3 +34,24 @@ test('Claude process failures return sanitized errors',async()=>{
   const absent=new ClaudeLogin(()=>({file:'quota-island-nonexistent-executable',args:[],env:process.env}));
   await assert.rejects(absent.start(()=>{},5000),e=>e.code==='missing_cli');
 });
+
+test('a code submission that never completes times out and can start again',async()=>{
+  const login=new ClaudeLogin(command("console.log('Paste code here');process.stdin.on('data',()=>{});setInterval(()=>{},1000)"),35);
+  for(let attempt=0;attempt<2;attempt++){
+    let prompt;const waiting=new Promise(resolve=>prompt=resolve);
+    const job=login.start(info=>{if(info.codeRequired)prompt()},5000);
+    const rejected=assert.rejects(job,/授權碼驗證逾時/);
+    await waiting;login.submitCode('TEST-CODE');
+    assert.throws(()=>login.submitCode('TEST-CODE'),/沒有等待授權碼/);
+    await rejected;
+  }
+});
+
+test('canceling verification settles login and unrelated output does not reuse an old code prompt',async()=>{
+  const login=new ClaudeLogin(command("console.log('Paste code here');process.stdin.on('data',()=>console.log('Processing'));setInterval(()=>{},1000)"),5000);
+  let prompt,seen=0;const waiting=new Promise(resolve=>prompt=resolve);
+  const job=login.start(info=>{if(info.codeRequired){seen++;prompt()}},5000);
+  const rejected=assert.rejects(job,/已取消/);
+  await waiting;login.submitCode('TEST-CODE');await new Promise(resolve=>setTimeout(resolve,60));
+  assert.equal(seen,1);login.close();await rejected;
+});

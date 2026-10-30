@@ -4,10 +4,10 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT 授權"></a>
-  <img src="https://img.shields.io/badge/version-0.3.0-informational" alt="版本 0.3.0">
+  <img src="https://img.shields.io/badge/version-0.3.1-informational" alt="版本 0.3.1">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows 已測試">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron 與 TypeScript">
-  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-46%20passing-brightgreen" alt="46 項核心測試於本機通過"></a>
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-49%20passing-brightgreen" alt="49 項核心測試於本機通過"></a>
   <a href="README.md"><img src="https://img.shields.io/badge/lang-English-blue" alt="English README"></a>
 </p>
 
@@ -88,8 +88,8 @@ npm start
 
 | 檢查 | 最近一次本機結果 |
 |---|---|
-| 核心測試 | **46 項通過** |
-| 納入統計的 Node 模組 | **行 87.44% · 分支 85.88% · 函式 89.23%** |
+| 核心測試 | **49 項通過** |
+| 納入統計的 Node 模組 | **行 87.77% · 分支 85.91% · 函式 89.47%** |
 | Windows 打包成品 | 桌面操作、排序、畫面檢查通過 |
 | 授權整合 | 模擬上游回應，搭配真實本機 IPC／回呼／子程序路徑 |
 | 真實帳號 | 曾驗證 Gemini、Codex 可讀取；Claude 最近一次真實查詢回傳 HTTP 429 |

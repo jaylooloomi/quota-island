@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('quota', {
   expand: (value: boolean) => ipcRenderer.invoke('expand', value),
   refresh: () => ipcRenderer.invoke('refresh'),
   login: (id: string) => ipcRenderer.invoke('login', id),
+  cancelLogin: (id: string) => ipcRenderer.invoke('cancel-login', id),
   reopenLogin: (id: string) => ipcRenderer.invoke('reopen-login', id),
   submitCode: (id: string, code: string) => ipcRenderer.invoke('submit-code', id, code),
   openProvider: (id: string) => ipcRenderer.invoke('open-provider', id),
