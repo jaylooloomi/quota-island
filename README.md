@@ -1,67 +1,156 @@
-# Quota Island
+<h1 align="center">Quota Island 🏝️</h1>
 
-Claude Code、Gemini CLI / Code Assist、Codex 的本機桌面動態島。使用 Electron + TypeScript。
+<p align="center"><b>Three AI subscriptions. One tiny island.</b><br>Keep Claude, Gemini, and Codex quotas in sight. Expand for details. Get back to building.</p>
 
-## 使用
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/version-0.2.0-informational" alt="Version 0.2.0">
+  <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
+  <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-41%20passing-brightgreen" alt="41 core tests passed locally"></a>
+  <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/lang-繁體中文-green" alt="Traditional Chinese"></a>
+</p>
 
-Windows 最新成品：`release/0.2.0/Quota Island 0.2.0.exe`（portable），或 `release/0.2.0/win-unpacked/Quota Island.exe`。
+<p align="center"><img src="docs/design/original-dark-00-small/compact.png" alt="Compact dark island: Claude 36%, Gemini 62%, Codex 12%, with a draggable grip" width="464"><br><sub>Actual app screenshot with demo data. Percentages are illustrative, not live account readings.</sub></p>
 
-0.2.0 已依照設計稿重做收合列、展開面板、剩餘／已用切換、連線狀態與四階段連接畫面。首次升級切換成設計稿的「剩餘」模式，其後會保留你的選擇。原本的排序、登入與來源設定會保留。
+## Use cases
 
-1. 啟動後點任一配額或右側箭頭展開；拖曳左側雙點移動。
+| Situation | What you do | What the island shows |
+|---|---|---|
+| 🧑‍💻 **Deep in a coding session** | Leave the capsule above your windows | Remaining quota at a glance |
+| 🔄 **Switching between AI tools** | Expand the island | Each provider's windows and reset times |
+| 🔐 **Connecting an account** | Finish authorization | Connection progress, then automatic quota sync |
+| 🧩 **Your tools, your order** | Drag an icon or card heading | Shared ordering, saved across restarts |
+| ⏳ **A provider is rate-limiting** | Let the countdown run | An explicit error and scheduled retry |
+| 🖥️ **A busy desktop** | Collapse it or hide it to the tray | A small capsule, ready when needed |
 
-可直接拖曳上方服務圖示／百分比調整順序，或拖曳展開卡片的標題換位。兩個視圖使用同一順序，重新啟動也會保留。鍵盤可聚焦服務圖示後使用 `Alt + ←/→` 排序。
-2. Claude：先安裝 [Claude Code](https://code.claude.com/docs/en/setup)，點「登入 Claude 並同步」。若官方 CLI 使用授權碼流程，將瀏覽器授權頁提供的授權碼貼進 App 出現的欄位，按「完成連接並同步」。授權完成後 App 自動取回配額，不需要自己查看官方用量頁，也不需要按重新整理。
-3. Codex：先安裝 [Codex CLI](https://developers.openai.com/codex/cli)，點「登入 Codex」，使用 ChatGPT 訂閱帳號；已有本機登入可直接讀取。
-4. Gemini（個人版）：預設讀取 **Antigravity 的 Gemini 模型配額**。開啟並登入 Antigravity 後即可自動讀取，不需要在本工具重做舊 Gemini CLI OAuth。也可點「連接 Antigravity 並同步」。收合列顯示最吃緊的 Gemini 模型，展開列出模型與重設時間。Antigravity 中的 Claude/GPT 額度不會混入獨立的 Claude Code 或 Codex 卡片。
-5. 若使用企業 Code Assist，請在設定將「Google 配額來源」改為 Code Assist，再使用原本的 Google OAuth 登入。這是另一個明確區分的來源。
+## Get started
 
-Google 已公告個人 Free/Pro/Ultra 的 Gemini CLI 在 2026-06-18 遷移至 Antigravity CLI。官方 CLI 指令為 `agy`；啟動後用 `/usage`（或 `/quota`）查看配額。本工具顯示的 Antigravity 配額也不是 Gemini 網頁版額度。
+**Requires:** Node.js 24 LTS recommended, npm, and the official provider tools for the accounts you want to monitor. Windows is locally tested. macOS and Linux have build targets but still need real-device validation.
 
-登入期間會顯示「等待授權／等待授權碼／同步中／已同步／失敗原因」。完成授權後自動展開 App 並同步配額。瀏覽器登入網站本身不會授權此 App；未連接前不再顯示易混淆的官方頁面箭頭。外部官方 CLI 的授權檔更新也會在 5 秒檢查週期自動偵測並重新讀取。
-
-三家來源預設開啟，各自每 2 分鐘更新。未知顯示「—」，舊資料標記 `*`。手動重新整理仍尊重服務冷卻。設定可切換置頂、90% 用量提醒與監控來源；隱藏的來源停止查詢。切換百分比可看剩餘或已用。全域快捷鍵為 `Ctrl/⌘ + Alt + Q`。
-
-右上角箭頭收合成膠囊；設定內可隱藏到系統匣或結束應用，右鍵系統匣也可暫停、還原或結束。點卡片右上角的連線狀態可管理連接、查看資料來源。成功連接會顯示完成進度，接著自動回到配額。無自動開機啟動設定。
-
-更新按鈕可在短暫的 5 秒防連點時間後立即更新資料；正常背景同步為每 2 分鐘。上游回傳 429 時保留 Retry-After 到本機冷卻檔，重開應用或手動更新不會繞過服務要求。畫面會顯示限流與自動重試倒數。
-
-## 開發與驗證
-
-需要 Node.js 22.16+（建議 Node 24 LTS）與 npm。
+### 1. Start the app
 
 ```sh
+git clone https://github.com/jaylooloomi/quota-island.git
+cd quota-island
+git switch design/original-dark-00
 npm ci
 npm start
-npm test
-npm run test:desktop
-npm run test:auth
-npm run test:order
-npm run test:design
-npm run test:live
-npm run check:live
-npm run check:accounts
-npm run dist:win
 ```
 
-`npm run test:desktop` 使用明確標示的展示資料，不會發送 provider 用量請求或啟動登入。`npm run check:live` 在隔離設定目錄讀取本機官方 CLI 授權，不會自動登入、不會輸出 token；報告在 `test-results/live.json`。登入本工具的 Google 帳號需在正常啟動的應用內驗證，隔離測試不會讀取正常應用的加密帳號檔。
+The branch above contains the compact Original Dark layout shown here. Prefer an executable? Run `npm run dist:win`; the portable Windows executable is written to `release/`. There is currently no published installer download.
 
-完成正常應用內登入後，使用 `npm run check:accounts` 讀取正常應用的加密 Google 授權與兩家官方 CLI 授權，再驗證真實配額。報告在 `test-results/accounts.json`，不含 token。
+### 2. Connect your tools
 
-啟動展示：`npx electron . --demo`。畫面中的數字是展示資料，不能作為帳號驗證。
+| Provider | What to install / open | How it connects |
+|---|---|---|
+| **Claude** | [Claude Code](https://code.claude.com/docs/en/setup) | Use the app's login; paste the browser authorization code back into the app if prompted. Existing CLI authorization can also be used. |
+| **Gemini — personal** | Antigravity, running and signed in | Reads Gemini model quotas from its local service. Keep Antigravity open. |
+| **Gemini — enterprise** | A Code Assist account | Choose **Code Assist** in Google source settings, then complete Google OAuth. |
+| **Codex** | [Codex CLI](https://developers.openai.com/codex/cli) | Use the app's login or an existing local ChatGPT subscription login. |
 
-其他系統在各自平台執行 `npm run dist:mac`／`npm run dist:linux`。CI matrix 也會建置三個平台；配置存在不代表已執行成功。macOS 版本尚未簽章／公證，Windows portable 尚未簽章。
+After authorization, the app comes forward and syncs automatically. Signing into a provider's website alone does not connect the app.
 
-## 授權資料
+### 3. Keep building
 
-Claude 與 Codex 由官方 CLI 管理；本工具不自行輪替它們的 refresh token。Claude token 過期時會要求重新登入；也可先在官方 CLI 更新登入再回到本工具。Google 授權以系統加密儲存於應用 userData 的 `gemini-session.bin`。不在 renderer、偏好檔或測試報告存 token。
+Click a quota or chevron to expand. Drag the left grip to move the island. Drag provider icons or card headings to reorder them.
 
-- Windows userData：`%APPDATA%/quota-island`。
-- macOS：`~/Library/Application Support/quota-island`。
-- Linux：`~/.config/quota-island`（或系統設定的 XDG 路徑）。需可用的 Secret Service；不支援 plaintext fallback。
+<p align="center"><img src="docs/design/original-dark-00-small/expanded.png" alt="Expanded dark panel with remaining/used switch, three provider cards, quota bars, reset times and connection status" width="480"><br><sub>Original Dark · compact window 464 × 76 · expanded window 480 × 640, including transparent margins. Demo data.</sub></p>
 
-要取消 Google 授權，可在 Google 帳號安全頁撤銷 Gemini CLI 的存取權；這可能同時影響使用相同 OAuth client 的 CLI。要只移除本工具的本機副本，先結束應用再刪除其 `gemini-session.bin`。來源開關只停止監控，不會登出官方 CLI。
+## Everyday controls
 
-目前讀取的是訂閱配額與重設窗口，不是網路頻寬、API 帳單或本地 token 統計。Antigravity 本機 RPC、Claude 與 Google 配額端點不是穩定公開 API，可能隨上游變更而需要更新。Antigravity 必須保持執行；工具會隨讀取重新發現本機服務的動態連接埠。macOS/Linux 的發現器使用 `ps` 與 `lsof`，尚待實機驗證。
+| Control | Action |
+|---|---|
+| Remaining / Used | Switch the percentage view; your choice is saved |
+| Refresh | Request fresh data after a 5-second debounce; service cooldowns still apply |
+| Connection status | Manage authorization and inspect the data source |
+| `Alt + ← / →` on a compact provider | Reorder with the keyboard |
+| `Esc` | Close connection details, close settings, then collapse |
+| `Ctrl / ⌘ + Alt + Q` | Show or hide the app |
+| Settings / system tray | Always-on-top, sources, usage alerts, hide, or quit |
 
-研究與選型：[docs/research.md](docs/research.md)。驗證結果：[docs/verification.md](docs/verification.md)。第三方聲明：[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+Background polling runs every two minutes. Disabling a source stops its polling. `Retry-After` survives restarts; refresh cannot bypass it. Unknown quotas remain unknown, and stale readings are labeled.
+
+## What the numbers mean
+
+These are **subscription quotas and reset windows**, not network traffic, API billing, or local token counts.
+
+| Card | Source | Important distinction |
+|---|---|---|
+| Claude | Local Claude Code authorization → OAuth usage endpoint | The usage endpoint is not a stable public API |
+| Gemini | Antigravity local service by default; enterprise Code Assist is optional | Not Gemini website quota; Antigravity's Claude/GPT quotas are not mixed into the other cards |
+| Codex | Official `codex app-server` → `account/rateLimits/read` | Uses server-provided windows instead of assuming every plan has the same limits |
+
+## Tested, with boundaries
+
+| Check | Latest local result |
+|---|---|
+| Core tests | **41 passed** |
+| Measured Node modules | **85.97% lines · 84.04% branches · 87.16% functions** |
+| Windows packaged app | Desktop controls, ordering and design checks passed |
+| Authorization integration | Fixture upstream responses; real local IPC, callbacks and child-process paths |
+| Real accounts | Gemini and Codex reads previously verified; Claude's last real check returned HTTP 429 |
+| macOS / Linux | Build targets and CI matrix exist; no local real-device validation |
+
+Coverage describes modules loaded by Node tests, **not the entire app**. Electron entrypoints, provider integration and renderer behavior are checked separately. Antigravity native discovery still has a unit-test gap. See [coverage scope](docs/test-coverage.md) and [Actions](https://github.com/jaylooloomi/quota-island/actions) for remote run status.
+
+<details>
+<summary><b>Run tests and build packages</b></summary>
+
+```sh
+npm run test:coverage  # rebuild, core tests, enforced coverage thresholds
+npm run test:desktop   # dimensions, controls, sandbox, encryption
+npm run test:auth      # authorization and automatic UI sync
+npm run test:order     # drag, keyboard, restart persistence
+npm run test:design    # overlap, clipping, bars, states, no-scroll layout
+npm run dist:win       # Windows portable executable
+npm run dist:mac       # macOS ZIP
+npm run dist:linux     # Linux AppImage
+```
+
+CI gates: 85% lines, 80% branches and 85% functions in measured modules. Reports are uploaded as workflow artifacts. Windows packages are unsigned; macOS packages are unsigned and not notarized.
+
+Build first, then use `npx electron . --demo` for a demo without provider requests. `npm run check:live`, `npm run check:accounts` and `npm run test:live` query real local account data; they are separate from fixture tests.
+
+</details>
+
+<details>
+<summary><b>Credentials and local storage</b></summary>
+
+Claude and Codex credentials remain managed by their official CLIs; the app does not rotate their refresh tokens. Enterprise Google OAuth credentials use native Electron `safeStorage` encryption; plaintext fallback is refused. Tokens are not sent to the renderer or stored in preferences or test reports.
+
+| Platform | App data directory |
+|---|---|
+| Windows | `%APPDATA%/quota-island` |
+| macOS | `~/Library/Application Support/quota-island` |
+| Linux | `~/.config/quota-island` or the configured XDG path |
+
+Linux requires a working Secret Service. To remove the app's enterprise Google credential copy, quit and delete `gemini-session.bin` from its data directory. Disabling monitoring does not log out of an official CLI.
+
+</details>
+
+## FAQ
+
+**Why does Gemini use Antigravity?**  
+The personal source reads Antigravity's Gemini model quotas. Enterprise Code Assist is a separate setting. See [source research](docs/research.md).
+
+**Why does Claude show a countdown instead of a percentage?**  
+The last real request was rate-limited. The app shows that response and retries after the cooldown; it does not invent a quota or treat rate-limiting as a logout.
+
+**Can I switch to the five alternative themes?**  
+Those are [design explorations](docs/design/style-explorations/00-six-styles-comparison.png). Original Dark is implemented; there is no theme switcher yet.
+
+**Is this an official provider app?**  
+No. This is an independent desktop utility. Provider names belong to their respective owners. Unpublished quota interfaces can change upstream.
+
+## Contributing
+
+For additional credential removal and troubleshooting notes, see the [detailed usage notes in Traditional Chinese](docs/usage-guide.zh-TW.md).
+
+Issues and PRs are welcome. Run the coverage gate and desktop checks relevant to your changes. Include your OS and distinguish demo data from real provider responses in bug reports.
+
+README presentation inspired by [i-want-to-sleep](https://github.com/jaylooloomi/i-want-to-sleep): a compact introduction, screenshots, use-case tables and expandable technical details.
+
+## License
+
+[MIT](LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md) for fonts and bundled material.

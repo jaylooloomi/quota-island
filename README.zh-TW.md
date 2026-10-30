@@ -1,0 +1,156 @@
+<h1 align="center">Quota Island 🏝️</h1>
+
+<p align="center"><b>三家 AI 訂閱，一座小島掌握。</b><br>Claude、Gemini、Codex 還剩多少，一眼就知道。需要細節再展開，其他時間專心寫程式。</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT 授權"></a>
+  <img src="https://img.shields.io/badge/version-0.2.0-informational" alt="版本 0.2.0">
+  <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows 已測試">
+  <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron 與 TypeScript">
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-41%20passing-brightgreen" alt="41 項核心測試於本機通過"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/lang-English-blue" alt="English README"></a>
+</p>
+
+<p align="center"><img src="docs/design/original-dark-00-small/compact.png" alt="深色精簡動態島：Claude 剩餘 36%、Gemini 62%、Codex 12%，左側為拖曳把手" width="464"><br><sub>實際 App 截圖，使用展示資料；圖中百分比不代表即時帳號配額。</sub></p>
+
+## 使用情境
+
+| 情境 | 你怎麼用 | 小島幫你看什麼 |
+|---|---|---|
+| 🧑‍💻 **寫程式寫到忘我** | 讓精簡膠囊常駐視窗上方 | 剩餘配額，一眼掌握 |
+| 🔄 **在幾家 AI 之間切換** | 點一下展開 | 各家窗口與重設時間 |
+| 🔐 **連接帳號** | 完成授權流程 | 連接進度，完成後自動同步 |
+| 🧩 **常用的工具想放前面** | 拖曳服務圖示或卡片標題 | 兩個視圖共用排序，重開仍保留 |
+| ⏳ **服務限制查詢頻率** | 等待冷卻倒數 | 明確的限流狀態與自動重試 |
+| 🖥️ **桌面已經夠擠了** | 收成小膠囊，或藏到系統匣 | 需要時再叫出來 |
+
+## 開始使用
+
+**需要：** 建議 Node.js 24 LTS、npm，以及欲監控服務的官方工具。Windows 已於本機測試；macOS、Linux 有建置目標，仍待實機驗證。
+
+### 1. 啟動 App
+
+```sh
+git clone https://github.com/jaylooloomi/quota-island.git
+cd quota-island
+git switch design/original-dark-00
+npm ci
+npm start
+```
+
+上述分支包含本頁的小尺寸原版深色介面。想用執行檔？執行 `npm run dist:win`，Windows 便攜版會產生在 `release/`。目前尚未提供已發布的安裝檔下載。
+
+### 2. 連接你的工具
+
+| 服務 | 先安裝／開啟 | 如何連接 |
+|---|---|---|
+| **Claude** | [Claude Code](https://code.claude.com/docs/en/setup) | 使用 App 的登入入口；若出現授權碼流程，將瀏覽器提供的碼貼回 App。也可沿用本機 CLI 授權。 |
+| **Gemini 個人版** | 已登入且持續執行的 Antigravity | 直接讀取其本機服務提供的 Gemini 模型配額。 |
+| **Gemini 企業版** | Code Assist 帳號 | 在設定切換 Google 來源為 **Code Assist**，再完成 Google OAuth。 |
+| **Codex** | [Codex CLI](https://developers.openai.com/codex/cli) | 使用 App 的登入入口，或沿用本機 ChatGPT 訂閱登入。 |
+
+授權完成後，App 會自動顯示並同步配額。不必自己去用量頁查看；只登入服務網站本身不等於已授權此 App。
+
+### 3. 繼續專心工作
+
+點配額或箭頭展開，拖左側把手移動整座島，拖服務圖示或卡片標題調整順序。
+
+<p align="center"><img src="docs/design/original-dark-00-small/expanded.png" alt="原版深色展開面板：剩餘與已用切換、三家服務配額、重設時間與連接狀態" width="480"><br><sub>原版深色 · 收合視窗 464 × 76 · 展開視窗 480 × 640，包含透明邊距。使用展示資料。</sub></p>
+
+## 日常操作
+
+| 操作 | 功能 |
+|---|---|
+| 剩餘／已用 | 切換百分比顯示，並記住選擇 |
+| 重新整理 | 5 秒防連點後可更新，仍尊重服務冷卻時間 |
+| 連接狀態 | 管理帳號授權、查看資料來源 |
+| 聚焦精簡服務後 `Alt + ← / →` | 鍵盤排序 |
+| `Esc` | 依序關閉連接詳情、設定，再收合面板 |
+| `Ctrl / ⌘ + Alt + Q` | 隱藏或顯示 App |
+| 設定／系統匣 | 調整置頂、來源、用量提醒、隱藏或結束 |
+
+背景每兩分鐘更新。停用來源後停止查詢。服務的 `Retry-After` 冷卻時間會保留到下次啟動，手動更新也不會繞過。未知配額不會當成零，舊資料也會明確標示。
+
+## 數字從哪裡來
+
+這裡顯示的是**訂閱配額與重設窗口**，不是網路流量、API 帳單或本機 token 累計。
+
+| 卡片 | 資料來源 | 要分清楚的地方 |
+|---|---|---|
+| Claude | 本機 Claude Code 授權 → OAuth 用量端點 | 用量端點並非穩定公開 API |
+| Gemini | 預設 Antigravity 本機服務，也可選企業 Code Assist | 不是 Gemini 網頁版配額；Antigravity 的 Claude／GPT 額度不會混入另外兩張卡片 |
+| Codex | 官方 `codex app-server` → `account/rateLimits/read` | 依伺服器實際窗口顯示，不假設所有方案限制相同 |
+
+## 測試與實際驗證
+
+| 檢查 | 最近一次本機結果 |
+|---|---|
+| 核心測試 | **41 項通過** |
+| 納入統計的 Node 模組 | **行 85.97% · 分支 84.04% · 函式 87.16%** |
+| Windows 打包成品 | 桌面操作、排序、畫面檢查通過 |
+| 授權整合 | 模擬上游回應，搭配真實本機 IPC／回呼／子程序路徑 |
+| 真實帳號 | 曾驗證 Gemini、Codex 可讀取；Claude 最近一次真實查詢回傳 HTTP 429 |
+| macOS／Linux | 已有建置目標與 CI matrix，尚無本機實機驗證 |
+
+覆蓋率只統計 Node 測試載入的模組，**不是整個 App 的覆蓋率**。Electron 進入點、來源整合與 renderer 操作另有測試；Antigravity 原生程序發現仍有單元測試缺口。詳見[覆蓋範圍](docs/test-coverage.md)，遠端執行狀態請看 [GitHub Actions](https://github.com/jaylooloomi/quota-island/actions)。
+
+<details>
+<summary><b>執行測試與打包</b></summary>
+
+```sh
+npm run test:coverage  # 重建、核心測試、覆蓋率門檻
+npm run test:desktop   # 尺寸、操作、sandbox、原生加密
+npm run test:auth      # 授權流程與自動同步畫面
+npm run test:order     # 拖拉、鍵盤排序、重啟保留
+npm run test:design    # 裁切、重疊、比例、狀態、無捲動版面
+npm run dist:win       # Windows 便攜執行檔
+npm run dist:mac       # macOS ZIP
+npm run dist:linux     # Linux AppImage
+```
+
+CI 門檻：納入統計的模組至少行 85%、分支 80%、函式 85%，並上傳報告。Windows 成品尚未簽章；macOS 成品尚未簽章或公證。
+
+不查詢服務的展示模式：先 build，再執行 `npx electron . --demo`。`npm run check:live`、`npm run check:accounts`、`npm run test:live` 會查詢真實本機帳號，與模擬資料測試分開。
+
+</details>
+
+<details>
+<summary><b>授權資料與本機儲存</b></summary>
+
+Claude、Codex 授權仍由官方 CLI 管理，App 不自行輪替其 refresh token。企業 Google OAuth 使用 Electron 原生 `safeStorage` 加密，不允許明文 fallback。Token 不傳到 renderer，也不寫進偏好檔或測試報告。
+
+| 平台 | App 資料目錄 |
+|---|---|
+| Windows | `%APPDATA%/quota-island` |
+| macOS | `~/Library/Application Support/quota-island` |
+| Linux | `~/.config/quota-island` 或系統設定的 XDG 路徑 |
+
+Linux 需要可用的 Secret Service。若只想移除 App 的企業 Google 授權副本，先結束應用，再刪除資料目錄中的 `gemini-session.bin`。關閉來源只停止監控，不會登出官方 CLI。
+
+</details>
+
+## 常見問題
+
+**Gemini 為什麼透過 Antigravity？**  
+個人版來源讀取 Antigravity 的 Gemini 模型配額，企業 Code Assist 是另一個明確區分的設定。詳見[來源研究](docs/research.md)。
+
+**Claude 為什麼顯示倒數，沒有百分比？**  
+最近一次真實查詢被服務限流。App 會顯示原因，冷卻後自動重試；不會編造配額，也不會把限流當成登出。
+
+**可以切換之前畫的五款風格嗎？**  
+那些是[設計探索稿](docs/design/style-explorations/00-six-styles-comparison.png)。目前實作的是原版深色，尚無主題切換器。
+
+**這是三家官方提供的 App 嗎？**  
+不是。這是獨立桌面工具，服務名稱歸各自權利人所有。非公開配額介面可能隨上游變更。
+
+## 貢獻
+
+其他撤銷授權、操作與排錯細節請見[完整操作筆記](docs/usage-guide.zh-TW.md)。
+
+歡迎 issue 與 PR。提交前請執行覆蓋率檢查與變更相關的桌面測試。回報問題時附上作業系統，並區分展示資料與真實服務回應。
+
+README 呈現參考 [i-want-to-sleep](https://github.com/jaylooloomi/i-want-to-sleep)：精簡介紹、圖片、情境表格與可收合的技術細節。
+
+## 授權
+
+[MIT](LICENSE)。字型等隨附素材請見[第三方聲明](THIRD_PARTY_NOTICES.md)。
