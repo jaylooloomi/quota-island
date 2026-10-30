@@ -271,3 +271,7 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
   .footer-sync-controls{gap:2px}.footer-sync-controls .footer-control{font-size:9px;gap:4px}
   .demo-badge{display:none}
 }
+/* Anchor icons independently of the translated label length. */
+.footer-preferences .footer-control{position:relative;justify-content:flex-start;padding-left:28px;padding-right:0;gap:0}
+.footer-preferences .footer-control>svg{position:absolute;left:6px;top:50%;transform:translateY(-50%);width:17px;height:17px}
+@media(max-width:480px){.footer-preferences .footer-control{padding-left:25px;font-size:10px}.footer-preferences .footer-control>svg{left:4px;width:16px;height:16px}}
