@@ -21,6 +21,19 @@ let quotaDetailsOpen=false;
 let quotaDetailsProvider='gemini';
 let paceDetailsProvider=null;
 let quotaPanelHeight=480;
+let compactClaudeId='claude',compactClaudeHovered=false,compactClaudeFocused=false,compactClaudeNext=Date.now()+5000;
+function compactClaudeAccounts(){return ['claude',...(state?.settings.order??[]).filter(isExtra)].filter(id=>state?.providers[id]&&state.settings.visible?.[id]!==false);}
+function advanceCompactClaude(){const accounts=compactClaudeAccounts();if(accounts.length<2)return;compactClaudeId=accounts[(Math.max(0,accounts.indexOf(compactClaudeId))+1)%accounts.length];compactClaudeNext=Date.now()+5000;renderCompactClaude();}
+function renderCompactClaude(){
+  if(!state)return;
+  const accounts=compactClaudeAccounts(),button=document.querySelector('.compact-provider.claude');
+  button.hidden=!accounts.length;
+  if(!accounts.includes(compactClaudeId))compactClaudeId=accounts[0]??'claude';
+  if(accounts.length)renderCompact(compactClaudeId,'claude');
+  const badge=$('claude-account-count');badge.textContent=accounts.length>1?`${accounts.indexOf(compactClaudeId)+1}/${accounts.length}`:'';badge.hidden=accounts.length<2;
+  button.setAttribute('aria-label',paceText(accounts.length>1?'切換下一個帳號':'展開 Claude 配額'));
+  button.dataset.account=compactClaudeId;
+}
 const quotaCardHeights={};
 function closeFooterPopover(focus=false){const trigger=footerPopover==='language'?'language-shortcut':'sync-shortcut';footerPopover=null;render(state);if(focus)$(trigger).focus();}
 function openFooterPopover(kind){footerPopover=footerPopover===kind?null:kind;settingsOpen=false;render(state);if(footerPopover==='language')$('language-popover').querySelector('[aria-checked="true"]').focus();else if(footerPopover==='sync')$('sync-popover').focus();}
@@ -267,16 +280,26 @@ function renderCard(id){
   card.querySelector('.logout-confirm').hidden=confirmLogout!==id;
   if(isExtra(id))card.querySelector('.logout-confirm p').textContent='只登出此獨立帳號，不影響其他帳號。';
   for(const button of card.querySelectorAll('.logout-confirm button'))button.disabled=logoutBusy===id;
-  const mini=$(`mini-${id}`),windowLabel=$(`window-${id}`),button=document.querySelector(`.compact-provider[data-provider="${id}"]`),w=presentation.weeklyWindow(allWindows);
+  if(!isExtra(id))renderCompact(id);
+}
+function renderCompact(id,slot=id){
+  const s=state.providers[id],expired=s.updatedAt&&Date.now()-Date.parse(s.updatedAt)>24*3600000;
+  const limited=/429|限制查詢|查詢頻率/.test(s.error??'');
+  const allWindows=s.enabled&&!expired?presentation.groupWindows(s.reading?.windows??[]):[];
+  const mini=$(`mini-${slot}`),windowLabel=$(`window-${slot}`),button=document.querySelector(`.compact-provider[data-provider="${slot}"]`),w=presentation.weeklyWindow(allWindows);
   if(!mini)return;
   button.classList.toggle('unconnected',!w);button.classList.toggle('disabled',!s.enabled);button.classList.toggle('stale',s.status==='stale');
   mini.className=`mini-value${w?'':' unknown'}`;
   mini.textContent=!s.enabled?'暫停':expired?'資料過期':s.status==='stale'?'更新失敗':w?`${percent(w)}%`:s.status==='loading'?'同步中':s.status==='signed_out'?'未連接':limited?'限流中':s.reading?'未提供週額度':'讀取失敗';
+  mini.textContent=paceText(mini.textContent);
   windowLabel.textContent=s.status==='stale'&&w?`${percent(w)}%`:w?presentation.shortWindow(w.label):'';
   windowLabel.setAttribute('aria-label',s.status==='stale'&&w?`上次資料 ${percent(w)}%`:windowLabel.textContent);
   if(id==='codex')button.querySelector('.mini-logo').src=s.status==='stale'?'icons/codex-error.svg':'icons/codex.svg';
-  button.querySelector('.mini-alert').hidden=s.status!=='stale'&&s.status!=='unavailable';
-  mini.title=w?`${names[id]} · ${w.label} · ${state.settings.remaining?'剩餘':'已用'} ${percent(w)}%${s.status==='stale'?' · 舊資料':''}`:s.error||status;
+  button.querySelector('.mini-alert').hidden=!['stale','unavailable','signed_out'].includes(s.status);
+  const reset=w?presentation.resetDate(w.resetsAt,state.settings.locale):null;
+  const detail=w?`${paceText(w.label)} · ${paceText('剩餘')} ${Math.round(100-w.usedPercent)}% · ${paceText('已用')} ${Math.round(w.usedPercent)}%\n${paceText(countdown(w.resetsAt))}${reset?` (${reset})`:''}`:paceText(mini.textContent);
+  button.title=`${names[id]}\n${detail}${s.error?`\n${s.error}`:''}${s.status==='stale'?`\n${paceText('更新失敗')}`:''}`;button.setAttribute('data-localized-title','');
+  mini.removeAttribute('title');
   button.querySelector('.mini-track').hidden=!w;
   button.querySelector('.mini-track span').style.width=w?`${percent(w)}%`:'0%';
 }
@@ -399,7 +422,7 @@ function render(next){
   for(const id of ids){const visible=state.settings.visible?.[id]!==false;cardNodes[id].hidden=!visible;const compact=document.querySelector(`.compact-provider[data-provider="${id}"]`);if(compact)compact.hidden=!visible;}
   const extraSettings=$('extra-account-settings');extraSettings.replaceChildren();
   for(const account of state.accounts??[]){const label=document.createElement('label'),name=document.createElement('span');name.textContent=account.label;name.setAttribute('data-localized-text','');const input=document.createElement('input');input.type='checkbox';input.setAttribute('role','switch');input.checked=state.settings.visible[account.id]!==false;input.addEventListener('change',()=>api.settings({visible:{[account.id]:input.checked}}));label.append(name,input);extraSettings.append(label);}
-  const accountCount=(state.accounts?.length??0)+1;$('claude-account-count').textContent=accountCount>1?String(accountCount):'';$('claude-account-count').hidden=accountCount===1;
+  renderCompactClaude();
   $('add-account-area').hidden=settingsOpen||quotaDetailsOpen;
   for(const input of document.querySelectorAll('[data-visible]'))input.checked=state.settings.visible?.[input.dataset.visible]!==false;
   $('no-visible-providers').hidden=settingsOpen||quotaDetailsOpen||ids.some(id=>state.settings.visible?.[id]!==false);
@@ -445,10 +468,16 @@ $('add-account-form').addEventListener('submit',async event=>{
 });
 document.querySelectorAll('[data-expand]').forEach(button=>{
   enableReorder(button,button.dataset.provider);
-  button.addEventListener('click',()=>{if(!draggedProvider&&Date.now()>suppressClickUntil)api.expand(true);});
+  button.addEventListener('click',()=>{if(!draggedProvider&&Date.now()>suppressClickUntil){if(button.dataset.provider==='claude'&&compactClaudeAccounts().length>1)advanceCompactClaude();else api.expand(true);}});
   button.addEventListener('keydown',event=>{if(!event.altKey||!['ArrowLeft','ArrowRight'].includes(event.key)||!state)return;const order=state.settings.order,index=order.indexOf(button.dataset.provider),target=order[index+(event.key==='ArrowLeft'?-1:1)];if(target){event.preventDefault();moveProvider(button.dataset.provider,target);button.focus();}});
 });
 $('toggle').addEventListener('click',()=>api.expand(true));$('collapse').addEventListener('click',()=>api.expand(false));
+const compactClaudeButton=document.querySelector('.compact-provider.claude');
+compactClaudeButton.addEventListener('mouseenter',()=>{compactClaudeHovered=true;});
+compactClaudeButton.addEventListener('mouseleave',()=>{compactClaudeHovered=false;compactClaudeNext=Date.now()+5000;});
+compactClaudeButton.addEventListener('focus',()=>{compactClaudeFocused=compactClaudeButton.matches(':focus-visible');});
+compactClaudeButton.addEventListener('blur',()=>{compactClaudeFocused=false;compactClaudeNext=Date.now()+5000;});
+setInterval(()=>{if(state&&!state.expanded&&!compactClaudeHovered&&!compactClaudeFocused&&!draggedProvider&&Date.now()>=compactClaudeNext)advanceCompactClaude();},250);
 $('refresh').addEventListener('click',async()=>{$('refresh').disabled=true;$('refresh').classList.add('spinning');try{await api.refresh();}finally{$('refresh').classList.remove('spinning');setTimeout(()=>{$('refresh').disabled=false;},700);}});
 $('settings-toggle').addEventListener('click',()=>{footerPopover=null;settingsOpen=!settingsOpen;$('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));render(state);});
 $('mode-remaining').addEventListener('click',()=>{paceDetailsProvider=null;api.settings({remaining:true,pacing:false});});$('mode-used').addEventListener('click',()=>{paceDetailsProvider=null;api.settings({remaining:false,pacing:false});});

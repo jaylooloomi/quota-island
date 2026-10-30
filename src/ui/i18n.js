@@ -2,6 +2,7 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['切換下一個帳號','Next account','次のアカウント','다음 계정'],
     ['未提供週額度','No weekly quota','週間利用枠なし','주간 할당량 없음'],
     ['重新命名','Rename','名前を変更','이름 변경'],['儲存','Save','保存','저장'],['無法重新命名','Unable to rename','名前を変更できません','이름을 변경할 수 없습니다'],
     ['帳號名稱已使用，請換個名稱','This account name is in use. Choose another name.','このアカウント名は使用中です。別の名前を入力してください。','이미 사용 중인 계정 이름입니다. 다른 이름을 입력하세요.'],
