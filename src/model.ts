@@ -2,6 +2,7 @@ export const providerIds = ['claude', 'gemini', 'codex'] as const;
 export type ProviderId = typeof providerIds[number];
 export interface QuotaWindow {
   id: string; label: string; usedPercent: number; resetsAt: string | null;
+  group?: string;
 }
 export interface Reading {
   provider: ProviderId; plan: string | null; windows: QuotaWindow[]; source: string;

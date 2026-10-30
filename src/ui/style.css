@@ -214,3 +214,16 @@ html:not([lang="zh-TW"]) .account-actions button{font-size:10px}
 .sync-note{font-size:10px;line-height:1.6;color:#919ba9;margin:5px 0 0}
 #sync-shortcut{font-size:11px;min-width:0}
 #sync-summary{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.quota-details-link{position:absolute;right:7px;bottom:2px;font-size:9px;padding:1px 0;color:#b8bbf6}
+.quota-details-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.quota-details-heading h2{font-size:15px;margin:4px 0}
+.quota-details-note{font-size:10px;line-height:1.6;color:#a5adba;margin:4px 0 9px}
+.quota-group{padding:5px 0;border-top:1px solid #ffffff18}
+.quota-group h3{font-size:12px;margin:0 0 4px;color:#e4e6ed}
+.group-limit{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:3px 0;font-size:11px}
+.group-number{font-size:12px}
+.group-track{grid-column:1/-1;height:5px;background:#34373b;border-radius:5px;overflow:hidden}
+.group-track span{display:block;height:100%;background:#a2a3ff;border-radius:5px}
+.group-limit small{grid-column:1/-1;font-size:9px;color:#a5adba}
+.card.gemini:has(.quota-details-link:not([hidden])) .provider-identity h2{font-size:15px}
+.quota-details-view .context-line{display:none}

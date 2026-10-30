@@ -2,6 +2,8 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['所有配額','All quota limits','すべての利用枠','모든 할당량'],['Antigravity 配額','Antigravity quotas','Antigravity 利用枠','Antigravity 할당량'],['查看所有配額','View all limits','すべて表示','모든 할당량 보기'],['返回配額','Back to quota','利用枠に戻る','할당량으로 돌아가기'],['來源尚未提供群組配額','Source has not provided group limits.','ソースにグループ利用枠がありません。','소스에서 그룹 할당량을 제공하지 않았습니다.'],
+    ['以下都是 Antigravity 內的配額，不是獨立 Claude Code／Codex 訂閱額度。','All limits below belong to Antigravity, not your separate Claude Code or Codex subscriptions.','以下は Antigravity の利用枠です。独立した Claude Code／Codex のサブスクリプションとは異なります。','아래는 Antigravity 내부 할당량이며 별도의 Claude Code/Codex 구독 할당량과 다릅니다.'],
     ['同步詳情','Sync details','同期の詳細','동기화 상세'],['部分失敗','Some failed','一部失敗','일부 실패'],['限流期間仍會遵守服務冷卻時間。','Provider cooldowns still apply during rate limits.','制限中はサービスの待機時間を守ります。','요청 제한 중에는 서비스 대기 시간을 준수합니다.'],
     ['本次工作階段','Current session','現在のセッション','현재 세션'],['每週 · 所有模型','Weekly · All models','週間・全モデル','주간 · 모든 모델'],['模型專屬','Model-specific','モデル別','모델별'],
     ['配額','Quota','利用枠','할당량'],['帳號','Accounts','アカウント','계정'],['配額與帳號','Quota and accounts','利用枠とアカウント','할당량 및 계정'],

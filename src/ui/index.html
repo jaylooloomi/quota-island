@@ -49,6 +49,7 @@
           <div class="settings-actions"><button id="hide" class="text-button">隱藏到系統匣</button><button id="quit" class="text-button danger">結束 Quota Island</button></div>
         </section>
         <div id="cards" class="cards" aria-live="polite"></div>
+        <section id="quota-details" hidden aria-label="所有配額"><div class="quota-details-heading"><h2>Antigravity 配額</h2><button id="close-quota-details" class="text-button">返回配額</button></div><p class="quota-details-note">以下都是 Antigravity 內的配額，不是獨立 Claude Code／Codex 訂閱額度。</p><div id="quota-groups"></div></section>
       </div>
       <div id="language-popover" class="footer-popover language-popover" role="menu" aria-label="語言" hidden><button role="menuitemradio" data-locale="zh-TW">繁體中文</button><button role="menuitemradio" data-locale="en">English</button><button role="menuitemradio" data-locale="ja">日本語</button><button role="menuitemradio" data-locale="ko">한국어</button></div>
       <section id="sync-popover" class="footer-popover sync-popover" role="dialog" tabindex="-1" aria-label="同步詳情" hidden><h3>同步詳情</h3><div id="sync-sources"></div><button id="sync-refresh" class="text-button">重新同步</button><p class="sync-note">限流期間仍會遵守服務冷卻時間。</p></section>
@@ -59,6 +60,7 @@
     <article class="card">
       <div class="card-heading"><div class="provider-icon"></div><div class="provider-identity"><h2></h2><div class="provider-description"><span class="provider-subtitle"></span><span class="plan"></span></div><span class="quota-display-mode"></span></div><button class="connection-status" aria-expanded="false" title="管理帳號連接"><span class="connection-label"><i></i><span class="status-label"></span></span><span class="updated"></span></button></div>
       <div class="quota-windows"></div>
+      <button class="quota-details-link text-button" hidden>查看所有配額</button>
       <div class="empty-state"><div class="empty-title"></div><p class="empty-message"></p><button class="connect-primary text-button"></button></div>
       <div class="account-actions" hidden><button class="account-switch">切換帳號</button><button class="account-logout danger">登出</button><div class="logout-confirm" hidden><p>登出也會影響本機官方 CLI，確定繼續？</p><button class="confirm-logout danger">確認登出</button><button class="cancel-logout">取消</button></div></div>
       <section class="connection-details" hidden aria-label="帳號連接">

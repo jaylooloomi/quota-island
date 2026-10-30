@@ -9,9 +9,10 @@ const cardNodes={};
 let state,settingsOpen=false,activeDetail=null,draggedProvider=null,suppressClickUntil=0;
 let currentView='quota',confirmLogout=null,logoutBusy=null;
 let footerPopover=null,syncBusy=false;
+let quotaDetailsOpen=false;
 function closeFooterPopover(focus=false){const trigger=footerPopover==='language'?'language-shortcut':'sync-shortcut';footerPopover=null;render(state);if(focus)$(trigger).focus();}
 function openFooterPopover(kind){footerPopover=footerPopover===kind?null:kind;settingsOpen=false;render(state);if(footerPopover==='language')$('language-popover').querySelector('[aria-checked="true"]').focus();else if(footerPopover==='sync')$('sync-popover').focus();}
-function setView(view){currentView=view;settingsOpen=false;activeDetail=null;confirmLogout=null;footerPopover=null;render(state);}
+function setView(view){currentView=view;settingsOpen=false;activeDetail=null;confirmLogout=null;footerPopover=null;quotaDetailsOpen=false;render(state);}
 function renderFooter(){
   const enabled=ids.map(id=>state.providers[id]).filter(s=>s.enabled);
   const busy=syncBusy||enabled.some(s=>s.status==='loading'||s.refreshing);
@@ -109,6 +110,7 @@ function makeCards(){
     card.querySelector('.close-connection').addEventListener('click',()=>{activeDetail=null;render(state);});
       card.querySelector('.connect-primary').addEventListener('click',()=>{const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
     card.querySelector('.login').addEventListener('click',()=>startLogin(id));
+    card.querySelector('.quota-details-link').addEventListener('click',()=>{quotaDetailsOpen=true;activeDetail=null;settingsOpen=false;footerPopover=null;render(state);});
     card.querySelector('.account-switch').addEventListener('click',async()=>{
       if(id==='gemini'&&state.settings.googleSource==='antigravity'){
         activeDetail=id;render(state);const result=await api.openAntigravity();
@@ -171,7 +173,13 @@ function renderConnection(id,s,auth){
 function renderCard(id){
   const s=state.providers[id],card=cardNodes[id],auth=state.auth[id];
   const expired=s.updatedAt&&Date.now()-Date.parse(s.updatedAt)>24*3600000;
-  const windows=s.enabled&&!expired?presentation.groupWindows(s.reading?.windows??[]):[];
+  const allWindows=s.enabled&&!expired?presentation.groupWindows(s.reading?.windows??[]):[];
+  const grouped=allWindows.some(w=>w.group);
+  const windows=grouped?[...allWindows].sort((a,b)=>b.usedPercent-a.usedPercent).slice(0,2):allWindows;
+  card.querySelector('.quota-details-link').hidden=!grouped||currentView==='accounts'||activeDetail===id;
+  card.querySelector('.quota-details-link').textContent=`查看所有配額 (${allWindows.length})`;
+  card.querySelector('.quota-details-link').title=`${allWindows.length} · Antigravity`;
+  card.querySelector('.provider-identity h2').textContent=id==='gemini'&&grouped?'Antigravity':names[id];
   card.classList.remove('ready','stale','signed_out','loading','unavailable','disabled');card.classList.add(!s.enabled?'disabled':expired?'unavailable':s.status);
   card.classList.toggle('pending',!!auth?.pending);
   const usesAntigravity=id==='gemini'&&state.settings.googleSource==='antigravity';
@@ -186,7 +194,7 @@ function renderCard(id){
   const container=card.querySelector('.quota-windows');container.replaceChildren();container.classList.toggle('single',windows.length===1);container.classList.toggle('many',windows.length>2);container.hidden=!windows.length;
   for(const w of windows){
     const row=$('window-template').content.firstElementChild.cloneNode(true);if(tone(w))row.classList.add(tone(w));
-    row.querySelector('.window-label').textContent=presentation.windowLabel(w.label);row.querySelector('.window-label').title=w.variants.join(' / ');
+    row.querySelector('.window-label').textContent=grouped?`${w.group==='Claude and GPT models'?'Claude／GPT':w.group==='Gemini Models'?'Gemini':w.group} · ${w.label.split(' · ').at(-1)}`:presentation.windowLabel(w.label);row.querySelector('.window-label').title=w.variants.join(' / ');
     const value=percent(w);row.querySelector('.quota-number').textContent=`${value}%`;
     const track=row.querySelector('.track');track.setAttribute('aria-valuenow',String(value));track.setAttribute('aria-label',`${names[id]} ${w.label} ${state.settings.remaining?'剩餘':'已用'}`);
     row.querySelector('.fill').style.width=`${value}%`;
@@ -223,6 +231,26 @@ function renderCard(id){
   button.querySelector('.mini-track').hidden=!w;
   button.querySelector('.mini-track span').style.width=w?`${percent(w)}%`:'0%';
 }
+function renderQuotaDetails(){
+  const container=$('quota-groups');container.replaceChildren();
+  const groups=new Map();
+  for(const window of state.providers.gemini.reading?.windows??[]){if(!window.group)continue;if(!groups.has(window.group))groups.set(window.group,[]);groups.get(window.group).push(window);}
+  for(const [name,windows] of groups){
+    const section=document.createElement('section');section.className='quota-group';
+    const title=document.createElement('h3');title.textContent=name;section.append(title);
+    for(const window of windows){
+      const row=document.createElement('div');row.className='group-limit';
+      const label=document.createElement('span');label.textContent=window.label.split(' · ').at(-1);
+      const value=document.createElement('strong');value.className='group-number';value.textContent=`${percent(window)}%`;
+      const track=document.createElement('div');track.className='group-track';track.setAttribute('role','progressbar');track.setAttribute('aria-label',`${name} ${window.label}`);track.setAttribute('aria-valuenow',String(percent(window)));track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');
+      const fill=document.createElement('span');fill.style.width=`${percent(window)}%`;track.append(fill);
+      const reset=document.createElement('small');reset.textContent=countdown(window.resetsAt);if(window.resetsAt){reset.title=presentation.resetDate(window.resetsAt,state.settings.locale);reset.setAttribute('data-localized-title','');}
+      row.append(label,value,track,reset);section.append(row);
+    }
+    container.append(section);
+  }
+  if(!groups.size)container.textContent='來源尚未提供群組配額';
+}
 function render(next){
   if(!next)return;state=next;
   if(!state.expanded)footerPopover=null;
@@ -240,9 +268,12 @@ function render(next){
   for(const id of ['compact-version','header-version','footer-version'])$(id).textContent=`v${state.version}`;
   $('island').classList.toggle('accounts-view',currentView==='accounts');
   $('island').classList.toggle('settings-view',settingsOpen);
+  $('island').classList.toggle('quota-details-view',quotaDetailsOpen&&!settingsOpen);
   $('settings').hidden=!settingsOpen;
   $('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));
   $('cards').hidden=settingsOpen;
+  $('cards').hidden=settingsOpen||quotaDetailsOpen;
+  $('quota-details').hidden=!quotaDetailsOpen||settingsOpen;
   for(const view of ['quota','accounts']){$(`tab-${view}`).setAttribute('aria-selected',String(view===currentView));$(`tab-${view}`).tabIndex=view===currentView?0:-1;}
   $('cards').setAttribute('role','tabpanel');$('cards').setAttribute('aria-labelledby',`tab-${currentView}`);
   const healthy=!state.paused&&ids.some(id=>ready(state.providers[id]));$('live-dot').classList.toggle('off',!healthy);
@@ -251,6 +282,7 @@ function render(next){
   $('google-source').value=state.settings.googleSource;$('google-source').disabled=!!state.auth.gemini?.pending;
   for(const input of document.querySelectorAll('[data-enable]'))input.checked=state.settings.enabled[input.dataset.enable];
   ids.forEach(renderCard);
+  renderQuotaDetails();
   renderFooter();
   $('language').value=state.settings.locale??'zh-TW';
   window.QuotaI18n.localizeDocument(document,state.settings.locale);
@@ -280,8 +312,9 @@ $('language-popover').addEventListener('keydown',event=>{
 $('sync-refresh').addEventListener('click',async()=>{syncBusy=true;render(state);try{await api.refresh();}finally{syncBusy=false;render(await api.getState());}});
 document.addEventListener('pointerdown',event=>{if(footerPopover&&!event.target.closest('.footer-popover,#language-shortcut,#sync-shortcut'))closeFooterPopover();});
 $('compact-refresh').addEventListener('click',()=>api.refresh());
+$('close-quota-details').addEventListener('click',()=>{quotaDetailsOpen=false;render(state);});
 $('language').addEventListener('change',event=>api.settings({locale:event.target.value}));
 for(const key of ['alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
-document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(footerPopover){closeFooterPopover(true);event.preventDefault();}else if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
+document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(footerPopover){closeFooterPopover(true);event.preventDefault();}else if(quotaDetailsOpen){quotaDetailsOpen=false;render(state);}else if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
 api.subscribe(render);api.getState().then(render);setInterval(()=>{if(state)render(state);},15000);

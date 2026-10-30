@@ -4,10 +4,10 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT 授權"></a>
-  <img src="https://img.shields.io/badge/version-0.5.0-informational" alt="版本 0.5.0">
+  <img src="https://img.shields.io/badge/version-0.6.0-informational" alt="版本 0.6.0">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows 已測試">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron 與 TypeScript">
-  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-53%20passing-brightgreen" alt="53 項核心測試於本機通過"></a>
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-58%20passing-brightgreen" alt="58 項核心測試於本機通過"></a>
   <a href="README.md"><img src="https://img.shields.io/badge/lang-English-blue" alt="English README"></a>
 </p>
 
@@ -63,7 +63,7 @@ npm start
 重試倒數，並可重新同步；**設定**管理偏好，關閉後回到原本的配額／帳號分頁。
 選單同時只開一個，點外部或按 Esc 關閉；帳號管理集中在上方「帳號」分頁。
 
-0.5.0 採用「精簡雙層島」：膠囊迷你進度條、精簡服務列、明顯版本號，以及**配額／帳號**分頁。
+0.6.0 採用「精簡雙層島」：膠囊迷你進度條、精簡服務列、明顯版本號，以及**配額／帳號**分頁。
 在帳號頁可切換或登出 Claude、Codex；登出須確認，也會影響本機官方 CLI 使用的帳號。
 Gemini 個人版則透過專用按鈕開啟 Antigravity，在其中管理 Google 帳號。
 
@@ -91,6 +91,12 @@ Gemini 個人版則透過專用按鈕開啟 Antigravity，在其中管理 Google
 
 ## 數字從哪裡來
 
+Antigravity 現在優先讀取 `RetrieveUserQuotaSummary` 群組摘要，包含 Gemini 群組、
+Claude／GPT 群組各自的每週與 5 小時限制，以及 Argon 等模型專屬限制。
+主卡顯示最吃緊的兩項，並以「查看所有配額」標明總數；點開可看每個回傳群組。
+這裡的 Claude／GPT 都屬於 Antigravity，不會混入獨立訂閱卡片。較舊的本機服務才
+回退至其實際提供的 Gemini 模型資料，不會編造缺少的群組額度。
+
 這裡顯示的是**訂閱配額與重設窗口**，不是網路流量、API 帳單或本機 token 累計。
 
 | 卡片 | 資料來源 | 要分清楚的地方 |
@@ -103,8 +109,8 @@ Gemini 個人版則透過專用按鈕開啟 Antigravity，在其中管理 Google
 
 | 檢查 | 最近一次本機結果 |
 |---|---|
-| 核心測試 | **53 項通過** |
-| 納入統計的 Node 模組 | **行 88.27% · 分支 86.82% · 函式 89.63%** |
+| 核心測試 | **58 項通過** |
+| 納入統計的 Node 模組 | **行 90.61% · 分支 87.11% · 函式 88.89%** |
 | Windows 打包成品 | 桌面操作、排序、畫面檢查通過 |
 | 授權整合 | 模擬上游回應，搭配真實本機 IPC／回呼／子程序路徑 |
 | 真實帳號 | 曾驗證 Gemini、Codex 可讀取；Claude 最近一次真實查詢回傳 HTTP 429 |

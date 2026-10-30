@@ -4,6 +4,7 @@ const fs=require('node:fs/promises');
 const path=require('node:path');
 const os=require('node:os');
 const {parseClaude}=require('../dist/model');
+const {parseAntigravitySummary}=require('../dist/antigravity');
 (async()=>{
   const directory=await fs.mkdtemp(path.join(os.tmpdir(),'quota-languages-'));
   const env={...process.env,QUOTA_TEST_DATA:directory};delete env.ELECTRON_RUN_AS_NODE;
@@ -78,6 +79,27 @@ const {parseClaude}=require('../dist/model');
       if(locale==='en')assert.match(await page.locator('.card.codex .login').textContent(),/Switch Codex account/);
       await page.locator('.card.codex .close-connection').click();
       const baseline=await page.evaluate(()=>window.quota.getState());
+      const grouped=structuredClone(baseline);grouped.settings.remaining=true;
+      grouped.providers.gemini.reading=parseAntigravitySummary({response:{groups:[
+        {displayName:'Gemini Models',buckets:[{bucketId:'gw',window:'weekly',remainingFraction:.99},{bucketId:'gs',window:'5h',remainingFraction:1}]},
+        {displayName:'Claude and GPT models',buckets:[{bucketId:'cw',window:'weekly',remainingFraction:.5},{bucketId:'cs',window:'5h',remainingFraction:1}]},
+        {displayName:'Gemini 4 Argon',buckets:[{bucketId:'aw',window:'weekly',remainingFraction:.25}]}
+      ]}},'Pro');
+      await app.evaluate(({BrowserWindow},value)=>BrowserWindow.getAllWindows()[0].webContents.send('state',value),grouped);
+      await page.locator('.card.gemini .quota-details-link').waitFor({state:'visible'});
+      assert.equal(await page.locator('.card.gemini h2').textContent(),'Antigravity');
+      await page.locator('.card.gemini .quota-details-link').click();
+      assert.equal(await page.locator('#cards').isVisible(),false);
+      assert.deepEqual(await page.locator('.group-number').allTextContents(),['99%','100%','50%','100%','25%']);
+      assert.equal(await page.locator('.quota-group').count(),3);
+      assert.equal(await page.locator('.panel-body').evaluate(el=>el.scrollHeight<=el.clientHeight+1),true,`${locale}: complete Antigravity summary must fit`);
+      await page.screenshot({path:`test-results/language-${locale}-antigravity-groups.png`});
+      grouped.settings.remaining=false;
+      await app.evaluate(({BrowserWindow},value)=>BrowserWindow.getAllWindows()[0].webContents.send('state',value),grouped);
+      await page.locator('.group-number').first().filter({hasText:'1%'}).waitFor();
+      assert.deepEqual(await page.locator('.group-number').allTextContents(),['1%','0%','50%','0%','75%']);
+      await page.locator('#close-quota-details').click();
+      await app.evaluate(({BrowserWindow},value)=>BrowserWindow.getAllWindows()[0].webContents.send('state',value),baseline);
       const modern=structuredClone(baseline);
       modern.providers.claude.reading=parseClaude({limits:[
         {kind:'session',group:'session',percent:12,is_active:false,resets_at:'2026-11-01T00:00:00Z'},
