@@ -1,0 +1,64 @@
+{
+  "name": "quota-island",
+  "version": "0.2.0",
+  "private": true,
+  "description": "A local-first desktop island for Claude, Gemini CLI and Codex quotas",
+  "author": "Quota Island",
+  "license": "MIT",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc && node scripts/copy-ui.cjs",
+    "start": "npm run build && electron .",
+    "test": "npm run build && node --test test/*.test.cjs",
+    "test:desktop": "npm run build && node scripts/desktop-test.cjs",
+    "test:auth": "npm run build && node scripts/auth-desktop-test.cjs",
+    "test:order": "npm run build && node scripts/order-test.cjs",
+    "test:design": "npm run build && node scripts/design-test.cjs",
+    "test:live": "npm run build && node scripts/soak-live-test.cjs",
+    "check:live": "npm run build && node scripts/live-check.cjs",
+    "check:accounts": "npm run build && electron scripts/account-check.cjs",
+    "pack": "npm run build && electron-builder --dir",
+    "dist:win": "npm run build && electron-builder --win portable",
+    "dist:mac": "npm run build && electron-builder --mac zip",
+    "dist:linux": "npm run build && electron-builder --linux AppImage"
+  },
+  "build": {
+    "appId": "app.quota-island.desktop",
+    "productName": "Quota Island",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json",
+      "LICENSE",
+      "THIRD_PARTY_NOTICES.md",
+      "README.md"
+    ],
+    "asar": true,
+    "npmRebuild": false,
+    "portable": { "useZip": true },
+    "win": {
+      "target": "portable",
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": "zip"
+    },
+    "linux": {
+      "category": "Development",
+      "target": "AppImage"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "electron": "45.1.0",
+    "electron-builder": "26.18.0",
+    "playwright": "1.64.1",
+    "typescript": "7.0.2"
+  },
+  "dependencies": {
+    "google-auth-library": "10.9.0"
+  }
+}

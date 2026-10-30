@@ -1,0 +1,45 @@
+const { _electron:electron } = require('playwright');
+const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
+const path = require('node:path');
+const os = require('node:os');
+(async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(),'quota-auth-e2e-'));
+  const env = {...process.env,QUOTA_TEST_DATA:dir,CLAUDE_CONFIG_DIR:path.join(dir,'claude')}; delete env.ELECTRON_RUN_AS_NODE;
+  const application = await electron.launch({args:['scripts/auth-e2e-main.cjs','--test-mode'],env,timeout:30000});
+  try {
+    const page = await application.firstWindow();
+    await page.evaluate(()=>window.quota.settings({googleSource:'code_assist'}));
+    await page.locator('#toggle').click();
+    await page.locator('.card.claude .empty-title').filter({hasText:'連接你的帳號'}).waitFor();
+    // No misleading official-page link before an account has been connected.
+    assert.equal(await page.locator('.card.claude .provider-link').isVisible(),false);
+    await page.locator('.card.claude .connect-primary').click();
+    await page.locator('.card.claude .auth-code-form').waitFor({state:'visible'});
+    await page.locator('.card.claude .auth-code').fill('TEST-AUTH-CODE');
+    await page.locator('.card.claude .auth-code-form button').click();
+    await page.locator('.card.claude .quota-number').filter({hasText:'58'}).waitFor();
+    assert.match(await page.locator('.card.claude .auth-message').textContent(),/已自動同步/);
+    assert.equal(await page.locator('.card.claude .auth-code').inputValue(),'');
+    await page.locator('.card.gemini .connect-primary').click();
+    let url;
+    for(let i=0;i<100;i++) { const urls = await application.evaluate(() => globalThis.__AUTH_TEST_URLS); url=urls.find(value => new URL(value).hostname==='accounts.google.com'); if(url)break; await new Promise(r=>setTimeout(r,50)); }
+    assert.ok(url,'Google login URL emitted');
+    const auth=new URL(url), callback=new URL(auth.searchParams.get('redirect_uri'));
+    callback.searchParams.set('code','TEST-GOOGLE-CODE'); callback.searchParams.set('state','WRONG');
+    assert.equal((await fetch(callback)).status,400);
+    await application.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].hide());
+    callback.searchParams.set('state',auth.searchParams.get('state'));
+    const response=await fetch(callback); assert.equal(response.status,200); await response.text();
+    // No refresh click: completion must update the renderer and bring app back.
+    await page.locator('.card.gemini .quota-number').filter({hasText:'60'}).waitFor();
+    assert.equal(await application.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].isVisible()),true);
+    assert.match(await page.locator('.card.gemini .auth-message').textContent(),/已自動同步/);
+    const state=await page.evaluate(()=>window.quota.getState());
+    assert.equal(state.providers.gemini.status,'ready'); assert.equal(state.auth.gemini.phase,'ready');
+    const bytes=await fs.readFile(path.join(dir,'gemini-session.bin'));
+    assert.ok(!bytes.includes(Buffer.from('TEST-GOOGLE-NOT-REAL')));
+    const report={passed:true,checks:['Claude manual authorization code returns through CLI stdin','Google real loopback callback and encrypted vault','wrong OAuth state rejected','auth completion bypasses stale auth backoff','quota cards update without refresh click','app restores and expands after browser authorization','no misleading external sign-in link','authorization code input cleared']};
+    await fs.mkdir('test-results',{recursive:true}); await fs.writeFile('test-results/auth-desktop.json',JSON.stringify(report,null,2)); console.log(JSON.stringify(report,null,2));
+  } finally {await application.close();await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
+})().catch(e=>{console.error(e);process.exitCode=1;});
