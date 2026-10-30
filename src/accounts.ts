@@ -43,6 +43,12 @@ export class Accounts {
     const profile:Profile={id:`claude-account-${randomUUID()}`,label:raw.trim(),enabled:true,visible:true,reserve:10,window:''};
     this.attach(profile);this.save();this.changed();return profile.id;
   }
+  rename(id:unknown,raw:unknown){
+    const e=this.entry(id);
+    if(typeof raw!=='string'||!raw.trim()||raw.trim().length>24||/[\x00-\x1f]/.test(raw))throw new ProviderError('auth','請輸入 1 至 24 字的帳號名稱');
+    if([...this.entries.values()].some(other=>other!==e&&other.profile.label===raw.trim()))throw new ProviderError('auth','帳號名稱已使用，請換個名稱');
+    e.profile.label=raw.trim();this.save();this.changed();
+  }
   snapshot(){
     const accounts:any[]=[],providers:Record<string,unknown>={},auth:Record<string,unknown>={},enabled:Record<string,boolean>={},visible:Record<string,boolean>={},reservePercent:Record<string,number>={},paceWindows:Record<string,string>={};
     for(const e of this.entries.values()){

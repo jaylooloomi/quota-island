@@ -2,6 +2,7 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['重新命名','Rename','名前を変更','이름 변경'],['儲存','Save','保存','저장'],['無法重新命名','Unable to rename','名前を変更できません','이름을 변경할 수 없습니다'],
     ['帳號名稱已使用，請換個名稱','This account name is in use. Choose another name.','このアカウント名は使用中です。別の名前を入力してください。','이미 사용 중인 계정 이름입니다. 다른 이름을 입력하세요.'],
     ['＋ 新增帳號','＋ Add account','＋ アカウント追加','＋ 계정 추가'],['Claude 帳號名稱','Claude account name','Claude アカウント名','Claude 계정 이름'],['例如：Claude 工作帳號','For example: Claude Work','例：Claude 仕事用','예: Claude 업무용'],['新增獨立 Claude 登入，不會更改目前的帳號。','Add a separate Claude sign-in without changing your current account.','現在のアカウントを変更せず、独立した Claude ログインを追加します。','현재 계정을 변경하지 않고 별도의 Claude 로그인을 추가합니다.'],['新增並登入','Add and sign in','追加してログイン','추가 후 로그인'],['移除帳號','Remove account','アカウント削除','계정 제거'],['確認移除','Confirm removal','削除を確認','제거 확인'],['只移除此獨立帳號，不影響其他帳號。','Remove only this independent account. Other accounts stay connected.','この独立アカウントのみ削除します。他のアカウントには影響しません。','이 독립 계정만 제거합니다. 다른 계정에는 영향을 주지 않습니다.'],['只登出此獨立帳號，不影響其他帳號。','Sign out only this independent account. Other accounts stay connected.','この独立アカウントのみログアウトします。他のアカウントには影響しません。','이 독립 계정만 로그아웃합니다. 다른 계정에는 영향을 주지 않습니다.'],['請輸入 1 至 24 字的帳號名稱','Enter an account name of 1–24 characters.','1～24文字のアカウント名を入力してください。','1~24자의 계정 이름을 입력하세요.'],['無法新增帳號','Unable to add account','アカウントを追加できません','계정을 추가할 수 없습니다'],['最多可新增 20 個獨立帳號','Up to 20 independent accounts can be added.','独立アカウントは20個まで追加できます。','독립 계정은 최대 20개까지 추가할 수 있습니다.'],
     ['建議用量','Suggested use','推奨使用量','권장 사용량'],

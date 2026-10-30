@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('quota', {
   getState: () => ipcRenderer.invoke('get-state'),
   addAccount: (label:string) => ipcRenderer.invoke('account-add',label),
+  renameAccount: (id:string,label:string) => ipcRenderer.invoke('account-rename',id,label),
   removeAccount: (id:string) => ipcRenderer.invoke('account-remove',id),
   expand: (value: boolean) => ipcRenderer.invoke('expand', value),
   antigravityAccount: (action: 'switch'|'disconnect') => ipcRenderer.invoke('antigravity-account',action),

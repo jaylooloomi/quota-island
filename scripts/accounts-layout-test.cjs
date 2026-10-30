@@ -20,6 +20,12 @@ const {_electron:electron}=require('playwright'),assert=require('node:assert/str
       assert.equal(await page.locator(`[data-provider="${first}"] h2`).textContent(),'工作帳號','Account names must not be translated into status messages');
       const identity=()=>page.locator(`[data-provider="${first}"]`).evaluate(el=>{const r=el.querySelector('.card-heading').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};});
       const quota=await identity();await page.locator('#tab-accounts').click();assert.deepEqual(await identity(),quota);
+      const card=page.locator(`[data-provider="${first}"]`);
+      await card.locator('.rename-account').click();await card.locator('.rename-input').fill('改名測試');await card.locator('.rename-editor button[type="submit"]').click();
+      await card.locator('h2').filter({hasText:'改名測試'}).waitFor();
+      assert.equal((await page.evaluate(()=>window.quota.getState())).accounts.find(a=>a.id===first).label,'改名測試');
+      await card.locator('.rename-account').click();await card.locator('.rename-input').fill('工作帳號');await card.locator('.rename-editor button[type="submit"]').click();
+      await card.locator('h2').filter({hasText:'工作帳號'}).waitFor();
       assert.equal(await page.locator('.panel-body').evaluate(el=>el.scrollHeight<=el.clientHeight+1),true,`${locale}: five cards and add control must fit`);
       assert.equal(await page.locator('#add-account-toggle').evaluate(el=>el.getBoundingClientRect().bottom<=document.querySelector('footer').getBoundingClientRect().top),true);
       await fs.mkdir('test-results',{recursive:true});await page.screenshot({path:`test-results/multi-accounts-${locale}.png`});

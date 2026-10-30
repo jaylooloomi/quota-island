@@ -136,6 +136,7 @@ function installHandlers() {
     'refresh': async () => { if (!paused) await Promise.all([poller.tick(true),accounts.tick(true)]); return snapshot(); },
     'account-add': (_event:any,label:unknown)=>{try{return {ok:true,id:accounts.add(label)};}catch(e){return {ok:false,message:e instanceof ProviderError?e.message:'無法新增帳號'};}},
     'account-remove': async (_event:any,id:unknown)=>{try{await accounts.remove(id);return {ok:true};}catch{return {ok:false,message:'無法移除帳號'};}},
+    'account-rename': (_event:any,id:unknown,label:unknown)=>{try{accounts.rename(id,label);return {ok:true};}catch(e){return {ok:false,message:e instanceof ProviderError?e.message:'無法重新命名'};}},
     'hide': () => win.hide(),
     'quit': () => { quitting = true; app.quit(); },
     'open-provider': async (_event: any, id: unknown) => { if (typeof id === 'string' && external[id]) await shell.openExternal(external[id]!); },

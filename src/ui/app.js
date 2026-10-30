@@ -120,6 +120,16 @@ function makeCards(){
     card.querySelector('.connection-logo').src=`icons/${baseId(id)}.svg`;
     if(isExtra(id)){
       card.querySelector('.provider-identity h2').setAttribute('data-localized-text','');
+      const rename=document.createElement('button');rename.className='rename-account';rename.textContent='重新命名';
+      const editor=document.createElement('form');editor.className='rename-editor';editor.hidden=true;
+      const input=document.createElement('input');input.className='rename-input';input.maxLength=24;input.required=true;input.setAttribute('aria-label','Claude 帳號名稱');
+      const save=document.createElement('button');save.type='submit';save.textContent='儲存';
+      const cancel=document.createElement('button');cancel.type='button';cancel.textContent='取消';
+      const error=document.createElement('p');error.setAttribute('role','alert');
+      rename.addEventListener('click',()=>{input.value=names[id];editor.hidden=false;error.textContent='';render(state);input.focus();input.select();});
+      cancel.addEventListener('click',()=>{editor.hidden=true;render(state);});
+      editor.addEventListener('submit',async event=>{event.preventDefault();save.disabled=true;try{const result=await api.renameAccount(id,input.value);if(result.ok){editor.hidden=true;render(await api.getState());}else{error.textContent=paceText(result.message);render(state);}}finally{save.disabled=false;}});
+      editor.append(input,save,cancel,error);card.querySelector('.account-actions').append(rename,editor);
       const remove=document.createElement('button');remove.className='remove-account danger';remove.textContent='移除帳號';
       remove.addEventListener('click',()=>{card.querySelector('.remove-confirm').hidden=false;});
       const confirm=document.createElement('div');confirm.className='remove-confirm';confirm.hidden=true;
