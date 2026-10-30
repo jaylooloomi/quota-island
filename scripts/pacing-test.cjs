@@ -7,9 +7,9 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
   const launch=()=>electron.launch({...(executablePath?{executablePath}:{}),args:[...(executablePath?[]:['.']),'--demo','--test-mode'],env});
   let app=await launch();
   try{
-    let page=await app.firstWindow();await page.locator('#mini-codex').filter({hasText:'12%'}).waitFor();await page.locator('#toggle').click();
+    let page=await app.firstWindow();await page.emulateMedia({reducedMotion:'reduce'});await page.locator('#mini-codex').filter({hasText:'12%'}).waitFor();await page.locator('#toggle').click();
     const send=s=>app.evaluate(({BrowserWindow},state)=>BrowserWindow.getAllWindows()[0].webContents.send('state',state),s);
-    const shape=()=>page.locator('.card').evaluateAll(nodes=>({width:innerWidth,height:innerHeight,rows:nodes.map(el=>{const r=el.getBoundingClientRect(),heading=el.querySelector('.card-heading').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,headingX:heading.x};})}));
+    const shape=()=>page.locator('.card').evaluateAll(nodes=>({width:innerWidth,height:innerHeight,footerY:document.querySelector('footer').getBoundingClientRect().y,rows:nodes.map(el=>{const r=el.getBoundingClientRect(),heading=el.querySelector('.card-heading').getBoundingClientRect(),icon=el.querySelector('.provider-icon').getBoundingClientRect(),name=el.querySelector('.provider-identity h2').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,headingX:heading.x,headingY:heading.y,iconY:icon.y,nameX:name.x,nameY:name.y,nameWidth:name.width,nameFont:getComputedStyle(el.querySelector('.provider-identity h2')).fontSize};})}));
     for(const locale of ['zh-TW','en','ja','ko']){
       await page.evaluate(locale=>window.quota.settings({locale,pacing:false,remaining:true}),locale);
       await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
@@ -30,6 +30,21 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
       assert.equal(await page.locator('.panel-body').evaluate(el=>el.scrollHeight<=el.clientHeight+1),true);
       assert.equal(await page.locator('.panel-header').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true,'Header must fit three modes');
       await fs.mkdir('test-results',{recursive:true});await page.screenshot({path:`test-results/pacing-${locale}.png`});
+      const grouped=structuredClone(fixture);
+      grouped.providers.gemini.reading.windows=[
+        {id:'gemini-weekly',group:'Gemini Models',label:'Gemini Models · 每週',usedPercent:1},
+        {id:'gemini-5h',group:'Gemini Models',label:'Gemini Models · 5 小時',usedPercent:0},
+        {id:'claude-weekly',group:'Claude and GPT models',label:'Claude and GPT models · 每週',usedPercent:50},
+        {id:'claude-5h',group:'Claude and GPT models',label:'Claude and GPT models · 5 小時',usedPercent:0},
+        {id:'argon-weekly',group:'Gemini 4 Argon',label:'Gemini 4 Argon · 每週',usedPercent:75},
+      ].map(w=>({...w,resetsAt:new Date(Date.now()+4*86400000).toISOString()}));
+      let groupedShape;
+      for(const mode of ['remaining','used','pacing','remaining']){
+        grouped.settings.pacing=mode==='pacing';grouped.settings.remaining=mode!=='used';
+        await send(grouped);await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+        const current=await shape();if(groupedShape)assert.deepEqual(current,groupedShape,`${locale}: real Antigravity groups must keep card, identity and footer coordinates across ${mode}`);else groupedShape=current;
+        await page.screenshot({path:`test-results/pacing-${locale}-grouped-${mode}.png`});
+      }
       const invalid=structuredClone(fixture);invalid.providers.codex.reading.windows[0].resetsAt=null;await send(invalid);
       assert.equal(await page.locator('.card.codex .pace-value').textContent(),'—','Missing reset must not invent guidance');
       const stale=structuredClone(fixture);stale.providers.codex.status='stale';await send(stale);assert.equal(await page.locator('.card.codex .pace-value').textContent(),'—');

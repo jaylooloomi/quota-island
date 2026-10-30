@@ -221,7 +221,8 @@ function renderCard(id){
     container.append(row);
   }
   const paceContent=card.querySelector('.pacing-content');paceContent.hidden=!paceMode||!windows.length;
-  if(paceMode&&windows.length){container.hidden=true;renderPaceCard(id,allWindows);}
+  if(windows.length)renderPaceCard(id,allWindows);
+  if(paceMode&&windows.length)container.hidden=true;
   const empty=card.querySelector('.empty-state');empty.hidden=!!windows.length;
   card.querySelector('.empty-title').textContent=!s.enabled?'已暫停此來源':auth?.pending?(auth.codeRequired?'等待授權碼':auth.phase==='syncing'?'連接完成，正在同步…':'等待帳號連接…'):s.status==='signed_out'?'連接你的帳號':s.status==='loading'?'正在讀取配額…':expired?'資料已過期':limited?'配額服務暫時限流':'暫時無法取得配額';
   const errorText=limited?['服務回覆 HTTP 429',retryLabel(s)].filter(Boolean).join(' · '):s.error?[s.error,retryLabel(s)].filter(Boolean).join(' · '):'';
@@ -359,8 +360,23 @@ function render(next){
   window.QuotaI18n.localizeDocument(document,state.settings.locale);
   if(state.settings.locale==='en')$('compact-mode').textContent=state.settings.remaining?'Left':'Used';
   requestAnimationFrame(()=>{
-    if(!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider){
-      for(const id of ids){const card=cardNodes[id];if(currentView==='quota'){card.style.minHeight='';quotaCardHeights[id]=Math.ceil(card.getBoundingClientRect().height);}card.style.minHeight=`${quotaCardHeights[id]??98}px`;}
+    if(state.expanded&&!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider){
+      for(const id of ids){
+        const card=cardNodes[id];if(card.hidden)continue;
+        if(currentView==='quota'){
+          card.style.minHeight='';
+          const quota=card.querySelector('.quota-windows'),pace=card.querySelector('.pacing-content');
+          let height=card.getBoundingClientRect().height;
+          if(quota.children.length){
+            const quotaHidden=quota.hidden,paceHidden=pace.hidden;
+            quota.hidden=false;pace.hidden=true;height=Math.max(height,card.getBoundingClientRect().height);
+            quota.hidden=true;pace.hidden=false;height=Math.max(height,card.getBoundingClientRect().height);
+            quota.hidden=quotaHidden;pace.hidden=paceHidden;
+          }
+          quotaCardHeights[id]=Math.ceil(height);
+        }
+        card.style.minHeight=`${quotaCardHeights[id]??98}px`;
+      }
     }
     const content=(settingsOpen?$('settings'):paceDetailsProvider?$('pace-details'):quotaDetailsOpen?$('quota-details'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height;
     const chrome=document.querySelector('.panel-header').getBoundingClientRect().height+document.querySelector('footer').getBoundingClientRect().height+18;

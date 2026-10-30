@@ -228,7 +228,7 @@ html:not([lang="zh-TW"]) .account-actions button{font-size:10px}
 .group-track{grid-column:1/-1;height:5px;background:#34373b;border-radius:5px;overflow:hidden}
 .group-track span{display:block;height:100%;background:#a2a3ff;border-radius:5px}
 .group-limit small{grid-column:1/-1;font-size:9px;color:#a5adba}
-.card.gemini:has(.quota-details-link:not([hidden])) .provider-identity h2{font-size:15px}
+.card.gemini .provider-identity h2{font-size:15px;white-space:nowrap}
 .quota-details-view .context-line{display:none}
 footer{justify-content:space-between;gap:8px;padding:0 18px}
 .footer-local{display:flex;align-items:center;gap:6px;color:#a8b0bd;font-size:10px;white-space:nowrap}
