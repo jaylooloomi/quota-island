@@ -32,6 +32,7 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
       await page.locator('#mode-label').filter({hasText:names[locale]}).waitFor();
       assert.equal(await page.locator('#language-popover').isVisible(),false);
       assert.equal(await page.locator('#settings').isVisible(),false);
+      assert.equal(await page.locator('.panel-header').evaluate(el=>el.getBoundingClientRect().height),await page.locator('.bar').evaluate(el=>parseFloat(getComputedStyle(el).height)),`${locale}: title height must match compact bar`);
       const positions=await page.locator('.footer-preferences .footer-control').evaluateAll(nodes=>nodes.map(el=>{const r=el.getBoundingClientRect(),icon=el.querySelector('svg').getBoundingClientRect();return {x:r.x,width:r.width,iconX:icon.x,iconOffsetY:icon.y-r.y,iconWidth:icon.width};}));
       if(footerButtonPositions)assert.deepEqual(positions,footerButtonPositions,`${locale}: footer buttons must not move with language`);else footerButtonPositions=positions;
       await page.locator('#settings-toggle').click();

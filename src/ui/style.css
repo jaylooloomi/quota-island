@@ -314,3 +314,4 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
 .pace-expanded .pace-explanation{font-size:10px;line-height:1.5;margin:8px 0}
 .pace-expanded #pace-summary{padding:10px;margin:10px 0}.pace-expanded #pace-summary p{margin:6px 0}.pace-expanded .pace-detail-value{font-size:21px}
 .card.pace-expanded>.card-grip{top:calc(13px + var(--pace-row-height,72px)/2)}
+.panel-header{height:58px;min-height:58px}
