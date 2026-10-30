@@ -7,6 +7,7 @@ import { Gemini, GeminiVault } from './gemini';
 import { Connections } from './connections';
 import { CredentialWatch } from './credential-watch';
 import {Accounts} from './accounts';
+import {Diagnostics} from './diagnostics';
 import {fitWindow,snapWindow,Dock,Rect} from './window-position';
 import { homedir } from 'node:os';
 import { ProviderError, ProviderId, ProviderState, providerIds, Reading } from './model';
@@ -66,9 +67,11 @@ function readSettings() {
   } catch { /* First run or invalid preferences: use defaults. */ }
 }
 let accounts:Accounts;
+let diagnostics:Diagnostics|undefined;
 function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
 function publish() {
   persistRateLimits();
+  if(poller)diagnostics?.observe(snapshot());
   if (!win?.isDestroyed() && !win?.webContents.isDestroyed()) win?.webContents.send('state', snapshot());
   if (settings.notifications && !demo && !testing && Notification.isSupported()) {
     for (const [accountId,s] of Object.entries({...poller.states,...accounts?.snapshot().providers}) as [string,ProviderState][]) {
@@ -151,6 +154,7 @@ function installHandlers() {
       if (sourceChanged) { settings.googleSource=patch.googleSource; delete connections.states.gemini; }
       for (const key of ['remaining', 'pacing', 'alwaysOnTop', 'notifications'] as const) if (typeof patch[key] === 'boolean') settings[key] = patch[key];
       if (patch.enabled && typeof patch.enabled === 'object') for (const id of providerIds) if (typeof patch.enabled[id] === 'boolean') {
+        if(settings.enabled[id]!==patch.enabled[id])diagnostics?.sourceToggle(id,patch.enabled[id]);
         settings.enabled[id] = patch.enabled[id]; poller.setEnabled(id, patch.enabled[id]);
       }
       win.setAlwaysOnTop(settings.alwaysOnTop, 'floating'); saveSettings(); publish();
@@ -223,7 +227,8 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { if (win) { win.show(); win.focus(); } });
   app.whenReady().then(async () => {
-    readSettings(); providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource);
+    readSettings();diagnostics=new Diagnostics(path.join(app.getPath('userData'),demo?'demo-logs':'logs'));diagnostics.startup(app.getVersion(),settings.enabled);
+    providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource);
     poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish);
     if(!demo){try{poller.restoreRateLimits(JSON.parse(readFileSync(path.join(app.getPath('userData'),'provider-cooldowns.json'),'utf8')));}catch{/* No prior cooldowns. */}}
     connections = new Connections(providers, poller, openAuthUrl, publish, () => {

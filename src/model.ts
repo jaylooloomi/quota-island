@@ -12,6 +12,7 @@ export interface ProviderState {
   reading: Reading | null; updatedAt: string | null; error: string | null;
   nextPollAt: number; enabled: boolean;
   refreshing?: boolean;
+  errorCode?: 'auth' | 'network' | 'schema' | 'missing_cli' | 'rate_limit';
 }
 export class ProviderError extends Error {
   constructor(public code: 'auth' | 'network' | 'schema' | 'missing_cli' | 'rate_limit', message: string, public retryAfterMs = 0) {

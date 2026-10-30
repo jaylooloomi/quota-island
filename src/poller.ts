@@ -15,6 +15,7 @@ export class Poller {
       const value=input?.[id];
       if (typeof value?.until !== 'number' || !Number.isFinite(value.until) || value.until<=this.now()) continue;
       this.rateLimitUntil.set(id,value.until);
+      this.states[id].errorCode='rate_limit';
       this.states[id].nextPollAt=value.until;this.states[id].status='unavailable';
       this.states[id].error=typeof value.message==='string'?value.message:'服務暫時限制查詢頻率，冷卻後會自動恢復';
     }
@@ -42,6 +43,7 @@ export class Poller {
       const reading = await this.fetcher(id);
       if (!s.enabled) return;
       s.reading = reading; s.status = 'ready'; s.updatedAt = new Date(this.now()).toISOString(); s.error = null;
+      delete s.errorCode;
       this.failures.delete(id); s.nextPollAt = this.now() + 120_000;
       this.rateLimitUntil.delete(id);
     } catch (e) {
@@ -51,6 +53,7 @@ export class Poller {
       if (err.code === 'auth') { s.reading = null; s.updatedAt = null; s.status = 'signed_out'; }
       else s.status = s.reading ? 'stale' : 'unavailable';
       s.error = err.message;
+      s.errorCode=err.code;
       s.nextPollAt = this.now() + Math.max(err.retryAfterMs, Math.min(30 * 60_000, 60_000 * 2 ** Math.min(n - 1, 5)));
       if (err.code === 'rate_limit') this.rateLimitUntil.set(id, s.nextPollAt);
     } finally { s.refreshing = false; this.changed(); }

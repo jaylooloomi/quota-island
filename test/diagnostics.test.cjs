@@ -1,0 +1,17 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const {Diagnostics}=require('../dist/diagnostics');
+test('diagnostics records disabled sources and missing resets without credential or account data',()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pebble-log-'));try{
+    const logger=new Diagnostics(dir);logger.startup('1.2.4',{claude:true,codex:false,gemini:true});logger.sourceToggle('codex',true);
+    const state={providers:{claude:{enabled:true,status:'ready',error:'Bearer SECRET email@example.com',updatedAt:'2026-10-31T00:00:00Z',reading:{token:'SECRET',label:'Private account',windows:[{id:'five_hour',usedPercent:0,resetsAt:null},{id:'seven_day',usedPercent:15,resetsAt:'2026-11-04T14:00:00Z'}]}}}};
+    logger.observe(state);logger.observe(state);const text=fs.readFileSync(logger.file,'utf8'),rows=text.trim().split('\n').map(JSON.parse);
+    assert.equal(rows.length,3);assert.equal(rows[0].enabled.codex,false);assert.equal(rows[1].origin,'settings');assert.equal(rows[2].windows[0].usedPercent,0);assert.equal(rows[2].windows[0].resetsAt,null);assert.equal(rows[2].windows[1].kind,'weekly');
+    for(const privateValue of ['SECRET','email@example.com','Private account','Bearer'])assert.equal(text.includes(privateValue),false);
+  }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('diagnostics rotates bounded files and tolerates unwritable destinations',()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pebble-log-'));try{
+    const logger=new Diagnostics(dir,1);logger.startup('1',{});logger.sourceToggle('codex',false);assert.ok(fs.existsSync(logger.file+'.1'));
+    const blocked=path.join(dir,'file');fs.writeFileSync(blocked,'x');assert.doesNotThrow(()=>new Diagnostics(blocked).startup('1',{}));
+  }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
