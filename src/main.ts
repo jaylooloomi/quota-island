@@ -80,7 +80,7 @@ function publish() {
     }
   }
 }
-let panelHeight = 520;
+let panelHeight = 480;
 function reposition() {
   const bounds = win.getBounds();
   const area = screen.getDisplayMatching(bounds).workArea;
@@ -116,7 +116,7 @@ function installHandlers() {
   for (const [channel, handler] of Object.entries({
     'get-state': () => snapshot(),
     'expand': (_event: any, value: unknown) => { if (typeof value === 'boolean') setExpanded(value); },
-    'panel-height': (_event: any, value: unknown) => { if (typeof value === 'number' && Number.isFinite(value)) { const height = Math.max(520, Math.min(1200, Math.ceil(value))); if (height !== panelHeight) { panelHeight = height; reposition(); } } },
+    'panel-height': (_event: any, value: unknown) => { if (typeof value === 'number' && Number.isFinite(value)) { const height = Math.max(480, Math.min(1200, Math.ceil(value))); if (height !== panelHeight) { panelHeight = height; reposition(); } } },
     'refresh': async () => { if (!paused) await poller.tick(true); return snapshot(); },
     'hide': () => win.hide(),
     'quit': () => { quitting = true; app.quit(); },

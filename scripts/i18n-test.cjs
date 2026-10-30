@@ -42,7 +42,7 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
         return style.whiteSpace==='nowrap'&&button.scrollWidth<=button.clientWidth&&button.scrollHeight<=button.clientHeight;
       })),true,`${locale}: percentage toggle labels must fit on one line`);
       await page.locator('#settings-toggle').click();
-      await page.waitForFunction(()=>window.innerHeight===520);
+      await page.waitForFunction(()=>{const body=document.querySelector('.panel-body');return window.innerHeight<520&&body.scrollHeight<=body.clientHeight+1;});
       assert.equal(await page.locator('.panel-body').evaluate(el=>el.scrollHeight<=el.clientHeight+1),true,`${locale}: cards must fit`);
       assert.equal(await page.locator('.quota-number').count(),5);
       const resetLabels=await page.locator('.reset').evaluateAll(nodes=>nodes.map(el=>({text:el.textContent,title:el.title,width:el.clientWidth,scroll:el.scrollWidth})));

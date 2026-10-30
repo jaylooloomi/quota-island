@@ -298,9 +298,9 @@ function render(next){
   window.QuotaI18n.localizeDocument(document,state.settings.locale);
   if(state.settings.locale==='en')$('compact-mode').textContent=state.settings.remaining?'Left':'Used';
   requestAnimationFrame(()=>{
-    const content=settingsOpen?$('settings').getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height:0;
+    const content=(settingsOpen?$('settings'):quotaDetailsOpen?$('quota-details'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height;
     const chrome=document.querySelector('.panel-header').getBoundingClientRect().height+document.querySelector('footer').getBoundingClientRect().height+18;
-    api.panelHeight(settingsOpen?Math.ceil(content+chrome+24):520);
+    api.panelHeight(Math.max(480,Math.ceil(content+chrome+(settingsOpen?24:12))));
   });
 }
 makeCards();
