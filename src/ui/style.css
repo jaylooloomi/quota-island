@@ -254,3 +254,20 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
 .footer-preferences{width:176px;gap:0;justify-self:center}
 .footer-preferences .footer-control{width:88px;flex:0 0 88px;padding:0 4px}
 .footer-sync-controls{justify-self:end}
+@media(max-width:480px){
+  .panel-header{padding:0 14px}.app-title{min-width:0;gap:6px}h1{font-size:19px}#header-version{font-size:9px}
+  .tools{gap:7px}.segmented button{width:54px;font-size:11px}
+  .panel-body{padding:0 12px}.view-tabs{width:244px}
+  .card{grid-template-columns:116px minmax(0,1fr);gap:8px}
+  .card-heading{grid-template-columns:30px minmax(0,1fr);column-gap:7px}
+  .provider-icon,.provider-icon img{width:30px;height:30px}.provider-identity h2{font-size:16px}
+  .quota-windows{gap:10px}.quota-number{font-size:18px}.window-label{font-size:10px}
+  .quota-row:nth-child(2) .quota-label{padding:1px 4px}.quota-row:nth-child(2) .quota-number{font-size:14px}
+  .accounts-view .card{grid-template-columns:145px minmax(0,1fr);gap:8px}
+  .account-actions{gap:6px}.account-actions button{padding:7px;font-size:10px}
+  footer{padding:0 12px;grid-template-columns:minmax(0,1fr) 144px minmax(0,1fr);gap:4px}
+  .footer-preferences{width:144px}.footer-preferences .footer-control{width:72px;flex-basis:72px;font-size:10px;gap:5px}
+  .footer-local{gap:4px;font-size:9px}.footer-local #footer-version{font-size:8px}
+  .footer-sync-controls{gap:2px}.footer-sync-controls .footer-control{font-size:9px;gap:4px}
+  .demo-badge{display:none}
+}

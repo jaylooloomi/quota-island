@@ -85,7 +85,7 @@ let panelHeight = 480;
 function reposition() {
   const bounds = win.getBounds();
   const area = screen.getDisplayMatching(bounds).workArea;
-  const width = Math.min(expanded ? 616 : 464, area.width);
+  const width = Math.min(464, area.width);
   const height = Math.min(expanded ? panelHeight : 76, area.height);
   win.setBounds({ width, height, x: Math.max(area.x, Math.min(bounds.x, area.x + area.width - width)), y: Math.max(area.y, Math.min(bounds.y, area.y + area.height - height)) });
 }
