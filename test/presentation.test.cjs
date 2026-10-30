@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {groupWindows,shortWindow,windowLabel}=require('../src/ui/presentation');
+const {groupWindows,shortWindow,windowLabel,resetDate}=require('../src/ui/presentation');
 test('equal Antigravity variants become one visible row without merging different models or quotas',()=>{
   const rows=[{id:'a',label:'Gemini Argon (High)',usedPercent:75,resetsAt:'2026-11-01'},
     {id:'b',label:'Gemini Argon (Low)',usedPercent:75,resetsAt:'2026-11-01'},
@@ -8,6 +8,15 @@ test('equal Antigravity variants become one visible row without merging differen
     {id:'d',label:'Gemini Flash (High)',usedPercent:0,resetsAt:'2026-11-01'}];
   const grouped=groupWindows(rows);assert.equal(grouped.length,3);assert.equal(grouped[0].variants.length,2);
   assert.equal(grouped[0].label,'Gemini Argon');assert.equal(grouped[1].usedPercent,80);
+});
+test('reset dates include year date and clock time in the local timezone for every provider',()=>{
+  for(const locale of ['zh-TW','en','ja','ko']){
+    const value=resetDate('2026-11-04T11:22:00Z',locale,'Asia/Taipei');
+    assert.match(value,/2026/);assert.match(value,/11/);assert.match(value,/04/);assert.match(value,/19:22/);
+  }
+  assert.match(resetDate('2026-12-31T18:00:00Z','zh-TW','Asia/Taipei'),/2027\/01\/01.*02:00/);
+  assert.equal(resetDate(null),null);assert.equal(resetDate('bad date'),null);
+  assert.equal(resetDate('2026-11-04T11:22:00Z','bad','UTC'),resetDate('2026-11-04T11:22:00Z','zh-TW','UTC'));
 });
 test('model names and quota reset boundaries are preserved in compact presentation',()=>{
   assert.equal(shortWindow('Gemini Flash'),'Flash');

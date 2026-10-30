@@ -83,3 +83,4 @@ html[lang="ja"] .segmented button{width:66px}
 .auth-code-form button{max-width:100%;white-space:normal}
 .connection-description,.auth-message,.connection-note,.settings p{overflow-wrap:anywhere}
 .connection-steps li{font-size:10px}
+.reset{white-space:nowrap;font-variant-numeric:tabular-nums}

@@ -2,6 +2,7 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['下次重置','Next reset:','次回リセット','다음 초기화'],
     ['取消登入','Cancel sign-in','ログインをキャンセル','로그인 취소'],
     ['驗證授權碼中…','Verifying code…','コードを確認中…','코드 확인 중…'],
     ['正在驗證授權碼，最多等待 60 秒；可取消後重新登入。','Verifying your code (up to 60 seconds). You can cancel and sign in again.','認証コードを確認中（最大60秒）。キャンセルして再ログインできます。','인증 코드 확인 중 (최대 60초). 취소 후 다시 로그인할 수 있습니다.'],
@@ -108,6 +109,7 @@
     for(const el of document.querySelectorAll('[title],[aria-label],[placeholder]')){
       const old=cache.get(el)||{};
       for(const attr of ['title','aria-label','placeholder'])if(el.hasAttribute(attr)){
+        if(attr==='title'&&el.hasAttribute('data-localized-title'))continue;
         const value=el.getAttribute(attr),entry=old[attr];
         const original=entry&&entry.output===value?entry.original:value;
         const output=translate(original,locale);el.setAttribute(attr,output);old[attr]={original,output};

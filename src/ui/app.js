@@ -56,9 +56,8 @@ function retryLabel(s){
   return minutes>=60?`${Math.floor(minutes/60)} 小時 ${minutes%60} 分後自動重試`:`約 ${minutes} 分鐘後自動重試`;
 }
 function resetLabel(id,date){
-  if(id!=='codex'||!date)return countdown(date);
-  const d=new Date(date),pad=value=>String(value).padStart(2,'0');
-  return `${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())} 重設`;
+  const formatted=presentation.resetDate(date,state.settings.locale);
+  return formatted?`下次重置 ${formatted}`:'重設時間未提供';
 }
 function tone(w){return w.usedPercent>=95?'danger':w.usedPercent>=80?'warning':'';}
 function ready(s){return s.enabled&&s.status==='ready'&&s.reading&&(!s.updatedAt||Date.now()-Date.parse(s.updatedAt)<24*3600000);}
@@ -142,7 +141,13 @@ function renderCard(id){
     const value=percent(w);row.querySelector('.quota-number').textContent=`${value}%`;
     const track=row.querySelector('.track');track.setAttribute('aria-valuenow',String(value));track.setAttribute('aria-label',`${names[id]} ${w.label} ${state.settings.remaining?'剩餘':'已用'}`);
     row.querySelector('.fill').style.width=`${value}%`;
-    row.querySelector('.reset').textContent=resetLabel(id,w.resetsAt);if(w.resetsAt)row.querySelector('.reset').title=new Date(w.resetsAt).toLocaleString();
+    row.querySelector('.reset').textContent=resetLabel(id,w.resetsAt);
+    if(presentation.resetDate(w.resetsAt,state.settings.locale)){
+      row.querySelector('.reset').title=new Intl.DateTimeFormat(state.settings.locale,{dateStyle:'full',timeStyle:'long'}).format(new Date(w.resetsAt));
+      row.querySelector('.reset').setAttribute('data-localized-title','');
+      row.querySelector('.reset').dataset.countdown=countdown(w.resetsAt);
+      row.querySelector('.reset').title+=' · '+window.QuotaI18n.translate(countdown(w.resetsAt),state.settings.locale);
+    }
     container.append(row);
   }
   const empty=card.querySelector('.empty-state');empty.hidden=!!windows.length;

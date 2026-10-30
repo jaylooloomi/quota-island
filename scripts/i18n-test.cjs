@@ -34,6 +34,7 @@ const os=require('node:os');
       await page.locator('#settings-toggle').click();
       assert.equal(await page.locator('.panel-body').evaluate(el=>el.scrollHeight<=el.clientHeight+1),true,`${locale}: cards must fit`);
       assert.equal(await page.locator('.quota-number').count(),5);
+      assert.equal(await page.locator('.reset').evaluateAll(nodes=>nodes.every(el=>/\d{4}/.test(el.textContent)&&/\d{2}:\d{2}/.test(el.textContent)&&el.scrollWidth<=el.clientWidth+1)),true,`${locale}: every window needs an unclipped reset date and time`);
       assert.equal(await page.locator('.card-heading').evaluateAll(nodes=>nodes.every(el=>el.querySelector('.provider-identity').getBoundingClientRect().right<=el.querySelector('.connection-status').getBoundingClientRect().left+1)),true);
       await page.screenshot({path:`test-results/language-${locale}.png`});
       await page.locator('.card.codex .connection-status').click();

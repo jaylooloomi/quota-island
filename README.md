@@ -4,10 +4,10 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/version-0.3.1-informational" alt="Version 0.3.1">
+  <img src="https://img.shields.io/badge/version-0.3.2-informational" alt="Version 0.3.2">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
-  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-49%20passing-brightgreen" alt="49 core tests passed locally"></a>
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-50%20passing-brightgreen" alt="50 core tests passed locally"></a>
   <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/lang-繁體中文-green" alt="Traditional Chinese"></a>
 </p>
 
@@ -75,6 +75,10 @@ quota countdowns, account controls and accessibility labels are localized too.
 
 Background polling runs every two minutes. Disabling a source stops its polling. `Retry-After` survives restarts; refresh cannot bypass it. Unknown quotas remain unknown, and stale readings are labeled.
 
+Every quota window shows its next reset date and time in your computer's
+timezone and selected language. Hover for the full timestamp, timezone and
+countdown. If the provider supplies no reset time, the app says so.
+
 ## What the numbers mean
 
 These are **subscription quotas and reset windows**, not network traffic, API billing, or local token counts.
@@ -89,8 +93,8 @@ These are **subscription quotas and reset windows**, not network traffic, API bi
 
 | Check | Latest local result |
 |---|---|
-| Core tests | **49 passed** |
-| Measured Node modules | **87.77% lines · 85.91% branches · 89.47% functions** |
+| Core tests | **50 passed** |
+| Measured Node modules | **87.86% lines · 85.81% branches · 89.55% functions** |
 | Windows packaged app | Desktop controls, ordering and design checks passed |
 | Authorization integration | Fixture upstream responses; real local IPC, callbacks and child-process paths |
 | Real accounts | Gemini and Codex reads previously verified; Claude's last real check returned HTTP 429 |

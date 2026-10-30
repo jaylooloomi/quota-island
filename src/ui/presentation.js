@@ -23,6 +23,12 @@
     if(/gemini/i.test(label))return label.replace(/^gemini\s*/i,'');
     return label;
   }
-  const api={groupWindows,shortWindow,windowLabel};
+  function resetDate(date,locale='zh-TW',timeZone){
+    if(!date)return null;
+    const value=new Date(date);if(!Number.isFinite(value.getTime()))return null;
+    const supported=['zh-TW','en','ja','ko'].includes(locale)?locale:'zh-TW';
+    return new Intl.DateTimeFormat(supported,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23',...(timeZone?{timeZone}:{})}).format(value);
+  }
+  const api={groupWindows,shortWindow,windowLabel,resetDate};
   if(typeof module==='object'&&module.exports)module.exports=api;else root.QuotaPresentation=api;
 })(globalThis);

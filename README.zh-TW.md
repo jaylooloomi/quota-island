@@ -4,10 +4,10 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT 授權"></a>
-  <img src="https://img.shields.io/badge/version-0.3.1-informational" alt="版本 0.3.1">
+  <img src="https://img.shields.io/badge/version-0.3.2-informational" alt="版本 0.3.2">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows 已測試">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron 與 TypeScript">
-  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-49%20passing-brightgreen" alt="49 項核心測試於本機通過"></a>
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-50%20passing-brightgreen" alt="50 項核心測試於本機通過"></a>
   <a href="README.md"><img src="https://img.shields.io/badge/lang-English-blue" alt="English README"></a>
 </p>
 
@@ -74,6 +74,9 @@ npm start
 
 背景每兩分鐘更新。停用來源後停止查詢。服務的 `Retry-After` 冷卻時間會保留到下次啟動，手動更新也不會繞過。未知配額不會當成零，舊資料也會明確標示。
 
+每個配額窗口都會直接顯示「下次重置」的完整日期與時間，依電腦時區及所選語言呈現。
+滑鼠移上去可查看完整時間、時區與倒數；上游未提供時間時會明確標示，不自行推算。
+
 ## 數字從哪裡來
 
 這裡顯示的是**訂閱配額與重設窗口**，不是網路流量、API 帳單或本機 token 累計。
@@ -88,8 +91,8 @@ npm start
 
 | 檢查 | 最近一次本機結果 |
 |---|---|
-| 核心測試 | **49 項通過** |
-| 納入統計的 Node 模組 | **行 87.77% · 分支 85.91% · 函式 89.47%** |
+| 核心測試 | **50 項通過** |
+| 納入統計的 Node 模組 | **行 87.86% · 分支 85.81% · 函式 89.55%** |
 | Windows 打包成品 | 桌面操作、排序、畫面檢查通過 |
 | 授權整合 | 模擬上游回應，搭配真實本機 IPC／回呼／子程序路徑 |
 | 真實帳號 | 曾驗證 Gemini、Codex 可讀取；Claude 最近一次真實查詢回傳 HTTP 429 |
