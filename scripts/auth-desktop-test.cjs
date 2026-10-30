@@ -64,6 +64,21 @@ const os = require('node:os');
       assert.deepEqual(afterSwitch.providers[id],beforeSwitch.providers[id]);
       assert.deepEqual(afterSwitch.auth[id],beforeSwitch.auth[id]);
     }
+    await page.locator('#tab-accounts').click();
+    await page.locator('.card.codex .account-logout').click();
+    assert.equal(await page.locator('.card.codex .logout-confirm').isVisible(),true);
+    await page.locator('.card.codex .cancel-logout').click();
+    assert.equal((await page.evaluate(()=>window.quota.getState())).providers.codex.status,'ready');
+    await page.locator('.card.codex .account-logout').click();
+    await page.locator('.card.codex .confirm-logout').click();
+    await page.waitForFunction(async()=> (await window.quota.getState()).providers.codex.status==='signed_out');
+    assert.equal((await page.evaluate(()=>window.quota.getState())).providers.codex.reading,null);
+    await page.locator('.card.claude .account-logout').click();
+    await page.locator('.card.claude .confirm-logout').click();
+    await page.waitForFunction(async()=> (await window.quota.getState()).providers.claude.status==='signed_out');
+    const loggedOut=await page.evaluate(()=>window.quota.getState());
+    assert.deepEqual(loggedOut.providers.gemini,afterSwitch.providers.gemini);
+    assert.equal(await page.locator('.card.gemini .account-logout').isVisible(),false);
     const report={passed:true,checks:['Codex opens its own OpenAI login and switches quota automatically','Codex account switch preserves Claude and Gemini state','Claude manual authorization code returns through CLI stdin','Google real loopback callback and encrypted vault','wrong OAuth state rejected','auth completion bypasses stale auth backoff','quota cards update without refresh click','app restores and expands after browser authorization','no misleading external sign-in link','authorization code input cleared']};
     await fs.mkdir('test-results',{recursive:true}); await fs.writeFile('test-results/auth-desktop.json',JSON.stringify(report,null,2)); console.log(JSON.stringify(report,null,2));
   } finally {await application.close();await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}

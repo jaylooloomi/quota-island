@@ -5,6 +5,8 @@ contextBridge.exposeInMainWorld('quota', {
   refresh: () => ipcRenderer.invoke('refresh'),
   login: (id: string) => ipcRenderer.invoke('login', id),
   cancelLogin: (id: string) => ipcRenderer.invoke('cancel-login', id),
+  logout: (id: string) => ipcRenderer.invoke('logout', id),
+  openAntigravity: () => ipcRenderer.invoke('open-antigravity'),
   reopenLogin: (id: string) => ipcRenderer.invoke('reopen-login', id),
   submitCode: (id: string, code: string) => ipcRenderer.invoke('submit-code', id, code),
   openProvider: (id: string) => ipcRenderer.invoke('open-provider', id),

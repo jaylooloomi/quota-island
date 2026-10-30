@@ -83,8 +83,8 @@ function publish() {
 function reposition() {
   const bounds = win.getBounds();
   const area = screen.getDisplayMatching(bounds).workArea;
-  const width = Math.min(expanded ? 480 : 464, area.width);
-  const height = Math.min(expanded ? 640 : 76, area.height);
+  const width = Math.min(expanded ? 616 : 464, area.width);
+  const height = Math.min(expanded ? 520 : 76, area.height);
   win.setBounds({ width, height, x: Math.max(area.x, Math.min(bounds.x, area.x + area.width - width)), y: Math.max(area.y, Math.min(bounds.y, area.y + area.height - height)) });
 }
 function setExpanded(value: boolean) { expanded = value; reposition(); publish(); }
@@ -140,6 +140,21 @@ function installHandlers() {
     },
     'reopen-login': (_event: any, raw: unknown) => connections.reopen(validateId(raw)),
     'cancel-login': (_event: any, raw: unknown) => providers.cancelLogin(validateId(raw)),
+    'logout': async (_event: any, raw: unknown) => {
+      const id=validateId(raw);
+      if (demo) return {ok:false,message:'展示模式不會登出帳號'};
+      if (connections.states[id]?.pending) return {ok:false,message:'請先取消或完成目前的登入'};
+      try {
+        await providers.logout(id);await poller.signedOut(id);delete connections.states[id];publish();return {ok:true};
+      } catch(e) { return {ok:false,message:e instanceof ProviderError?e.message:'登出未完成，請稍後重試'}; }
+    },
+    'open-antigravity': async () => {
+      if (demo) return {ok:false,message:'展示模式不會開啟外部應用'};
+      const file=process.platform==='win32'?path.join(homedir(),'AppData/Local/Programs/Antigravity/Antigravity.exe'):process.platform==='darwin'?'/Applications/Antigravity.app':null;
+      if (!file) return {ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'};
+      const error=await shell.openPath(file);
+      return error?{ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'}:{ok:true};
+    },
     'submit-code': (_event: any, raw: unknown, code: unknown) => connections.submitCode(validateId(raw), code),
   })) {
     ipcMain.handle(channel, (event, ...args) => {

@@ -23,7 +23,10 @@ const makeClient = () => {
 };
 const read = Providers.prototype.read;
 Providers.prototype.read = async function(id) {
-  if (id === 'codex') return parseCodex({rateLimits:{primary:{usedPercent:globalThis.__AUTH_TEST_CODEX_SWITCHED?65:12,windowDurationMins:300}}});
+  if (id === 'codex') {
+    if(globalThis.__AUTH_TEST_CODEX_SIGNED_OUT)throw new ProviderError('auth','請登入以讀取配額');
+    return parseCodex({rateLimits:{primary:{usedPercent:globalThis.__AUTH_TEST_CODEX_SWITCHED?65:12,windowDurationMins:300}}});
+  }
   if (id === 'claude') {
     if (!fs.existsSync(path.join(process.env.CLAUDE_CONFIG_DIR,'.credentials.json'))) throw new ProviderError('auth','Fixture signed out');
     return parseClaude({five_hour:{utilization:42}});
@@ -35,9 +38,11 @@ Providers.prototype.read = async function(id) {
 const login = Providers.prototype.login;
 Providers.prototype.login = function(id, open, progress) {
   if(id==='codex')this.rpc.call=async method=>{
+    if(method==='account/logout'){globalThis.__AUTH_TEST_CODEX_SIGNED_OUT=true;return {};}
     if(method!=='account/login/start')throw Error('Unexpected fixture RPC');
     globalThis.__AUTH_TEST_CODEX_COMPLETE=()=>{
       globalThis.__AUTH_TEST_CODEX_SWITCHED=true;
+      globalThis.__AUTH_TEST_CODEX_SIGNED_OUT=false;
       this.rpc.onNotification('account/login/completed',{loginId:'fixture-codex-login',success:true});
     };
     return {loginId:'fixture-codex-login',authUrl:'https://auth.openai.com/authorize?state=FIXTURE-CODEX'};
@@ -45,5 +50,12 @@ Providers.prototype.login = function(id, open, progress) {
   if (id === 'claude') this.claudeLogin = new ClaudeLogin(() => ({ file:process.execPath, args:[path.join(__dirname,'../test/fixtures/claude-auth.cjs')], env:{...process.env,ELECTRON_RUN_AS_NODE:'1'} }));
   if (id === 'gemini') { this.gemini.makeClient = makeClient; this.googleSource=()=>'code_assist'; }
   return login.call(this,id,open,progress);
+};
+const logout=Providers.prototype.logout;
+Providers.prototype.logout=async function(id){
+  if(id!=='claude')return logout.call(this,id);
+  const cli=require('../dist/cli'),original=cli.findCli;
+  cli.findCli=()=>({file:process.execPath,args:[path.join(__dirname,'../test/fixtures/claude-auth.cjs')],env:{...process.env,ELECTRON_RUN_AS_NODE:'1'}});
+  try{return await logout.call(this,id);}finally{cli.findCli=original;}
 };
 require('../dist/main');

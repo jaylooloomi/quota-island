@@ -69,3 +69,13 @@ test('successful reauthorization preserves quota cooldown and resumes at its dea
   now=deadline;await p.refresh('claude');
   assert.equal(calls,1);assert.equal(p.states.claude.status,'ready');
 });
+
+test('sign-out clears in-flight old account readings without changing another provider',async()=>{
+  let finish;
+  const p=new Poller(id=>id==='claude'?new Promise(resolve=>finish=()=>resolve(reading(id))):Promise.resolve(reading(id)),()=>{});
+  await p.refresh('gemini');const gemini=structuredClone(p.states.gemini);
+  const request=p.refresh('claude');const logout=p.signedOut('claude');
+  finish();await request;await logout;
+  assert.equal(p.states.claude.status,'signed_out');assert.equal(p.states.claude.reading,null);
+  assert.equal(p.states.claude.updatedAt,null);assert.deepEqual(p.states.gemini,gemini);
+});

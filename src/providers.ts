@@ -87,5 +87,16 @@ export class Providers {
   }
   submitCode(id: ProviderId, code: unknown) { if (id !== 'claude') throw new ProviderError('auth', '此來源不接受授權碼'); this.claudeLogin.submitCode(code); }
   cancelLogin(id: ProviderId) { if (id === 'claude') this.claudeLogin.close(); }
+  async logout(id: ProviderId) {
+    if (this.authJobs.has(id)) throw new ProviderError('auth','請先取消或完成目前的登入');
+    if (id === 'codex') { await this.rpc.call('account/logout'); return; }
+    if (id === 'claude') {
+      const command=findCli('claude');
+      try { await exec(command.file,[...command.args,'auth','logout'],{env:command.env,windowsHide:true,timeout:15_000,maxBuffer:128*1024}); }
+      catch { throw new ProviderError('auth','登出未完成，請稍後重試'); }
+      return;
+    }
+    throw new ProviderError('auth','請在 Antigravity 或 Google 帳號中管理授權');
+  }
   close() { this.rpc.close(); this.gemini.close(); this.claudeLogin.close(); }
 }

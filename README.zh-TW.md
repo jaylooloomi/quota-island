@@ -4,14 +4,14 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT 授權"></a>
-  <img src="https://img.shields.io/badge/version-0.3.2-informational" alt="版本 0.3.2">
+  <img src="https://img.shields.io/badge/version-0.4.0-informational" alt="版本 0.4.0">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows 已測試">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron 與 TypeScript">
-  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-50%20passing-brightgreen" alt="50 項核心測試於本機通過"></a>
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-51%20passing-brightgreen" alt="51 項核心測試於本機通過"></a>
   <a href="README.md"><img src="https://img.shields.io/badge/lang-English-blue" alt="English README"></a>
 </p>
 
-<p align="center"><img src="docs/design/original-dark-00-small/compact.png" alt="深色精簡動態島：Claude 剩餘 36%、Gemini 62%、Codex 12%，左側為拖曳把手" width="464"><br><sub>實際 App 截圖，使用展示資料；圖中百分比不代表即時帳號配額。</sub></p>
+<p align="center"><img src="docs/design/compact-double-layer/compact.png" alt="深色精簡動態島：Claude 剩餘 36%、Gemini 62%、Codex 12%，左側為拖曳把手" width="464"><br><sub>實際 App 截圖，使用展示資料；圖中百分比不代表即時帳號配額。</sub></p>
 
 ## 使用情境
 
@@ -55,9 +55,15 @@ npm start
 
 點配額或箭頭展開，拖左側把手移動整座島，拖服務圖示或卡片標題調整順序。
 
-<p align="center"><img src="docs/design/original-dark-00-small/expanded.png" alt="原版深色展開面板：剩餘與已用切換、三家服務配額、重設時間與連接狀態" width="480"><br><sub>原版深色 · 收合視窗 464 × 76 · 展開視窗 480 × 640，包含透明邊距。使用展示資料。</sub></p>
+<p align="center"><img src="docs/design/compact-double-layer/expanded.png" alt="原版深色展開面板：剩餘與已用切換、三家服務配額、重設時間與連接狀態" width="480"><br><sub>原版深色 · 收合視窗 464 × 76 · 展開視窗 616 × 520，包含透明邊距。使用展示資料。</sub></p>
 
 ## 日常操作
+
+0.4.0 採用「精簡雙層島」：膠囊迷你進度條、精簡服務列、明顯版本號，以及**配額／帳號**分頁。
+在帳號頁可切換或登出 Claude、Codex；登出須確認，也會影響本機官方 CLI 使用的帳號。
+Gemini 個人版則透過專用按鈕開啟 Antigravity，在其中管理 Google 帳號。
+
+<p align="center"><img src="docs/design/compact-double-layer/accounts.png" alt="帳號分頁：Claude 與 Codex 各自的切換及登出按鈕，以及 Antigravity 帳號管理入口" width="616"><br><sub>展示帳號狀態；不推測或編造 email。</sub></p>
 
 **多語系：** 設定 → 語言 → 繁體中文／English／日本語／한국어。
 切換立即生效，重新啟動仍會保留；系統匣、配額倒數、登入操作與輔助標籤也會同步切換。
@@ -91,8 +97,8 @@ npm start
 
 | 檢查 | 最近一次本機結果 |
 |---|---|
-| 核心測試 | **50 項通過** |
-| 納入統計的 Node 模組 | **行 87.86% · 分支 85.81% · 函式 89.55%** |
+| 核心測試 | **51 項通過** |
+| 納入統計的 Node 模組 | **行 88.04% · 分支 85.84% · 函式 89.63%** |
 | Windows 打包成品 | 桌面操作、排序、畫面檢查通過 |
 | 授權整合 | 模擬上游回應，搭配真實本機 IPC／回呼／子程序路徑 |
 | 真實帳號 | 曾驗證 Gemini、Codex 可讀取；Claude 最近一次真實查詢回傳 HTTP 429 |

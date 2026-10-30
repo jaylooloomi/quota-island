@@ -84,3 +84,90 @@ html[lang="ja"] .segmented button{width:66px}
 .connection-description,.auth-message,.connection-note,.settings p{overflow-wrap:anywhere}
 .connection-steps li{font-size:10px}
 .reset{white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* Compact double-layer island: flat provider rows, explicit account navigation. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.island{background:#101112;border-color:#393b40}
+.island.expanded{background:linear-gradient(135deg,#141617,#101112);border-radius:26px}
+.compact-brand{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;width:35px}
+.compact-brand .grip{height:16px}
+#compact-version{font-size:8px;line-height:10px;color:#8e929a}
+.bar{gap:5px;padding:0 10px}
+.compact-mode{display:none}
+.mini-window{display:none}
+.mini-info{gap:4px}
+.mini-track{display:block;width:43px;height:4px;background:#32353a;border-radius:4px;overflow:hidden}
+.mini-track span{display:block;height:100%;background:var(--provider);border-radius:4px}
+.compact-provider{--provider:#b4a1ff;gap:8px}
+.compact-provider.claude{--provider:#f89c74}.compact-provider.codex{--provider:#eeeef0}
+.compact-provider+.compact-provider:before{background:#3d3f43}
+.bar .icon{width:28px;height:30px;padding:4px}
+.panel-header{height:62px;padding:0 20px;background:none;border-bottom:1px solid #3a3c3e}
+.app-title{min-width:0;gap:10px}
+h1{font-size:21px;letter-spacing:-.5px;white-space:nowrap}
+#header-version{font-size:11px;color:#969ba4;white-space:nowrap}
+.app-title .live-dot{display:none}
+.tools{gap:12px}
+.panel-body{padding:0 18px}
+.context-line{height:48px;padding:0;gap:12px}
+#mode-label{font-size:11px;color:#888f9a;white-space:nowrap}
+.view-tabs{display:flex;background:#1d2022;border:1px solid #34373a;padding:3px;border-radius:10px;gap:3px;width:274px}
+.view-tabs button{display:flex;align-items:center;justify-content:center;gap:8px;flex:1;border-radius:7px;font-size:12px;height:28px;white-space:nowrap;color:#9da3ab}
+.view-tabs button[aria-selected=true]{background:linear-gradient(#3d4144,#303437);color:#fff;box-shadow:0 1px 5px #0004}
+.view-tabs svg{width:16px;height:16px}
+.cards{gap:0}
+.card{display:grid;grid-template-columns:134px minmax(0,1fr);gap:14px;align-items:center;min-height:105px;padding:13px 0;border:0;border-bottom:1px solid #3b3d3f;border-radius:0;background:none;box-shadow:none}
+.card-heading{display:grid;grid-template-columns:36px minmax(0,1fr);grid-template-rows:auto auto;column-gap:10px;row-gap:3px;min-height:48px;padding:0;border:0}
+.provider-icon{grid-row:1/3}.provider-icon,.provider-icon img{width:36px;height:36px}
+.provider-identity h2{font-size:18px;line-height:23px;letter-spacing:-.3px;margin:0}
+.provider-description{display:none}
+.connection-status{grid-column:2;grid-row:2;align-items:flex-start;padding:0;max-width:none;gap:0;justify-self:start}
+.connection-label{font-size:10px;gap:6px;line-height:16px}
+.connection-label i{width:6px;height:6px}
+.updated{display:none}
+.quota-windows{margin:0;gap:16px;align-items:start}
+.quota-windows.single{grid-template-columns:1fr}
+.quota-row{min-width:0}
+.quota-windows:not(.single) .quota-row:nth-child(2n):before{display:none}
+.quota-label{margin-bottom:7px;gap:5px;line-height:21px}
+.quota-number{font-size:20px;line-height:23px}
+.window-label{font-size:11px}
+.track{height:7px;background:#34373b}
+.fill{background:linear-gradient(90deg,color-mix(in srgb,var(--provider) 80%,white),var(--provider))}
+.codex .quota-row:not(.danger) .fill{background:linear-gradient(90deg,#f5f5f6,#c8c9cd)}
+.reset{font-size:10px;color:#a3a8b1;line-height:16px;margin-top:7px}
+.quota-row:nth-child(2) .quota-label{background:#232629;border:1px solid #3b3e43;border-radius:6px;padding:1px 6px;margin-top:-3px;margin-bottom:7px}
+.quota-row:nth-child(2) .quota-number{font-size:15px}
+.empty-state{padding:0;min-width:0}
+.empty-message{margin:4px 0;font-size:11px}
+.empty-title{font-size:12px}
+footer{height:52px;padding:0 20px;gap:12px;background:none;border:0}
+.footer-build{display:flex;align-items:center;gap:6px;font-size:10px;color:#9299a3;white-space:nowrap}
+.footer-control{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;flex:1;height:30px;border-left:1px solid #3b3e42;border-radius:0;color:#b7bcc3;white-space:nowrap}
+.footer-control svg{width:17px;height:17px}
+.footer-control .small-chevron{width:11px;height:11px}
+.settings{margin:4px 0 12px;background:#1b1e21}
+.accounts-view .card{grid-template-columns:170px minmax(0,1fr);min-height:94px;gap:12px}
+.accounts-view .tools .segmented,.settings-view .tools .segmented,.accounts-view #mode-label{visibility:hidden}
+.accounts-view .quota-windows,.accounts-view .empty-state{display:none}
+.accounts-view .provider-description{display:flex;margin-top:2px;gap:5px}
+.accounts-view .provider-subtitle{font-size:10px;max-width:95px}
+.accounts-view .provider-identity h2{font-size:17px}
+.accounts-view .provider-icon{grid-row:1/3}
+.accounts-view .connection-label{font-size:10px}
+.account-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap}
+.account-actions button{border:1px solid #555b62;border-radius:7px;padding:7px 11px;font-size:11px;background:#1e2225;white-space:normal}
+.account-actions button:hover{background:#30363a}
+.account-actions .danger{color:#f5a67d;border-color:#8c5e45}
+.logout-confirm{flex-basis:100%;font-size:11px;line-height:1.6;color:#ccd0d6;text-align:right}
+.logout-confirm p{margin:4px 0 8px}
+.logout-confirm button{margin-left:6px}
+.card.details-open{display:block;padding:12px 0}
+.card.details-open .connection-details{padding:0 4px}
+.card.details-open .account-actions{display:none}
+.connection-details{min-width:0}
+.connection-actions{gap:14px}
+html:not([lang="zh-TW"]) .connection-label{font-size:9px}
+html:not([lang="zh-TW"]) .context-line h2{font-size:10px}
+html:not([lang="zh-TW"]) .account-actions button{font-size:10px}
+@media(max-width:560px){.tools{gap:6px}.panel-header{padding:0 14px}.card{grid-template-columns:120px minmax(0,1fr);gap:8px}}

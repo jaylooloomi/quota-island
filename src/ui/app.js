@@ -7,6 +7,8 @@ const presentation=window.QuotaPresentation;
 const $=id=>document.getElementById(id);
 const cardNodes={};
 let state,settingsOpen=false,activeDetail=null,draggedProvider=null,suppressClickUntil=0;
+let currentView='quota',confirmLogout=null,logoutBusy=null;
+function setView(view){currentView=view;settingsOpen=false;activeDetail=null;confirmLogout=null;render(state);}
 const previousPending=new Map();
 function orderProviders(order){
   const strip=$('provider-strip');
@@ -77,12 +79,28 @@ function makeCards(){
     card.querySelector('.close-connection').addEventListener('click',()=>{activeDetail=null;render(state);});
       card.querySelector('.connect-primary').addEventListener('click',()=>{const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
     card.querySelector('.login').addEventListener('click',()=>startLogin(id));
+    card.querySelector('.account-switch').addEventListener('click',async()=>{
+      if(id==='gemini'&&state.settings.googleSource==='antigravity'){
+        activeDetail=id;render(state);const result=await api.openAntigravity();
+        if(!result.ok){state.auth[id]={pending:false,phase:'error',message:result.message};render(state);}
+      }else startLogin(id);
+    });
+    card.querySelector('.account-logout').addEventListener('click',()=>{confirmLogout=id;render(state);});
+    card.querySelector('.cancel-logout').addEventListener('click',()=>{confirmLogout=null;render(state);});
+    card.querySelector('.confirm-logout').addEventListener('click',async()=>{
+      logoutBusy=id;render(state);
+      let result;
+      try{result=await api.logout(id);}catch{result={ok:false,message:'登出未完成，請稍後重試'};}
+      finally{logoutBusy=null;confirmLogout=null;const next=await api.getState();if(!result?.ok){next.auth[id]={pending:false,phase:'error',message:result?.message};activeDetail=id;}render(next);}
+    });
     card.querySelector('.cancel-login').addEventListener('click',()=>api.cancelLogin(id));
     card.querySelector('.provider-link').addEventListener('click',()=>api.openProvider(id));
     card.querySelector('.reopen-login').addEventListener('click',()=>api.reopenLogin(id));
     card.querySelector('.auth-code-form').addEventListener('submit',event=>{event.preventDefault();const input=card.querySelector('.auth-code'),code=input.value.trim();input.value='';if(code)api.submitCode(id,code);});
     card.querySelector('.setup-links button').addEventListener('click',()=>api.openProvider(`install-${id}`));
     $('cards').append(card);cardNodes[id]=card;
+    const miniTrack=document.createElement('span');miniTrack.className='mini-track';miniTrack.innerHTML='<span></span>';
+    document.querySelector(`.compact-provider[data-provider="${id}"] .mini-info`).append(miniTrack);
   }
 }
 function renderConnection(id,s,auth){
@@ -156,6 +174,12 @@ function renderCard(id){
   card.querySelector('.empty-message').textContent=!s.enabled?'在設定中開啟來源即可恢復同步。':auth?.pending||auth?.phase==='error'?auth.message:errorText||'完成連接後，配額會自動出現在這裡。';
   card.querySelector('.empty-message').title=s.error??'';
   renderConnection(id,s,auth);
+  const accountActions=card.querySelector('.account-actions');accountActions.hidden=currentView!=='accounts'||activeDetail===id;
+  const switchButton=card.querySelector('.account-switch');switchButton.textContent=usesAntigravity?'前往 Antigravity 切換':ready(s)?'切換帳號':'登入帳號';
+  switchButton.disabled=!!auth?.pending||logoutBusy===id||!s.enabled;
+  const logoutButton=card.querySelector('.account-logout');logoutButton.hidden=id==='gemini'||!s.reading;logoutButton.disabled=!!auth?.pending||logoutBusy===id;
+  card.querySelector('.logout-confirm').hidden=confirmLogout!==id;
+  for(const button of card.querySelectorAll('.logout-confirm button'))button.disabled=logoutBusy===id;
   const mini=$(`mini-${id}`),windowLabel=$(`window-${id}`),button=document.querySelector(`.compact-provider[data-provider="${id}"]`),w=windows[0];
   button.classList.toggle('unconnected',!w);button.classList.toggle('disabled',!s.enabled);button.classList.toggle('stale',s.status==='stale');
   mini.className=`mini-value${w?'':' unknown'}`;
@@ -165,6 +189,8 @@ function renderCard(id){
   if(id==='codex')button.querySelector('.mini-logo').src=s.status==='stale'?'icons/codex-error.svg':'icons/codex.svg';
   button.querySelector('.mini-alert').hidden=s.status!=='stale'&&s.status!=='unavailable';
   mini.title=w?`${names[id]} · ${w.label} · ${state.settings.remaining?'剩餘':'已用'} ${percent(w)}%${s.status==='stale'?' · 舊資料':''}`:s.error||status;
+  button.querySelector('.mini-track').hidden=!w;
+  button.querySelector('.mini-track span').style.width=w?`${percent(w)}%`:'0%';
 }
 function render(next){
   if(!next)return;state=next;
@@ -179,6 +205,14 @@ function render(next){
   $('compact-mode').textContent=state.settings.remaining?'剩餘':'已用';$('mode-label').textContent=state.settings.remaining?'剩餘額度':'已用額度';
   $('mode-remaining').setAttribute('aria-pressed',String(state.settings.remaining));$('mode-used').setAttribute('aria-pressed',String(!state.settings.remaining));
   $('demo-banner').hidden=!state.demo;$('app-version').textContent=`v${state.version}`;
+  for(const id of ['compact-version','header-version','footer-version'])$(id).textContent=`v${state.version}`;
+  $('island').classList.toggle('accounts-view',currentView==='accounts');
+  $('island').classList.toggle('settings-view',settingsOpen);
+  $('settings').hidden=!settingsOpen;
+  $('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));
+  $('cards').hidden=settingsOpen;
+  for(const view of ['quota','accounts']){$(`tab-${view}`).setAttribute('aria-selected',String(view===currentView));$(`tab-${view}`).tabIndex=view===currentView?0:-1;}
+  $('cards').setAttribute('role','tabpanel');$('cards').setAttribute('aria-labelledby',`tab-${currentView}`);
   const healthy=!state.paused&&ids.some(id=>ready(state.providers[id]));$('live-dot').classList.toggle('off',!healthy);
   document.querySelector('.footer-dot').classList.toggle('off',!healthy);$('footer-status').textContent=state.paused?'已暫停同步':'自動同步';
   for(const key of ['alwaysOnTop','notifications'])$(key).checked=state.settings[key];
@@ -197,12 +231,17 @@ document.querySelectorAll('[data-expand]').forEach(button=>{
 });
 $('toggle').addEventListener('click',()=>api.expand(true));$('collapse').addEventListener('click',()=>api.expand(false));
 $('refresh').addEventListener('click',async()=>{$('refresh').disabled=true;$('refresh').classList.add('spinning');try{await api.refresh();}finally{$('refresh').classList.remove('spinning');setTimeout(()=>{$('refresh').disabled=false;},700);}});
-$('settings-toggle').addEventListener('click',()=>{settingsOpen=!settingsOpen;$('settings').hidden=!settingsOpen;$('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));});
+$('settings-toggle').addEventListener('click',()=>{settingsOpen=!settingsOpen;$('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));render(state);});
 $('mode-remaining').addEventListener('click',()=>api.settings({remaining:true}));$('mode-used').addEventListener('click',()=>api.settings({remaining:false}));
 $('hide').addEventListener('click',()=>api.hide());$('quit').addEventListener('click',()=>api.quit());
 $('google-source').addEventListener('change',event=>api.settings({googleSource:event.target.value}));
+for(const view of ['quota','accounts'])$(`tab-${view}`).addEventListener('click',()=>setView(view));
+document.querySelector('.view-tabs').addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();const view=event.key==='Home'?'quota':event.key==='End'?'accounts':currentView==='quota'?'accounts':'quota';setView(view);$(`tab-${view}`).focus();}});
+$('accounts-shortcut').addEventListener('click',()=>setView('accounts'));
+$('language-shortcut').addEventListener('click',()=>{settingsOpen=true;activeDetail=null;render(state);$('language').focus();});
+$('compact-refresh').addEventListener('click',()=>api.refresh());
 $('language').addEventListener('change',event=>api.settings({locale:event.target.value}));
 for(const key of ['alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
-document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings').hidden=true;$('settings-toggle').setAttribute('aria-expanded','false');}else api.expand(false);});
+document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
 api.subscribe(render);api.getState().then(render);setInterval(()=>{if(state)render(state);},15000);

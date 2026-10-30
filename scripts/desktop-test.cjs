@@ -17,7 +17,7 @@ const os = require('node:os');
     assert.equal(compact.width, 464); assert.equal(compact.height, 76);
     await page.locator('#toggle').click(); await page.locator('#panel').waitFor({ state: 'visible' });
     const expanded = await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getBounds());
-    assert.equal(expanded.width, 480); assert.equal(expanded.height,640);
+    assert.equal(expanded.width, 616); assert.equal(expanded.height,520);
     assert.equal(await page.locator('.card').count(), 3); assert.equal(await page.locator('.quota-row').count(), 5);
     await page.locator('#mode-used').click(); await page.locator('#mini-claude').filter({ hasText: '64%' }).waitFor({state:'attached'});
     assert.match(await page.locator('#mode-label').textContent(), /已用/);

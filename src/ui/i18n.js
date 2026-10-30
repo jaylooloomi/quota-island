@@ -2,6 +2,18 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['配額','Quota','利用枠','할당량'],['帳號','Accounts','アカウント','계정'],['配額與帳號','Quota and accounts','利用枠とアカウント','할당량 및 계정'],
+    ['切換帳號','Switch account','アカウント切替','계정 전환'],['登入帳號','Sign in','ログイン','로그인'],['登出','Sign out','ログアウト','로그아웃'],
+    ['確認登出','Confirm sign out','ログアウトを確認','로그아웃 확인'],['取消','Cancel','キャンセル','취소'],
+    ['登出也會影響本機官方 CLI，確定繼續？','Signing out also affects the local official CLI. Continue?','ローカルの公式 CLI もログアウトします。続行しますか？','로컬 공식 CLI도 로그아웃됩니다. 계속할까요?'],
+    ['前往 Antigravity 切換','Switch in Antigravity','Antigravity で切替','Antigravity에서 전환'],
+    ['請在 Antigravity 或 Google 帳號中管理授權','Manage authorization in Antigravity or your Google account.','Antigravity または Google アカウントで認証を管理してください。','Antigravity 또는 Google 계정에서 인증을 관리하세요.'],
+    ['請自行開啟 Antigravity，在其中登出並切換 Google 帳號','Open Antigravity to sign out and switch your Google account.','Antigravity を開き、ログアウトして Google アカウントを切り替えてください。','Antigravity를 열고 로그아웃한 다음 Google 계정을 전환하세요.'],
+    ['登出未完成，請稍後重試','Sign-out failed. Please retry.','ログアウトできませんでした。再試行してください。','로그아웃하지 못했습니다. 다시 시도하세요.'],
+    ['請先取消或完成目前的登入','Cancel or finish the current sign-in first.','現在のログインを完了またはキャンセルしてください。','먼저 진행 중인 로그인을 취소하거나 완료하세요.'],
+    ['請登入以讀取配額','Sign in to read quota.','利用枠を取得するにはログインしてください。','할당량을 읽으려면 로그인하세요.'],
+    ['展示模式不會登出帳號','Demo mode does not sign out accounts.','デモではログアウトしません。','데모에서는 계정을 로그아웃하지 않습니다.'],
+    ['展示模式不會開啟外部應用','Demo mode does not open external apps.','デモでは外部アプリを開きません。','데모에서는 외부 앱을 열지 않습니다.'],
     ['下次重置','Next reset:','次回リセット','다음 초기화'],
     ['取消登入','Cancel sign-in','ログインをキャンセル','로그인 취소'],
     ['驗證授權碼中…','Verifying code…','コードを確認中…','코드 확인 중…'],

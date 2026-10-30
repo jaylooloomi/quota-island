@@ -12,26 +12,29 @@
     <symbol id="i-settings" viewBox="0 0 24 24"><path d="m9.5 3-.7 2.2-2 .9-2.1-.5-2.1 3.6 1.5 1.7v2.2l-1.5 1.7 2.1 3.6 2.2-.5 1.9 1 .7 2.1h4.2l.7-2.1 2-1 2.1.5 2.1-3.6-1.5-1.7v-2.2l1.5-1.7L18.5 5l-2.2.5-1.9-.9-.7-2.2z"/><circle cx="11.6" cy="12" r="3"/></symbol>
     <symbol id="i-laptop" viewBox="0 0 24 24"><path d="M4 17V4h16v13M2 20h20l-2-3H4z"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3z"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4" ry="10"/><path d="M2 12h20"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20V8"/></symbol>
     <symbol id="i-link" viewBox="0 0 24 24"><path d="m10 14 4-4M8 16l-1 1a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0M12 18a4 4 0 0 0 6 0l5-5a4 4 0 0 0-6-6l-1 1" transform="translate(1 0) scale(.9)"/></symbol>
   </defs></svg>
   <main class="island" id="island">
     <header class="bar" aria-label="配額動態島">
-      <div class="drag grip" title="拖曳移動整座動態島" aria-label="拖曳移動動態島"></div>
+      <div class="compact-brand"><div class="drag grip" title="拖曳移動整座動態島" aria-label="拖曳移動動態島"></div><span id="compact-version"></span></div>
       <span class="compact-mode" id="compact-mode">剩餘</span>
       <div id="provider-strip" class="provider-strip">
         <button class="compact-provider claude" data-provider="claude" data-expand draggable="true" title="拖曳排序；Alt + 左右鍵也可排序" aria-label="展開 Claude 配額"><img class="mini-logo" src="icons/claude.svg" alt="" draggable="false"><span class="mini-info"><span class="mini-value" id="mini-claude">同步中</span><span class="mini-window" id="window-claude"></span></span><span class="mini-alert" hidden>!</span></button>
         <button class="compact-provider gemini" data-provider="gemini" data-expand draggable="true" title="拖曳排序；Alt + 左右鍵也可排序" aria-label="展開 Gemini 配額"><img class="mini-logo" src="icons/gemini.svg" alt="" draggable="false"><span class="mini-info"><span class="mini-value" id="mini-gemini">同步中</span><span class="mini-window" id="window-gemini"></span></span><span class="mini-alert" hidden>!</span></button>
         <button class="compact-provider codex" data-provider="codex" data-expand draggable="true" title="拖曳排序；Alt + 左右鍵也可排序" aria-label="展開 Codex 配額"><img class="mini-logo" src="icons/codex.svg" alt="" draggable="false"><span class="mini-info"><span class="mini-value" id="mini-codex">同步中</span><span class="mini-window" id="window-codex"></span></span><span class="mini-alert" hidden>!</span></button>
       </div>
-      <button id="toggle" class="icon" aria-label="展開配額面板" aria-expanded="false"><svg><use href="#i-chevron"/></svg></button>
+      <button id="compact-refresh" class="icon" aria-label="重新整理配額"><svg><use href="#i-refresh"/></svg></button><button id="toggle" class="icon" aria-label="展開配額面板" aria-expanded="false"><svg><use href="#i-chevron"/></svg></button>
     </header>
     <section id="panel" class="panel" hidden>
       <header class="panel-header">
-        <div class="app-title"><h1>Quota Island</h1><span class="live-dot" id="live-dot"></span></div>
-        <div class="tools"><button id="refresh" class="icon" aria-label="重新整理配額" title="更新配額（尊重服務冷卻時間）"><svg><use href="#i-refresh"/></svg></button><button id="settings-toggle" class="icon" aria-label="顯示設定" aria-expanded="false" title="設定"><svg><use href="#i-settings"/></svg></button><span class="tool-divider"></span><button id="collapse" class="icon" aria-label="收合配額面板" title="收合"><svg><use href="#i-chevron"/></svg></button></div>
+        <div class="app-title"><h1>Quota Island</h1><span id="header-version"></span><span class="live-dot" id="live-dot"></span></div>
+        <div class="tools"><button id="refresh" class="icon" aria-label="重新整理配額" title="更新配額（尊重服務冷卻時間）"><svg><use href="#i-refresh"/></svg></button><div class="segmented" role="group" aria-label="配額顯示方式"><button id="mode-remaining" aria-pressed="true">剩餘</button><button id="mode-used" aria-pressed="false">已用</button></div><span class="tool-divider"></span><button id="collapse" class="icon" aria-label="收合配額面板" title="收合"><svg><use href="#i-chevron"/></svg></button></div>
       </header>
       <div class="panel-body">
-        <div class="context-line"><h2 id="mode-label">剩餘額度</h2><div class="segmented" role="group" aria-label="配額顯示方式"><button id="mode-remaining" aria-pressed="true">剩餘</button><button id="mode-used" aria-pressed="false">已用</button></div></div>
+        <div class="context-line"><div class="view-tabs" role="tablist" aria-label="配額與帳號"><button id="tab-quota" role="tab" aria-selected="true" aria-controls="cards"><svg><use href="#i-chart"/></svg>配額</button><button id="tab-accounts" role="tab" aria-selected="false" aria-controls="cards"><svg><use href="#i-user"/></svg>帳號</button></div><h2 id="mode-label">剩餘額度</h2></div>
         <section id="settings" class="settings" hidden aria-label="設定">
           <div class="settings-title">顯示與提醒 <span id="app-version"></span></div>
           <label>語言<select id="language" aria-label="語言"><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option></select></label>
@@ -47,7 +50,7 @@
         </section>
         <div id="cards" class="cards" aria-live="polite"></div>
       </div>
-      <footer><span class="local-status"><svg><use href="#i-laptop"/></svg>本機執行<span id="demo-banner" class="demo-badge" hidden>展示資料</span></span><span class="footer-sync"><svg><use href="#i-refresh"/></svg><span id="footer-status">自動同步</span><span class="live-dot footer-dot"></span></span></footer>
+      <footer><span class="footer-build"><span id="footer-version"></span><span id="demo-banner" class="demo-badge" hidden>展示資料</span><span class="live-dot footer-dot" id="live-footer-dot"></span><span id="footer-status" class="sr-only">自動同步</span></span><button id="language-shortcut" class="footer-control"><svg><use href="#i-globe"/></svg>語言<svg class="small-chevron"><use href="#i-chevron"/></svg></button><button id="accounts-shortcut" class="footer-control"><svg><use href="#i-user"/></svg>帳號<svg class="small-chevron"><use href="#i-chevron"/></svg></button><button id="settings-toggle" class="footer-control" aria-label="顯示設定" aria-expanded="false"><svg><use href="#i-settings"/></svg>設定</button></footer>
     </section>
   </main>
   <template id="card-template">
@@ -55,6 +58,7 @@
       <div class="card-heading"><div class="provider-icon"></div><div class="provider-identity"><h2></h2><div class="provider-description"><span class="provider-subtitle"></span><span class="plan"></span></div></div><button class="connection-status" aria-expanded="false" title="管理帳號連接"><span class="connection-label"><i></i><span class="status-label"></span></span><span class="updated"></span></button></div>
       <div class="quota-windows"></div>
       <div class="empty-state"><div class="empty-title"></div><p class="empty-message"></p><button class="connect-primary text-button"></button></div>
+      <div class="account-actions" hidden><button class="account-switch">切換帳號</button><button class="account-logout danger">登出</button><div class="logout-confirm" hidden><p>登出也會影響本機官方 CLI，確定繼續？</p><button class="confirm-logout danger">確認登出</button><button class="cancel-logout">取消</button></div></div>
       <section class="connection-details" hidden aria-label="帳號連接">
         <div class="connection-detail-heading"><h3>連接帳號</h3><button class="close-connection icon" aria-label="關閉連接詳情"><svg><use href="#i-close"/></svg></button></div>
         <div class="connection-account"><img class="connection-logo" alt="" draggable="false"><div><h4></h4><p class="connection-description"></p></div></div>

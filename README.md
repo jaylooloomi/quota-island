@@ -4,14 +4,14 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/version-0.3.2-informational" alt="Version 0.3.2">
+  <img src="https://img.shields.io/badge/version-0.4.0-informational" alt="Version 0.4.0">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
-  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-50%20passing-brightgreen" alt="50 core tests passed locally"></a>
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-51%20passing-brightgreen" alt="51 core tests passed locally"></a>
   <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/lang-繁體中文-green" alt="Traditional Chinese"></a>
 </p>
 
-<p align="center"><img src="docs/design/original-dark-00-small/compact.png" alt="Compact dark island: Claude 36%, Gemini 62%, Codex 12%, with a draggable grip" width="464"><br><sub>Actual app screenshot with demo data. Percentages are illustrative, not live account readings.</sub></p>
+<p align="center"><img src="docs/design/compact-double-layer/compact.png" alt="Compact dark island: Claude 36%, Gemini 62%, Codex 12%, with a draggable grip" width="464"><br><sub>Actual app screenshot with demo data. Percentages are illustrative, not live account readings.</sub></p>
 
 ## Use cases
 
@@ -55,9 +55,17 @@ After authorization, the app comes forward and syncs automatically. Signing into
 
 Click a quota or chevron to expand. Drag the left grip to move the island. Drag provider icons or card headings to reorder them.
 
-<p align="center"><img src="docs/design/original-dark-00-small/expanded.png" alt="Expanded dark panel with remaining/used switch, three provider cards, quota bars, reset times and connection status" width="480"><br><sub>Original Dark · compact window 464 × 76 · expanded window 480 × 640, including transparent margins. Demo data.</sub></p>
+<p align="center"><img src="docs/design/compact-double-layer/expanded.png" alt="Expanded dark panel with remaining/used switch, three provider cards, quota bars, reset times and connection status" width="480"><br><sub>Original Dark · compact window 464 × 76 · expanded window 616 × 520, including transparent margins. Demo data.</sub></p>
 
 ## Everyday controls
+
+Version 0.4.0 uses the Compact Double-layer layout: a capsule with mini progress
+bars, flat provider rows, visible version labels, and **Quota / Accounts** tabs.
+Open Accounts to switch or sign out of Claude/Codex. Signing out requires
+confirmation and also affects the official CLI account on this computer.
+Gemini personal accounts are managed in Antigravity through its dedicated button.
+
+<p align="center"><img src="docs/design/compact-double-layer/accounts.png" alt="Accounts tab with independent Claude and Codex switch/sign-out controls and Antigravity account management" width="616"><br><sub>Demo account state. No email addresses are inferred or fabricated.</sub></p>
 
 **Languages:** Settings → Language → 繁體中文 / English / 日本語 / 한국어.
 Switches immediately and remembers your choice after restart. The tray menu,
@@ -93,8 +101,8 @@ These are **subscription quotas and reset windows**, not network traffic, API bi
 
 | Check | Latest local result |
 |---|---|
-| Core tests | **50 passed** |
-| Measured Node modules | **87.86% lines · 85.81% branches · 89.55% functions** |
+| Core tests | **51 passed** |
+| Measured Node modules | **88.04% lines · 85.84% branches · 89.63% functions** |
 | Windows packaged app | Desktop controls, ordering and design checks passed |
 | Authorization integration | Fixture upstream responses; real local IPC, callbacks and child-process paths |
 | Real accounts | Gemini and Codex reads previously verified; Claude's last real check returned HTTP 429 |

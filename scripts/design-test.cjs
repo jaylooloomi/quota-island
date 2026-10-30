@@ -29,7 +29,7 @@ const os=require('node:os');
     const headingsFit=await page.locator('.card-heading').evaluateAll(nodes=>nodes.every(node=>{
       const identity=node.querySelector('.provider-identity').getBoundingClientRect();
       const status=node.querySelector('.connection-status').getBoundingClientRect();
-      return identity.right<=status.left+1;
+      return node.scrollWidth<=node.clientWidth+1;
     }));
     assert.equal(headingsFit,true,'Small cards must keep account identity and connection status separate');
     await fs.mkdir('test-results',{recursive:true});await page.mouse.move(0,0);await page.screenshot({path:'test-results/design-expanded.png'});
@@ -39,6 +39,9 @@ const os=require('node:os');
     assert.match(await page.locator('.card.codex .connection-description').textContent(),/不同帳號/);
     await page.locator('.card.codex').screenshot({path:'test-results/design-codex-account.png'});
     await page.locator('.card.codex .close-connection').click();
+    const demoLogout=await page.evaluate(()=>window.quota.logout('codex'));
+    assert.equal(demoLogout.ok,false,'Demo must never log out real provider accounts');
+    assert.equal((await page.evaluate(()=>window.quota.getState())).providers.codex.status,'ready');
     await page.locator('.card.claude .connection-status').click();
     assert.equal(await page.locator('.card.claude .connection-steps li.done').count(),4);
     await page.locator('.card.claude .auth-message.success').waitFor();

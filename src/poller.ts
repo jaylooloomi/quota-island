@@ -62,4 +62,9 @@ export class Poller {
     return this.refresh(id);
   }
   tick(manual = false) { return Promise.all(providerIds.map(id => this.refresh(id, manual))); }
+  async signedOut(id: ProviderId) {
+    await this.inFlight.get(id);
+    Object.assign(this.states[id],{reading:null,updatedAt:null,status:'signed_out',error:'請登入以讀取配額',nextPollAt:this.now()+120_000});
+    this.changed();
+  }
 }
