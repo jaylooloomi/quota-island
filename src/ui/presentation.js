@@ -35,11 +35,11 @@
     const weekly=windows.filter(w=>/weekly|seven_day|每週|7\s*天/i.test(`${w.id} ${w.label}`));
     return [...(weekly.length?weekly:windows)].sort((a,b)=>b.usedPercent-a.usedPercent)[0]??null;
   }
-  function pacing(window,reservePercent=5,now=Date.now()){
+  function pacing(window,reservePercent=10,now=Date.now()){
     if(!window||!Number.isFinite(window.usedPercent)||window.usedPercent<0||window.usedPercent>100)return null;
     const hours=(Date.parse(window.resetsAt)-now)/3600000;
     if(!Number.isFinite(hours)||hours<=0)return null;
-    const configured=Number.isFinite(reservePercent)?Math.max(0,Math.min(100,reservePercent)):5;
+    const configured=Number.isFinite(reservePercent)?Math.max(0,Math.min(100,reservePercent)):10;
     const remaining=100-window.usedPercent,reserve=Math.min(configured,remaining),available=Math.max(0,remaining-reserve);
     const unit=hours<24?'hour':'day',periods=unit==='hour'?hours:hours/24;
     // A partial final period must never suggest more than all distributable quota.

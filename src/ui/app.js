@@ -271,7 +271,7 @@ function renderCard(id){
   button.querySelector('.mini-track span').style.width=w?`${percent(w)}%`:'0%';
 }
 function paceNumber(value){return new Intl.NumberFormat(state.settings.locale,{maximumFractionDigits:1,roundingMode:'floor'}).format(value);}
-function paceData(id,windows){const w=presentation.paceWindow(windows,state.settings.paceWindows?.[id]);return {w,p:ready(state.providers[id])&&!state.paused?presentation.pacing(w,state.settings.reservePercent?.[id]??5):null};}
+function paceData(id,windows){const w=presentation.paceWindow(windows,state.settings.paceWindows?.[id]);return {w,p:ready(state.providers[id])&&!state.paused?presentation.pacing(w,state.settings.reservePercent?.[id]??10):null};}
 function paceText(text){return window.QuotaI18n.translate(text,state.settings.locale);}
 function fillPaceBar(bar,p){
   bar.replaceChildren();bar.hidden=!p;if(!p)return;
@@ -287,7 +287,7 @@ function renderPaceCard(id,windows){
   row.querySelector('.pace-value').textContent=p?paceNumber(p.allowance):'—';
   row.querySelector('.pace-unit').textContent=p?(p.unit==='hour'?'%／小時':'%／天'):'配速暫不可用';
   row.querySelector('.pace-value').title=w?.label??'';
-  row.querySelector('.pace-reserve-label').textContent=`保留 ${paceNumber(state.settings.reservePercent?.[id]??5)}%`;
+  row.querySelector('.pace-reserve-label').textContent=`保留 ${paceNumber(state.settings.reservePercent?.[id]??10)}%`;
   row.querySelector('.pace-reserve-label').title=paceText('保留比例以總配額為基準；各來源與窗口獨立計算。');row.querySelector('.pace-reserve-label').setAttribute('data-localized-title','');
   fillPaceBar(row.querySelector('.pace-bar'),p);
   row.querySelector('.pace-remaining').textContent=p?`剩餘 ${paceNumber(p.remaining)}%`:w?.label??'';
@@ -301,7 +301,7 @@ function renderPaceDetails(){
   if(isExtra(id)){$('pace-details-title').textContent=`${names[id]} · ${paceText('配速詳情')}`;$('pace-details-title').setAttribute('data-localized-text','');}else $('pace-details-title').removeAttribute('data-localized-text');
   const select=$('pace-window');select.replaceChildren();
   for(const window of windows){const option=document.createElement('option');option.value=window.id;option.textContent=window.label;option.selected=window.id===w?.id;select.append(option);}
-  select.disabled=!windows.length;$('pace-reserve').value=state.settings.reservePercent?.[id]??5;$('pace-reserve-value').textContent=`${$('pace-reserve').value}%`;
+  select.disabled=!windows.length;$('pace-reserve').value=state.settings.reservePercent?.[id]??10;$('pace-reserve-value').textContent=`${$('pace-reserve').value}%`;
   const summary=$('pace-summary');summary.setAttribute('data-localized-text','');summary.replaceChildren();
   if(!p){summary.textContent=paceText('配速暫不可用');return;}
   const heading=document.createElement('h3');heading.textContent=paceText('建議用量');

@@ -8,7 +8,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
   let app=await launch();
   try{
     let page=await app.firstWindow();await page.emulateMedia({reducedMotion:'reduce'});await page.locator('#mini-codex').filter({hasText:'12%'}).waitFor();await page.locator('#toggle').click();
-    assert.deepEqual((await page.evaluate(()=>window.quota.getState())).settings.reservePercent,{claude:5,codex:5,gemini:5},'Fresh defaults reserve 5%');
+    assert.deepEqual((await page.evaluate(()=>window.quota.getState())).settings.reservePercent,{claude:10,codex:10,gemini:10},'Fresh defaults reserve 10%');
     const send=s=>app.evaluate(({BrowserWindow},state)=>BrowserWindow.getAllWindows()[0].webContents.send('state',state),s);
     const shape=()=>page.locator('.card').evaluateAll(nodes=>({width:innerWidth,height:innerHeight,footerY:document.querySelector('footer').getBoundingClientRect().y,rows:nodes.map(el=>{const r=el.getBoundingClientRect(),heading=el.querySelector('.card-heading').getBoundingClientRect(),icon=el.querySelector('.provider-icon').getBoundingClientRect(),name=el.querySelector('.provider-identity h2').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,headingX:heading.x,headingY:heading.y,iconY:icon.y,nameX:name.x,nameY:name.y,nameWidth:name.width,nameFont:getComputedStyle(el.querySelector('.provider-identity h2')).fontSize};})}));
     for(const locale of ['zh-TW','en','ja','ko']){
@@ -100,9 +100,9 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
     const saved=await page.evaluate(()=>window.quota.getState());assert.equal(saved.settings.pacing,true);assert.equal(saved.settings.reservePercent.codex,25);assert.ok(saved.settings.paceWindows.codex);
     await app.close();
     const prefPath=path.join(dir,'preferences.json'),legacy=JSON.parse(await fs.readFile(prefPath,'utf8'));
-    delete legacy.reserveDefaultsVersion;legacy.reservePercent={claude:10,codex:20,gemini:0};await fs.writeFile(prefPath,JSON.stringify(legacy));
+    legacy.reserveDefaultsVersion=2;legacy.reservePercent={claude:5,codex:20,gemini:0};await fs.writeFile(prefPath,JSON.stringify(legacy));
     app=await launch();page=await app.firstWindow();
-    assert.deepEqual((await page.evaluate(()=>window.quota.getState())).settings.reservePercent,{claude:5,codex:20,gemini:0},'Old 10% default migrates to 5%; other configured values stay unchanged');
+    assert.deepEqual((await page.evaluate(()=>window.quota.getState())).settings.reservePercent,{claude:10,codex:20,gemini:0},'Old 5% default migrates to 10%; other configured values stay unchanged');
     await page.evaluate(()=>window.quota.settings({reservePercent:{claude:10}}));
     await app.close();app=await launch();page=await app.firstWindow();
     assert.equal((await page.evaluate(()=>window.quota.getState())).settings.reservePercent.claude,10,'A new explicit 10% choice survives future restarts');

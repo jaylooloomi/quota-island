@@ -11,9 +11,9 @@ test('independent Claude profiles poll in parallel and preserve per-account sett
     assert.throws(()=>a.add('Claude 工作'));
     f.services.get(x).value=12;f.services.get(y).value=45;await a.tick();
     let state=a.snapshot();assert.equal(state.providers[x].reading.windows[0].usedPercent,12);assert.equal(state.providers[y].reading.windows[0].usedPercent,45);
-    assert.equal(state.reservePercent[x],5);assert.equal(state.reservePercent[y],5);
+    assert.equal(state.reservePercent[x],10);assert.equal(state.reservePercent[y],10);
     a.patch({reservePercent:{[x]:20,[y]:-1},visible:{[y]:false},paceWindows:{[x]:'seven_day'}});a.close();a=f.create();state=a.snapshot();
-    assert.equal(state.accounts.length,2);assert.equal(state.reservePercent[x],20);assert.equal(state.reservePercent[y],5);assert.equal(state.visible[y],false);assert.equal(state.paceWindows[x],'seven_day');
+    assert.equal(state.accounts.length,2);assert.equal(state.reservePercent[x],20);assert.equal(state.reservePercent[y],10);assert.equal(state.visible[y],false);assert.equal(state.paceWindows[x],'seven_day');
     await a.login(x);a.submit(x,'TEST');await a.reopen(x);a.cancel(x);assert.equal(f.services.get(x).submitted,true);assert.equal(f.services.get(x).cancelled,true);
     await a.logout(x);assert.equal(a.snapshot().providers[x].reading,null);assert.equal(a.snapshot().enabled[x],false);assert.equal(a.snapshot().enabled[y],true);
     await a.tick(true);assert.equal(a.snapshot().providers[x].reading,null);await a.login(x);assert.equal(a.snapshot().enabled[x],true);

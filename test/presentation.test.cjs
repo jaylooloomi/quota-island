@@ -50,7 +50,7 @@ test('pacing handles absent malformed expired and exhausted quota without invent
   const {pacing}=require('../src/ui/presentation');const now=Date.now();
   for(const w of [null,{usedPercent:NaN,resetsAt:'2099-01-01'},{usedPercent:-1,resetsAt:'2099-01-01'},{usedPercent:101,resetsAt:'2099-01-01'},{usedPercent:20,resetsAt:null},{usedPercent:20,resetsAt:'bad'},{usedPercent:20,resetsAt:new Date(now).toISOString()}])assert.equal(pacing(w,10,now),null);
   assert.equal(pacing({usedPercent:100,resetsAt:new Date(now+86400000).toISOString()},10,now).allowance,0);
-  assert.equal(pacing({usedPercent:0,resetsAt:new Date(now+86400000).toISOString()},NaN,now).configured,5);
+  assert.equal(pacing({usedPercent:0,resetsAt:new Date(now+86400000).toISOString()},NaN,now).configured,10);
 });
 test('pacing keeps selected windows separate and defaults to all-model weekly rather than scoped models',()=>{
   const {paceWindow}=require('../src/ui/presentation');const windows=[{id:'five_hour',usedPercent:12},{id:'seven_day_fable',usedPercent:80},{id:'seven_day',usedPercent:15}];
