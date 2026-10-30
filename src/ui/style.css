@@ -103,7 +103,10 @@ html[lang="ja"] .segmented button{width:66px}
 .compact-provider+.compact-provider:before{background:#3d3f43}
 .bar .icon{width:28px;height:30px;padding:4px}
 .panel-header{height:62px;padding:0 20px;background:none;border-bottom:1px solid #3a3c3e}
-.app-title{min-width:0;gap:10px}
+.panel-header{-webkit-app-region:drag}
+.app-title{min-width:0;gap:10px;flex:1;cursor:grab}
+.app-title *{-webkit-app-region:drag}
+.panel-header .tools{-webkit-app-region:no-drag}
 h1{font-size:21px;letter-spacing:-.5px;white-space:nowrap}
 #header-version{font-size:11px;color:#969ba4;white-space:nowrap}
 .app-title .live-dot{display:none}
