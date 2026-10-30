@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT 授權"></a>
-  <img src="https://img.shields.io/badge/version-0.8.0-informational" alt="版本 0.8.0">
+  <img src="https://img.shields.io/badge/version-0.9.0-informational" alt="版本 0.9.0">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows 已測試">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron 與 TypeScript">
   <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-63%20passing-brightgreen" alt="63 項核心測試於本機通過"></a>
@@ -185,4 +185,6 @@ README 呈現參考 [i-want-to-sleep](https://github.com/jaylooloomi/i-want-to-s
 Antigravity 帳號操作：**切換帳號**會開啟官方 App、清除舊配額，偵測到不同帳號後自動更新。**中斷連接**只停止 Quota Pebble 的監控並保存狀態，不會登出 Antigravity。安裝版 2.27.0 尚未驗證可用的外部登出入口，因此未提供直接原生登出。
 
 ### 配速模式
-右上切換 **剩餘／已用／配速**，共用相同橫向卡片布局。預設保留總配額的 10%，依選定窗口的實際重置倒數平均分配餘額；不足一天則顯示每小時建議。詳情可切換配額窗口、調整保留百分比，並保存設定。資料過期、重置時間缺失或已過、監控暫停時不提供建議。這是平均預算建議，不是額外配額或用量上限。
+右上切換 **剩餘／已用／配速**，共用相同橫向卡片布局。預設保留總配額的 5%，依選定窗口的實際重置倒數平均分配餘額；不足一天則顯示每小時建議。詳情可切換配額窗口、調整保留百分比，並保存設定。資料過期、重置時間缺失或已過、監控暫停時不提供建議。這是平均預算建議，不是額外配額或用量上限。
+
+配速詳情會在所選服務卡片下方展開，一次只展開一家；其他卡片保持可見，視窗維持固定寬度並依內容加高。再點同一列即可收起並恢復高度。

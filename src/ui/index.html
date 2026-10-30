@@ -53,7 +53,7 @@
           <div class="settings-actions"><button id="hide" class="text-button">隱藏到系統匣</button><button id="quit" class="text-button danger">結束 Quota Pebble</button></div>
         </section>
         <div id="cards" class="cards" aria-live="polite"></div>
-        <section id="pace-details" hidden><div class="quota-details-heading"><h2 id="pace-details-title"></h2><button id="close-pace-details" class="text-button">返回配額</button></div><label class="pace-setting">配額窗口<select id="pace-window"></select></label><label class="pace-setting">保留比例<span><input id="pace-reserve" type="range" min="0" max="100" step="1"><output id="pace-reserve-value"></output></span></label><p class="pace-explanation">保留比例以總配額為基準；各來源與窗口獨立計算。</p><div id="pace-summary"></div><p class="pace-explanation">這是平均分配建議，不是用量上限；少於一天的窗口改以每小時計算。</p></section>
+        <section id="pace-details" hidden><div class="quota-details-heading"><h2 id="pace-details-title"></h2></div><label class="pace-setting">配額窗口<select id="pace-window"></select></label><label class="pace-setting">保留比例<span><input id="pace-reserve" type="range" min="0" max="100" step="1"><output id="pace-reserve-value"></output></span></label><p class="pace-explanation">保留比例以總配額為基準；各來源與窗口獨立計算。</p><div id="pace-summary"></div><p class="pace-explanation">這是平均分配建議，不是用量上限；少於一天的窗口改以每小時計算。</p></section>
         <p id="no-visible-providers" hidden>所有服務已隱藏，請到設定開啟顯示。</p>
         <section id="quota-details" hidden aria-label="所有配額"><div class="quota-details-heading"><h2>Antigravity 配額</h2><button id="close-quota-details" class="text-button">返回配額</button></div><p class="quota-details-note">以下都是 Antigravity 內的配額，不是獨立 Claude Code／Codex 訂閱額度。</p><div id="quota-groups"></div></section>
       </div>

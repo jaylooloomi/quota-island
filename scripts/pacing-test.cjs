@@ -8,10 +8,11 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
   let app=await launch();
   try{
     let page=await app.firstWindow();await page.emulateMedia({reducedMotion:'reduce'});await page.locator('#mini-codex').filter({hasText:'12%'}).waitFor();await page.locator('#toggle').click();
+    assert.deepEqual((await page.evaluate(()=>window.quota.getState())).settings.reservePercent,{claude:5,codex:5,gemini:5},'Fresh defaults reserve 5%');
     const send=s=>app.evaluate(({BrowserWindow},state)=>BrowserWindow.getAllWindows()[0].webContents.send('state',state),s);
     const shape=()=>page.locator('.card').evaluateAll(nodes=>({width:innerWidth,height:innerHeight,footerY:document.querySelector('footer').getBoundingClientRect().y,rows:nodes.map(el=>{const r=el.getBoundingClientRect(),heading=el.querySelector('.card-heading').getBoundingClientRect(),icon=el.querySelector('.provider-icon').getBoundingClientRect(),name=el.querySelector('.provider-identity h2').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,headingX:heading.x,headingY:heading.y,iconY:icon.y,nameX:name.x,nameY:name.y,nameWidth:name.width,nameFont:getComputedStyle(el.querySelector('.provider-identity h2')).fontSize};})}));
     for(const locale of ['zh-TW','en','ja','ko']){
-      await page.evaluate(locale=>window.quota.settings({locale,pacing:false,remaining:true}),locale);
+      await page.evaluate(locale=>window.quota.settings({locale,pacing:false,remaining:true,reservePercent:{claude:10,codex:10,gemini:10}}),locale);
       await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
       const base=await shape();
       await page.locator('#mode-pacing').click();
@@ -49,7 +50,15 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
       assert.equal(await page.locator('.card.codex .pace-value').textContent(),'—','Missing reset must not invent guidance');
       const stale=structuredClone(fixture);stale.providers.codex.status='stale';await send(stale);assert.equal(await page.locator('.card.codex .pace-value').textContent(),'—');
       await page.evaluate(()=>window.quota.settings({pacing:true}));
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      const beforeAccordion=await shape();
       await page.locator('.card.codex .pace-link').click();await page.locator('#pace-details').waitFor();
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      assert.equal(await page.locator('#pace-details').evaluate(el=>el.parentElement.classList.contains('codex')),true,'Details expand inside selected card');
+      assert.equal(await page.locator('.card:visible').count(),3,'Other provider rows stay visible');
+      const expanded=await shape();assert.equal(expanded.width,464);assert.ok(expanded.height>beforeAccordion.height);
+      assert.equal(expanded.rows[1].headingY,beforeAccordion.rows[1].headingY,'Codex heading stays in its main row');
+      assert.equal(expanded.rows[1].iconY,beforeAccordion.rows[1].iconY,'Codex icon stays in its main row');
       assert.match(await page.locator('#pace-details-title').textContent(),/Codex/,'Detail title must match selected provider');
       await page.locator('#pace-reserve').fill('20');await page.locator('#pace-reserve').dispatchEvent('change');
       await page.waitForFunction(()=>document.querySelector('#pace-reserve-value').textContent==='20%');
@@ -58,7 +67,14 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
       assert.equal((await page.evaluate(()=>window.quota.getState())).settings.paceWindows.codex,selected);
       await page.screenshot({path:`test-results/pacing-${locale}-details.png`});
       assert.equal(await page.locator('.panel-body').evaluate(el=>el.scrollHeight<=el.clientHeight+1),true,`${locale}: detail must fit`);
-      await page.locator('#close-pace-details').click();await page.locator('#mode-used').click();
+      await page.locator('.card.gemini .pace-link').click();
+      assert.equal(await page.locator('#pace-details').evaluate(el=>el.parentElement.classList.contains('gemini')),true,'Opening another card moves the single accordion');
+      assert.equal(await page.locator('.card.pace-expanded').count(),1);
+      await page.locator('.card.gemini .pace-link').click();
+      await page.waitForFunction(()=>document.querySelector('#pace-details').hidden);
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      assert.deepEqual(await shape(),beforeAccordion,'Collapsing restores original rows and window');
+      await page.locator('#mode-used').click();
       assert.equal(await page.locator('.pacing-content:not([hidden])').count(),0);
       await page.evaluate(()=>window.quota.settings({reservePercent:{codex:10}}));
     }
@@ -67,6 +83,14 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
     assert.equal((await page.evaluate(()=>window.quota.getState())).settings.reservePercent.codex,25);
     await app.close();app=await launch();page=await app.firstWindow();
     const saved=await page.evaluate(()=>window.quota.getState());assert.equal(saved.settings.pacing,true);assert.equal(saved.settings.reservePercent.codex,25);assert.ok(saved.settings.paceWindows.codex);
+    await app.close();
+    const prefPath=path.join(dir,'preferences.json'),legacy=JSON.parse(await fs.readFile(prefPath,'utf8'));
+    delete legacy.reserveDefaultsVersion;legacy.reservePercent={claude:10,codex:20,gemini:0};await fs.writeFile(prefPath,JSON.stringify(legacy));
+    app=await launch();page=await app.firstWindow();
+    assert.deepEqual((await page.evaluate(()=>window.quota.getState())).settings.reservePercent,{claude:5,codex:20,gemini:0},'Old 10% default migrates to 5%; other configured values stay unchanged');
+    await page.evaluate(()=>window.quota.settings({reservePercent:{claude:10}}));
+    await app.close();app=await launch();page=await app.firstWindow();
+    assert.equal((await page.evaluate(()=>window.quota.getState())).settings.reservePercent.claude,10,'A new explicit 10% choice survives future restarts');
     const report={passed:true,packaged:!!executablePath,checks:['three modes preserve row and window dimensions','four-language pacing and details fit','reserve percentage and independent quota segments','missing reset and stale data suppress advice','reserve and window preferences persist','invalid preferences rejected']};
     await fs.writeFile('test-results/pacing.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
   }finally{await app.close();await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}

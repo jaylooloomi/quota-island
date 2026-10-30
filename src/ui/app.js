@@ -116,7 +116,7 @@ function makeCards(){
       card.querySelector('.connect-primary').addEventListener('click',()=>{const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
     card.querySelector('.login').addEventListener('click',()=>startLogin(id));
     card.querySelector('.quota-details-link').addEventListener('click',()=>{quotaDetailsProvider=id;quotaDetailsOpen=true;activeDetail=null;settingsOpen=false;footerPopover=null;render(state);});
-    card.querySelector('.pace-link').addEventListener('click',()=>{paceDetailsProvider=id;quotaDetailsOpen=false;activeDetail=null;footerPopover=null;render(state);});
+    card.querySelector('.pace-link').addEventListener('click',()=>{paceDetailsProvider=paceDetailsProvider===id?null:id;quotaDetailsOpen=false;activeDetail=null;footerPopover=null;render(state);});
     card.querySelector('.account-switch').addEventListener('click',async()=>{
       if(id==='gemini'&&state.settings.googleSource==='antigravity'){
         activeDetail=id;render(state);const result=await api.antigravityAccount('switch');
@@ -249,7 +249,7 @@ function renderCard(id){
   button.querySelector('.mini-track span').style.width=w?`${percent(w)}%`:'0%';
 }
 function paceNumber(value){return new Intl.NumberFormat(state.settings.locale,{maximumFractionDigits:1,roundingMode:'floor'}).format(value);}
-function paceData(id,windows){const w=presentation.paceWindow(windows,state.settings.paceWindows?.[id]);return {w,p:ready(state.providers[id])&&!state.paused?presentation.pacing(w,state.settings.reservePercent?.[id]??10):null};}
+function paceData(id,windows){const w=presentation.paceWindow(windows,state.settings.paceWindows?.[id]);return {w,p:ready(state.providers[id])&&!state.paused?presentation.pacing(w,state.settings.reservePercent?.[id]??5):null};}
 function paceText(text){return window.QuotaI18n.translate(text,state.settings.locale);}
 function fillPaceBar(bar,p){
   bar.replaceChildren();bar.hidden=!p;if(!p)return;
@@ -265,7 +265,7 @@ function renderPaceCard(id,windows){
   row.querySelector('.pace-value').textContent=p?paceNumber(p.allowance):'—';
   row.querySelector('.pace-unit').textContent=p?(p.unit==='hour'?'%／小時':'%／天'):'配速暫不可用';
   row.querySelector('.pace-value').title=w?.label??'';
-  row.querySelector('.pace-reserve-label').textContent=`保留 ${paceNumber(state.settings.reservePercent?.[id]??10)}%`;
+  row.querySelector('.pace-reserve-label').textContent=`保留 ${paceNumber(state.settings.reservePercent?.[id]??5)}%`;
   row.querySelector('.pace-reserve-label').title=paceText('保留比例以總配額為基準；各來源與窗口獨立計算。');row.querySelector('.pace-reserve-label').setAttribute('data-localized-title','');
   fillPaceBar(row.querySelector('.pace-bar'),p);
   row.querySelector('.pace-remaining').textContent=p?`剩餘 ${paceNumber(p.remaining)}%`:w?.label??'';
@@ -278,7 +278,7 @@ function renderPaceDetails(){
   $('pace-details-title').textContent=`${id==='gemini'?'Antigravity':names[id]} · 配速詳情`;
   const select=$('pace-window');select.replaceChildren();
   for(const window of windows){const option=document.createElement('option');option.value=window.id;option.textContent=window.label;option.selected=window.id===w?.id;select.append(option);}
-  select.disabled=!windows.length;$('pace-reserve').value=state.settings.reservePercent?.[id]??10;$('pace-reserve-value').textContent=`${$('pace-reserve').value}%`;
+  select.disabled=!windows.length;$('pace-reserve').value=state.settings.reservePercent?.[id]??5;$('pace-reserve-value').textContent=`${$('pace-reserve').value}%`;
   const summary=$('pace-summary');summary.setAttribute('data-localized-text','');summary.replaceChildren();
   if(!p){summary.textContent=paceText('配速暫不可用');return;}
   const heading=document.createElement('h3');heading.textContent=paceText('配速建議');
@@ -318,6 +318,7 @@ function renderQuotaDetails(){
 }
 function render(next){
   if(!next)return;state=next;
+  if(paceDetailsProvider&&(!state.settings.pacing||currentView!=='quota'||settingsOpen||activeDetail||state.settings.visible?.[paceDetailsProvider]===false))paceDetailsProvider=null;
   if(!state.expanded)footerPopover=null;
   for(const id of ids){
     const wasPending=previousPending.get(id),pending=!!state.auth[id]?.pending;
@@ -339,9 +340,16 @@ function render(next){
   $('settings').hidden=!settingsOpen;
   $('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));
   $('cards').hidden=settingsOpen;
-  $('cards').hidden=settingsOpen||quotaDetailsOpen||!!paceDetailsProvider;
-  $('quota-details').hidden=!quotaDetailsOpen||settingsOpen||!!paceDetailsProvider;
+  $('cards').hidden=settingsOpen||quotaDetailsOpen;
+  $('quota-details').hidden=!quotaDetailsOpen||settingsOpen;
   $('pace-details').hidden=!paceDetailsProvider||settingsOpen;
+  for(const id of ids){
+    const open=paceDetailsProvider===id;cardNodes[id].classList.toggle('pace-expanded',open);
+    cardNodes[id].style.setProperty('--pace-row-height',`${Math.max(72,(quotaCardHeights[id]??98)-26)}px`);
+    const button=cardNodes[id].querySelector('.pace-link');button.setAttribute('aria-expanded',String(open));button.setAttribute('aria-controls','pace-details');button.textContent=open?'收起配速詳情 ⌃':'配速詳情 ›';
+  }
+  if(paceDetailsProvider)cardNodes[paceDetailsProvider].append($('pace-details'));
+  else if($('pace-details').parentElement!==document.querySelector('.panel-body'))document.querySelector('.panel-body').append($('pace-details'));
   for(const view of ['quota','accounts']){$(`tab-${view}`).setAttribute('aria-selected',String(view===currentView));$(`tab-${view}`).tabIndex=view===currentView?0:-1;}
   $('cards').setAttribute('role','tabpanel');$('cards').setAttribute('aria-labelledby',`tab-${currentView}`);
   const healthy=!state.paused&&ids.some(id=>ready(state.providers[id]));$('live-dot').classList.toggle('off',!healthy);
@@ -352,7 +360,7 @@ function render(next){
   ids.forEach(renderCard);
   for(const id of ids){const visible=state.settings.visible?.[id]!==false;cardNodes[id].hidden=!visible;document.querySelector(`.compact-provider[data-provider="${id}"]`).hidden=!visible;}
   for(const input of document.querySelectorAll('[data-visible]'))input.checked=state.settings.visible?.[input.dataset.visible]!==false;
-  $('no-visible-providers').hidden=settingsOpen||quotaDetailsOpen||!!paceDetailsProvider||ids.some(id=>state.settings.visible?.[id]!==false);
+  $('no-visible-providers').hidden=settingsOpen||quotaDetailsOpen||ids.some(id=>state.settings.visible?.[id]!==false);
   renderPaceDetails();
   renderQuotaDetails();
   renderFooter();
@@ -378,7 +386,7 @@ function render(next){
         card.style.minHeight=`${quotaCardHeights[id]??98}px`;
       }
     }
-    const content=(settingsOpen?$('settings'):paceDetailsProvider?$('pace-details'):quotaDetailsOpen?$('quota-details'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height;
+    const content=(settingsOpen?$('settings'):quotaDetailsOpen?$('quota-details'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height;
     const chrome=document.querySelector('.panel-header').getBoundingClientRect().height+document.querySelector('footer').getBoundingClientRect().height+18;
     const height=Math.max(480,Math.ceil(content+chrome+(settingsOpen?24:12)));
     if(!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider&&currentView==='quota')quotaPanelHeight=height;
@@ -396,7 +404,6 @@ $('refresh').addEventListener('click',async()=>{$('refresh').disabled=true;$('re
 $('settings-toggle').addEventListener('click',()=>{footerPopover=null;settingsOpen=!settingsOpen;$('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));render(state);});
 $('mode-remaining').addEventListener('click',()=>{paceDetailsProvider=null;api.settings({remaining:true,pacing:false});});$('mode-used').addEventListener('click',()=>{paceDetailsProvider=null;api.settings({remaining:false,pacing:false});});
 $('mode-pacing').addEventListener('click',()=>api.settings({pacing:true}));
-$('close-pace-details').addEventListener('click',()=>{paceDetailsProvider=null;render(state);});
 $('pace-window').addEventListener('change',event=>{if(paceDetailsProvider)api.settings({paceWindows:{[paceDetailsProvider]:event.target.value}});});
 $('pace-reserve').addEventListener('input',event=>{$('pace-reserve-value').textContent=`${event.target.value}%`;});
 $('pace-reserve').addEventListener('change',event=>{if(paceDetailsProvider)api.settings({reservePercent:{[paceDetailsProvider]:Number(event.target.value)}});});

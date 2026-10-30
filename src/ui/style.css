@@ -305,3 +305,12 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
 #pace-summary{border:1px solid #34383e;border-radius:12px;padding:14px;margin:15px 0;font-size:12px;line-height:1.6}
 #pace-summary h3{font-size:12px;margin:0 0 8px}.pace-detail-value{font-size:25px}#pace-summary .pace-bar{height:18px}
 #pace-details .quota-details-heading h2{font-size:14px}
+/* Inline accordion adds space beneath the unchanged main provider row. */
+.card.pace-expanded{min-height:0!important;grid-template-rows:var(--pace-row-height,72px) auto;row-gap:8px}
+.card.pace-expanded>.card-heading{grid-column:1;grid-row:1}
+.card.pace-expanded>.pacing-content{grid-column:2;grid-row:1}
+.card.pace-expanded>#pace-details{grid-column:1/-1;grid-row:2;min-width:0;margin:0 6px;padding-top:10px;border-top:1px solid #34383e}
+.pace-expanded .pace-setting{margin:10px 0;gap:6px}.pace-expanded .pace-setting select{padding:6px}
+.pace-expanded .pace-explanation{font-size:10px;line-height:1.5;margin:8px 0}
+.pace-expanded #pace-summary{padding:10px;margin:10px 0}.pace-expanded #pace-summary p{margin:6px 0}.pace-expanded .pace-detail-value{font-size:21px}
+.card.pace-expanded>.card-grip{top:calc(13px + var(--pace-row-height,72px)/2)}

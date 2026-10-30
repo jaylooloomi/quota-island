@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/version-0.8.0-informational" alt="Version 0.8.0">
+  <img src="https://img.shields.io/badge/version-0.9.0-informational" alt="Version 0.9.0">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
   <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-63%20passing-brightgreen" alt="63 core tests passed locally"></a>
@@ -65,7 +65,7 @@ with a refresh action; **Settings** opens preferences and returns to the same
 Quota/Accounts tab when closed. Popovers are mutually exclusive and close on
 outside click or Escape. Account management stays in the top Accounts tab.
 
-Version 0.8.0 uses the Compact Double-layer layout: a capsule with mini progress
+Version 0.9.0 uses the Compact Double-layer layout: a capsule with mini progress
 bars, flat provider rows, visible version labels, and **Quota / Accounts** tabs.
 Open Accounts to switch or sign out of Claude/Codex. Signing out requires
 confirmation and also affects the official CLI account on this computer.
@@ -194,4 +194,6 @@ README presentation inspired by [i-want-to-sleep](https://github.com/jaylooloomi
 Antigravity account controls: **Switch account** opens the official app, clears old quota, and automatically refreshes after a different account is detected. **Disconnect** only stops monitoring in Quota Pebble and persists across restarts; it does not sign out of Antigravity. Direct native logout is not enabled because no supported external logout entry point was verified for the installed 2.27.0 app.
 
 ### Pacing mode
-Choose **Remaining / Used / Pace** without changing the provider row layout. Pacing uses an independent selected quota window, reserves 10% of total quota by default, and divides the available balance by the actual time until reset. Windows under one day use hourly advice. Details let you choose the window and reserve percentage; both persist locally. Missing or expired reset times, stale data and paused monitoring suppress guidance. These are average budgeting suggestions, not additional provider allowances.
+Choose **Remaining / Used / Pace** without changing the provider row layout. Pacing uses an independent selected quota window, reserves 5% of total quota by default, and divides the available balance by the actual time until reset. Windows under one day use hourly advice. Details let you choose the window and reserve percentage; both persist locally. Missing or expired reset times, stale data and paused monitoring suppress guidance. These are average budgeting suggestions, not additional provider allowances.
+
+Pacing details expand inline beneath the selected provider row. Only one provider is expanded at a time; the other provider cards remain visible and the fixed-width window grows to fit. Collapse the same row to restore the original height.
