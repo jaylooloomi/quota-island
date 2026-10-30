@@ -79,8 +79,8 @@ function publish() {
 function reposition() {
   const bounds = win.getBounds();
   const area = screen.getDisplayMatching(bounds).workArea;
-  const width = Math.min(expanded ? 584 : 624, area.width);
-  const height = Math.min(expanded ? 744 : 92, area.height);
+  const width = Math.min(expanded ? 480 : 464, area.width);
+  const height = Math.min(expanded ? 640 : 76, area.height);
   win.setBounds({ width, height, x: Math.max(area.x, Math.min(bounds.x, area.x + area.width - width)), y: Math.max(area.y, Math.min(bounds.y, area.y + area.height - height)) });
 }
 function setExpanded(value: boolean) { expanded = value; reposition(); publish(); }
@@ -181,7 +181,7 @@ else {
     });
     for (const id of providerIds) poller.states[id].enabled = settings.enabled[id];
     const area = screen.getPrimaryDisplay().workArea;
-    win = new BrowserWindow({ width: 624, height: 92, x: settings.x ?? Math.round(area.x + (area.width - 624) / 2), y: settings.y ?? area.y + 12,
+    win = new BrowserWindow({ width: 464, height: 76, x: settings.x ?? Math.round(area.x + (area.width - 464) / 2), y: settings.y ?? area.y + 12,
       frame: false, transparent: true, resizable: false, maximizable: false, fullscreenable: false, hasShadow: false,
       alwaysOnTop: settings.alwaysOnTop, skipTaskbar: true, show: false, title: 'Quota Island',
       webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true }

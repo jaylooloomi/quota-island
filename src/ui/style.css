@@ -22,3 +22,46 @@
 .panel-header,.context-line,footer{animation:dark-reveal .18s ease-out both}
 @keyframes dark-reveal{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.panel-header,.context-line,footer{animation:none}}
+
+/* Small desktop footprint, with full-size hit targets and readable quotas. */
+.bar{height:58px;padding:0 12px;gap:8px}
+.compact-mode{font-size:11px}
+.provider-strip{height:44px}
+.compact-provider{padding:0 6px;gap:7px}
+.compact-provider+.compact-provider:before{top:8px;height:28px}
+.mini-logo{width:26px;height:26px}
+.mini-value{font-size:17px;line-height:20px}
+.mini-window{font-size:11px;line-height:14px;max-width:63px}
+.mini-value.unknown,.compact-provider.stale .mini-value{font-size:10px}
+.island.expanded{border-radius:23px}
+.panel-header{height:52px;padding:0 16px 0 20px}
+.app-title{min-width:160px;gap:9px}
+h1{font-size:20px}
+.tools{gap:6px}
+.icon{width:32px;height:32px}
+.panel-body{padding:0 12px}
+.context-line{height:46px;padding:0 8px}
+.context-line h2{font-size:14px}
+.segmented button{width:58px;height:25px;font-size:12px}
+.cards{gap:9px}
+.card{min-height:146px;padding:12px 14px 10px;border-radius:17px}
+.card-heading{min-height:48px;padding-bottom:9px;gap:12px}
+.provider-icon,.provider-icon img{width:38px;height:38px}
+.provider-identity h2{font-size:20px;line-height:24px}
+.provider-subtitle,.gemini .provider-subtitle{font-size:13px;line-height:18px;max-width:142px}
+.provider-description{gap:7px;min-height:18px}
+.plan{font-size:10px;line-height:14px;padding:1px 8px;max-width:65px}
+.connection-label{font-size:12px;gap:7px}
+.updated{font-size:10px;line-height:13px}
+.quota-windows{margin-top:10px;gap:12px 20px}
+.quota-windows:not(.single) .quota-row:nth-child(2n):before{left:-10px}
+.quota-label{line-height:20px;margin-bottom:5px}
+.window-label{font-size:12px}
+.quota-number{font-size:19px;line-height:21px}
+.track{height:9px}
+.reset{font-size:10px;line-height:15px;min-height:15px;margin-top:6px}
+.empty-state{padding-top:10px}
+.empty-title{font-size:12px}
+.empty-message{font-size:11px;line-height:1.6;margin:5px 0}
+footer{height:44px;padding:0 18px;font-size:11px}
+.connection-details{padding:12px}
