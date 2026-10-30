@@ -15,9 +15,14 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
       await page.evaluate(locale=>window.quota.settings({locale,pacing:false,remaining:true,reservePercent:{claude:10,codex:10,gemini:10}}),locale);
       await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
       const base=await shape();
+      const barCenters=()=>page.locator('.card').evaluateAll(cards=>cards.map(card=>{const bar=card.querySelector('.quota-windows:not([hidden]) .track,.pacing-content:not([hidden]) .pace-bar'),r=bar.getBoundingClientRect();return r.y+r.height/2;}));
+      const remainingBars=await barCenters();
+      await page.locator('#mode-used').click();await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      assert.deepEqual(await barCenters(),remainingBars,`${locale}: used bars align with remaining`);
       await page.locator('#mode-pacing').click();
       await page.waitForFunction(()=>document.querySelector('#mode-pacing').getAttribute('aria-pressed')==='true');
       assert.deepEqual(await shape(),base,`${locale}: pacing must preserve every card and window dimension`);
+      assert.deepEqual(await barCenters(),remainingBars,`${locale}: pacing bar centers align with remaining`);
       const state=await page.evaluate(()=>window.quota.getState()),fixture=structuredClone(state);
       for(const [id,remaining] of [['claude',62],['codex',80],['gemini',34]]){
         Object.assign(fixture.providers[id],{status:'ready',updatedAt:new Date().toISOString(),reading:{provider:id,plan:id==='claude'?'Team':'Pro',windows:[{id:'seven_day',label:'每週 · 所有模型',usedPercent:100-remaining,resetsAt:new Date(Date.now()+4*86400000).toISOString()}],source:'Test fixture'}});
