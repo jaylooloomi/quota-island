@@ -322,3 +322,13 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
 .card.pace-expanded{row-gap:12px}
 .card.pace-expanded .pace-link{top:calc(var(--pace-row-height,72px) + 8px);bottom:auto}
 .pace-budget{display:flex;align-items:baseline;gap:4px;white-space:nowrap;min-width:0}.pace-budget-label{font-size:9px;color:#b7bdc7;flex-shrink:0}.pace-budget .pace-unit{margin-left:0;font-size:9px}.pace-budget .pace-value{font-size:17px}
+#add-account-area{margin:0;padding:5px 0;height:auto;min-height:28px}
+#add-account-toggle{display:block;width:100%;height:23px;padding:0;font-size:11px;color:#b6bdc8;border:1px dashed #3c424a;border-radius:7px}
+#add-account-toggle:hover{background:#ffffff08;color:#eef0f4}
+#add-account-form{padding:12px;border:1px solid #3c424a;border-radius:10px;margin-top:8px;background:#191c20;font-size:11px}
+#add-account-form label{display:flex;flex-direction:column;gap:7px}#add-account-form input{padding:8px;background:#242830;border:1px solid #565e69;border-radius:6px;color:#fff;min-width:0}
+#add-account-form p{line-height:1.6;color:#b2bac7}#add-account-form button{padding:7px 12px;background:#343a45;border-radius:6px;font-size:11px;margin-right:6px}
+.account-count{position:absolute;top:1px;right:4px;font-size:8px;line-height:12px;min-width:12px;text-align:center;color:#efb597;background:#24201c;border-radius:6px}
+.remove-confirm{flex-basis:100%;font-size:10px;line-height:1.5;text-align:right}.remove-confirm p{margin:6px 0}.remove-confirm button{margin-left:6px}
+#extra-account-settings:empty{display:none}
+.card[data-provider^="claude-account-"] .provider-identity h2{font-size:14px;line-height:20px;overflow-wrap:anywhere}

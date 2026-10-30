@@ -6,8 +6,9 @@ import { Providers } from './providers';
 import { Gemini, GeminiVault } from './gemini';
 import { Connections } from './connections';
 import { CredentialWatch } from './credential-watch';
+import {Accounts} from './accounts';
 import { homedir } from 'node:os';
-import { ProviderError, ProviderId, providerIds, Reading } from './model';
+import { ProviderError, ProviderId, ProviderState, providerIds, Reading } from './model';
 const demo = process.argv.includes('--demo');
 const testing = process.argv.includes('--test-mode');
 const { translate, normalizeLocale } = require('./ui/i18n');
@@ -18,10 +19,10 @@ if (testing) {
   if (!testData) throw new Error('QUOTA_TEST_DATA required');
   app.setPath('userData', testData);
 }
-type Settings = { locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; pacing: boolean; reserveDefaultsVersion:2; reservePercent: Record<ProviderId, number>; paceWindows: Partial<Record<ProviderId, string>>; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: ProviderId[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; x?: number; y?: number };
+type Settings = { locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; pacing: boolean; reserveDefaultsVersion:2; reservePercent: Record<ProviderId, number>; paceWindows: Partial<Record<ProviderId, string>>; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: string[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; x?: number; y?: number };
 let settings: Settings = { locale:'zh-TW', remaining: true, pacing:false, reserveDefaultsVersion:2, reservePercent:{claude:5,codex:5,gemini:5}, paceWindows:{}, alwaysOnTop: true, notifications: false, visible: { claude:true, codex:true, gemini:true }, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
-function validOrder(raw: unknown): raw is ProviderId[] {
-  return Array.isArray(raw) && raw.length === providerIds.length && new Set(raw).size === providerIds.length && raw.every(id => providerIds.includes(id));
+function validOrder(raw: unknown): raw is string[] {
+  return Array.isArray(raw) && raw.length >= 3 && raw.length <= 23 && new Set(raw).size === raw.length && providerIds.every(id=>raw.includes(id)) && raw.every(id => providerIds.includes(id) || (typeof id === 'string' && /^claude-account-[0-9a-f-]{36}$/.test(id)));
 }
 let win: BrowserWindow;
 let tray: Tray;
@@ -63,15 +64,16 @@ function readSettings() {
     if (Number.isFinite(s.x) && Number.isFinite(s.y)) { settings.x = s.x; settings.y = s.y; }
   } catch { /* First run or invalid preferences: use defaults. */ }
 }
-function snapshot() { return { providers: poller.states, settings, auth: connections?.states ?? {}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
+let accounts:Accounts;
+function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
 function publish() {
   persistRateLimits();
   if (!win?.isDestroyed() && !win?.webContents.isDestroyed()) win?.webContents.send('state', snapshot());
   if (settings.notifications && !demo && !testing && Notification.isSupported()) {
-    for (const s of Object.values(poller.states)) {
+    for (const [accountId,s] of Object.entries({...poller.states,...accounts?.snapshot().providers}) as [string,ProviderState][]) {
       if (!s.enabled || s.status !== 'ready') continue;
       for (const w of s.reading?.windows ?? []) {
-        const key = `${s.provider}:${w.id}`;
+        const key = `${accountId}:${w.id}`;
         const reset = w.resetsAt ?? 'unknown';
         if (w.usedPercent < 85) warned.delete(key);
         if (w.usedPercent >= 90 && warned.get(key) !== reset) {
@@ -119,16 +121,19 @@ function installHandlers() {
     'get-state': () => snapshot(),
     'expand': (_event: any, value: unknown) => { if (typeof value === 'boolean') setExpanded(value); },
     'panel-height': (_event: any, value: unknown) => { if (typeof value === 'number' && Number.isFinite(value)) { const height = Math.max(480, Math.min(1200, Math.ceil(value))); if (height !== panelHeight) { panelHeight = height; reposition(); } } },
-    'refresh': async () => { if (!paused) await poller.tick(true); return snapshot(); },
+    'refresh': async () => { if (!paused) await Promise.all([poller.tick(true),accounts.tick(true)]); return snapshot(); },
+    'account-add': (_event:any,label:unknown)=>{try{return {ok:true,id:accounts.add(label)};}catch(e){return {ok:false,message:e instanceof ProviderError?e.message:'無法新增帳號'};}},
+    'account-remove': async (_event:any,id:unknown)=>{try{await accounts.remove(id);return {ok:true};}catch{return {ok:false,message:'無法移除帳號'};}},
     'hide': () => win.hide(),
     'quit': () => { quitting = true; app.quit(); },
     'open-provider': async (_event: any, id: unknown) => { if (typeof id === 'string' && external[id]) await shell.openExternal(external[id]!); },
     'settings': (_event: any, patch: any) => {
       if (!patch || typeof patch !== 'object') return;
+      accounts.patch(patch);
       for(const id of providerIds){if(typeof patch.reservePercent?.[id]==='number'&&Number.isFinite(patch.reservePercent[id])&&patch.reservePercent[id]>=0&&patch.reservePercent[id]<=100)settings.reservePercent[id]=patch.reservePercent[id];if(typeof patch.paceWindows?.[id]==='string'&&patch.paceWindows[id].length<=160)settings.paceWindows[id]=patch.paceWindows[id];}
       for (const id of providerIds) if (typeof patch.visible?.[id] === 'boolean') settings.visible[id] = patch.visible[id];
       if (['zh-TW','en','ja','ko'].includes(patch.locale)) { settings.locale=patch.locale; updateTrayMenu(); }
-      if (validOrder(patch.order)) settings.order = [...patch.order];
+      if (validOrder(patch.order)&&patch.order.every((id:string)=>providerIds.includes(id as ProviderId)||accounts.has(id))) settings.order = [...patch.order];
       const sourceChanged = !connections.states.gemini?.pending && (patch.googleSource === 'antigravity' || patch.googleSource === 'code_assist') && patch.googleSource !== settings.googleSource;
       if (sourceChanged) { settings.googleSource=patch.googleSource; delete connections.states.gemini; }
       for (const key of ['remaining', 'pacing', 'alwaysOnTop', 'notifications'] as const) if (typeof patch[key] === 'boolean') settings[key] = patch[key];
@@ -140,13 +145,15 @@ function installHandlers() {
       if (!paused) void poller.tick();
     },
     'login': (_event: any, raw: unknown) => {
+      if(accounts.has(raw)){if(!demo)void accounts.login(raw);return;}
       const id = validateId(raw);
       if (demo) { connections.states[id] = { pending: false, phase: 'error', message: '展示模式不會啟動登入；正常啟動即可連接帳號' }; publish(); return; }
       void connections.login(id);
     },
-    'reopen-login': (_event: any, raw: unknown) => connections.reopen(validateId(raw)),
-    'cancel-login': (_event: any, raw: unknown) => providers.cancelLogin(validateId(raw)),
+    'reopen-login': (_event: any, raw: unknown) => accounts.has(raw)?accounts.reopen(raw):connections.reopen(validateId(raw)),
+    'cancel-login': (_event: any, raw: unknown) => accounts.has(raw)?accounts.cancel(raw):providers.cancelLogin(validateId(raw)),
     'logout': async (_event: any, raw: unknown) => {
+      if(accounts.has(raw)){if(demo)return {ok:false,message:'展示模式不會登出帳號'};try{await accounts.logout(raw);return {ok:true};}catch(e){return {ok:false,message:e instanceof ProviderError?e.message:'登出未完成，請稍後重試'};}}
       const id=validateId(raw);
       if (demo) return {ok:false,message:'展示模式不會登出帳號'};
       if (connections.states[id]?.pending) return {ok:false,message:'請先取消或完成目前的登入'};
@@ -173,7 +180,7 @@ function installHandlers() {
       const error=await shell.openPath(file);if(error)return {ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'};
       providers.beginAntigravitySwitch();settings.enabled.gemini=true;poller.setEnabled('gemini',true);saveSettings();await poller.signedOut('gemini');void poller.authenticated('gemini');publish();return {ok:true};
     },
-    'submit-code': (_event: any, raw: unknown, code: unknown) => connections.submitCode(validateId(raw), code),
+    'submit-code': (_event: any, raw: unknown, code: unknown) => accounts.has(raw)?accounts.submit(raw,code):connections.submitCode(validateId(raw), code),
   })) {
     ipcMain.handle(channel, (event, ...args) => {
       if (event.sender !== win.webContents || event.senderFrame !== win.webContents.mainFrame) throw new Error('Untrusted sender');
@@ -209,6 +216,11 @@ else {
     connections = new Connections(providers, poller, openAuthUrl, publish, () => {
       if (!quitting && win && !win.isDestroyed()) { setExpanded(true); win.show(); win.focus(); }
     });
+    accounts=new Accounts(path.join(app.getPath('userData'),demo?'demo-claude-accounts':'claude-accounts'),directory=>{
+      const service=new Providers(new Gemini(new GeminiVault(app.getPath('userData'),safeStorage)),()=>settings.googleSource,directory);
+      if(demo)service.read=async()=>demoReading('claude');
+      return service;
+    },openAuthUrl,publish,()=>{if(!quitting&&win&&!win.isDestroyed()){setExpanded(true);win.show();win.focus();}});
     credentialWatch = new CredentialWatch({
       claude: [path.join(process.env.CLAUDE_CONFIG_DIR || path.join(homedir(), '.claude'), '.credentials.json')],
       gemini: [path.join(app.getPath('userData'), 'gemini-session.bin'), path.join(homedir(), '.gemini', 'oauth_creds.json')],
@@ -242,8 +254,9 @@ else {
     win.show();
     if (!demo) await credentialWatch.scan();
     void poller.tick();
-    interval = setInterval(() => { if (!paused) { if (!demo) void credentialWatch.scan(); if(!demo&&settings.enabled.gemini&&settings.googleSource==='antigravity'&&providers.waitingForAntigravityAccount)void poller.authenticated('gemini'); void poller.tick(); } }, 5000);
+    void accounts.tick();
+    interval = setInterval(() => { if (!paused) { if (!demo) void credentialWatch.scan(); if(!demo&&settings.enabled.gemini&&settings.googleSource==='antigravity'&&providers.waitingForAntigravityAccount)void poller.authenticated('gemini'); void poller.tick();void accounts.tick(); } }, 5000);
   });
-  app.on('before-quit', () => { quitting = true; clearInterval(interval); clearTimeout(saveTimer); providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
+  app.on('before-quit', () => { quitting = true; clearInterval(interval); clearTimeout(saveTimer); accounts?.close();providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
   app.on('window-all-closed', () => { if (quitting) app.quit(); });
 }

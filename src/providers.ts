@@ -19,7 +19,15 @@ export class Providers {
   beginAntigravitySwitch(){this.antigravity.beginSwitch();}
   cancelAntigravitySwitch(){this.antigravity.cancelSwitch();}
   get waitingForAntigravityAccount(){return this.antigravity.waitingForAccount;}
-  constructor(private gemini: Gemini, private googleSource: () => 'antigravity' | 'code_assist' = () => 'code_assist') {}
+  constructor(private gemini: Gemini, private googleSource: () => 'antigravity' | 'code_assist' = () => 'code_assist', private claudeConfigDir?:string) {
+    if(claudeConfigDir)this.claudeLogin=new ClaudeLogin(()=>this.claudeCommand());
+  }
+  private claudeCommand(){
+    const command=findCli('claude');if(!this.claudeConfigDir)return command;
+    const env={...command.env,CLAUDE_CONFIG_DIR:this.claudeConfigDir};
+    for(const key of ['CLAUDE_CODE_OAUTH_TOKEN','ANTHROPIC_API_KEY','ANTHROPIC_AUTH_TOKEN'])delete (env as NodeJS.ProcessEnv)[key];
+    return {...command,env};
+  }
   async read(id: ProviderId): Promise<Reading> {
     if (id === 'codex') {
       const account = await this.rpc.call('account/read', { refreshToken: false });
@@ -30,10 +38,10 @@ export class Providers {
     if (id === 'gemini') {
       return this.googleSource() === 'antigravity' ? this.antigravity.read() : this.gemini.read();
     }
-    const dir = process.env.CLAUDE_CONFIG_DIR || path.join(homedir(), '.claude');
+    const dir = this.claudeConfigDir || process.env.CLAUDE_CONFIG_DIR || path.join(homedir(), '.claude');
     let credentials: any;
     try { credentials = JSON.parse(await readFile(path.join(dir, '.credentials.json'), 'utf8')); } catch { /* Keychain fallback below */ }
-    if (!credentials?.claudeAiOauth?.accessToken && process.platform === 'darwin') {
+    if (!this.claudeConfigDir && !credentials?.claudeAiOauth?.accessToken && process.platform === 'darwin') {
       try {
         const { stdout } = await exec('/usr/bin/security', ['find-generic-password', '-s', 'Claude Code-credentials', '-w'], { timeout: 10_000, maxBuffer: 128 * 1024 });
         const text = stdout.trim();
@@ -94,7 +102,7 @@ export class Providers {
     if (this.authJobs.has(id)) throw new ProviderError('auth','請先取消或完成目前的登入');
     if (id === 'codex') { await this.rpc.call('account/logout'); return; }
     if (id === 'claude') {
-      const command=findCli('claude');
+      const command=this.claudeCommand();
       try { await exec(command.file,[...command.args,'auth','logout'],{env:command.env,windowsHide:true,timeout:15_000,maxBuffer:128*1024}); }
       catch { throw new ProviderError('auth','登出未完成，請稍後重試'); }
       return;

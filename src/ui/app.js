@@ -1,6 +1,14 @@
 'use strict';
 const api=window.quota;
 const ids=['claude','gemini','codex'];
+const isExtra=id=>typeof id==='string'&&id.startsWith('claude-account-');
+const baseId=id=>isExtra(id)?'claude':id;
+function syncAccounts(next){
+  const wanted=new Set(['claude','gemini','codex',...(next.accounts??[]).map(a=>a.id)]);
+  for(let i=ids.length-1;i>=0;i--)if(!wanted.has(ids[i])){if(cardNodes[ids[i]]?.contains($('pace-details')))document.querySelector('.panel-body').append($('pace-details'));cardNodes[ids[i]]?.remove();delete cardNodes[ids[i]];ids.splice(i,1);}
+  for(const account of next.accounts??[]){names[account.id]=account.label;subtitles[account.id]='Claude Code';if(!ids.includes(account.id))ids.push(account.id);}
+  makeCards();
+}
 const names={claude:'Claude',gemini:'Gemini',codex:'Codex'};
 const subtitles={claude:'Claude Code',gemini:'CLI / Code Assist',codex:'ChatGPT 訂閱'};
 const presentation=window.QuotaPresentation;
@@ -31,7 +39,7 @@ function renderFooter(){
   for(const id of state.settings.order??ids){
     const s=state.providers[id],entry=document.createElement('div');entry.className='sync-entry';
     const header=document.createElement('div');header.className='sync-entry-heading';
-    const name=document.createElement('strong');name.textContent=names[id];
+    const name=document.createElement('strong');name.textContent=names[id];if(isExtra(id))name.setAttribute('data-localized-text','');
     const status=document.createElement('span');status.textContent=!s.enabled?'已暫停':s.refreshing||s.status==='loading'?'同步中':s.status==='ready'?'已連接':s.status==='signed_out'?'未連接':'更新失敗';header.append(name,status);
     const time=document.createElement('p');time.textContent=elapsed(s.updatedAt);if(s.updatedAt){time.title=presentation.resetDate(s.updatedAt,state.settings.locale);time.setAttribute('data-localized-title','');}
     entry.append(header,time);
@@ -45,9 +53,11 @@ function renderFooter(){
 const previousPending=new Map();
 function orderProviders(order){
   const strip=$('provider-strip');
+  let compactIndex=0;
   for(const [index,id] of order.entries()){
     const button=strip.querySelector(`[data-provider="${id}"]`);
-    if(strip.children[index]!==button)strip.insertBefore(button,strip.children[index]??null);
+    if(button){if(strip.children[compactIndex]!==button)strip.insertBefore(button,strip.children[compactIndex]??null);compactIndex++;}
+    if(!cardNodes[id])continue;
     if($('cards').children[index]!==cardNodes[id])$('cards').insertBefore(cardNodes[id],$('cards').children[index]??null);
   }
 }
@@ -103,10 +113,20 @@ function sourceFor(id){
 function startLogin(id){activeDetail=id;void api.login(id);}
 function makeCards(){
   for(const id of ids){
-    const card=$('card-template').content.firstElementChild.cloneNode(true);card.classList.add(id);card.dataset.provider=id;
+    if(cardNodes[id])continue;
+    const card=$('card-template').content.firstElementChild.cloneNode(true);card.classList.add(baseId(id));card.dataset.provider=id;
     card.querySelector('h2').textContent=names[id];card.querySelector('.provider-subtitle').textContent=subtitles[id];
-    const logo=document.createElement('img');logo.src=`icons/${id}.svg`;logo.alt='';logo.draggable=false;card.querySelector('.provider-icon').append(logo);
-    card.querySelector('.connection-logo').src=`icons/${id}.svg`;
+    const logo=document.createElement('img');logo.src=`icons/${baseId(id)}.svg`;logo.alt='';logo.draggable=false;card.querySelector('.provider-icon').append(logo);
+    card.querySelector('.connection-logo').src=`icons/${baseId(id)}.svg`;
+    if(isExtra(id)){
+      card.querySelector('.provider-identity h2').setAttribute('data-localized-text','');
+      const remove=document.createElement('button');remove.className='remove-account danger';remove.textContent='移除帳號';
+      remove.addEventListener('click',()=>{card.querySelector('.remove-confirm').hidden=false;});
+      const confirm=document.createElement('div');confirm.className='remove-confirm';confirm.hidden=true;
+      const note=document.createElement('p');note.textContent='只移除此獨立帳號，不影響其他帳號。';
+      const yes=document.createElement('button');yes.textContent='確認移除';yes.addEventListener('click',async()=>{await api.removeAccount(id);if(activeDetail===id)activeDetail=null;if(paceDetailsProvider===id)paceDetailsProvider=null;render(await api.getState());});
+      const no=document.createElement('button');no.textContent='取消';no.addEventListener('click',()=>{confirm.hidden=true;});confirm.append(note,yes,no);card.querySelector('.account-actions').append(remove,confirm);
+    }
     const heading=card.querySelector('.card-heading');heading.title='拖曳調整卡片順序';enableReorder(heading,id,card);
     const grip=document.createElement('button');grip.className='card-grip';grip.type='button';grip.title='拖曳調整卡片順序';grip.setAttribute('aria-label',`${names[id]} · 拖曳調整卡片順序`);grip.textContent='⠿';
     enableReorder(grip,id,card);card.prepend(grip);
@@ -132,13 +152,13 @@ function makeCards(){
       finally{logoutBusy=null;confirmLogout=null;const next=await api.getState();if(!result?.ok){next.auth[id]={pending:false,phase:'error',message:result?.message};activeDetail=id;}render(next);}
     });
     card.querySelector('.cancel-login').addEventListener('click',()=>api.cancelLogin(id));
-    card.querySelector('.provider-link').addEventListener('click',()=>api.openProvider(id));
+    card.querySelector('.provider-link').addEventListener('click',()=>api.openProvider(baseId(id)));
     card.querySelector('.reopen-login').addEventListener('click',()=>api.reopenLogin(id));
     card.querySelector('.auth-code-form').addEventListener('submit',event=>{event.preventDefault();const input=card.querySelector('.auth-code'),code=input.value.trim();input.value='';if(code)api.submitCode(id,code);});
-    card.querySelector('.setup-links button').addEventListener('click',()=>api.openProvider(`install-${id}`));
+    card.querySelector('.setup-links button').addEventListener('click',()=>api.openProvider(`install-${baseId(id)}`));
     $('cards').append(card);cardNodes[id]=card;
     const miniTrack=document.createElement('span');miniTrack.className='mini-track';miniTrack.innerHTML='<span></span>';
-    document.querySelector(`.compact-provider[data-provider="${id}"] .mini-info`).append(miniTrack);
+    document.querySelector(`.compact-provider[data-provider="${id}"] .mini-info`)?.append(miniTrack);
   }
 }
 function renderConnection(id,s,auth){
@@ -147,7 +167,7 @@ function renderConnection(id,s,auth){
   card.classList.toggle('details-open',!details.hidden);
   card.querySelector('.connection-status').setAttribute('aria-expanded',String(!details.hidden));
   card.querySelector('.connection-description').textContent=id==='codex'?'登入要監控的 ChatGPT 訂閱帳號，可與 Claude、Gemini 使用不同帳號。':antigravity?'沿用 Antigravity 的 Google 帳號，讀取 Gemini 配額資訊。':`連接你的 ${id==='gemini'?'Google':names[id]} 帳號以讀取配額資訊。`;
-  card.querySelector('.connection-account h4').textContent=id==='claude'?'Claude Code':id==='codex'?'Codex':antigravity?'Antigravity · Gemini':'Google Code Assist';
+  card.querySelector('.connection-account h4').textContent=baseId(id)==='claude'?'Claude Code':id==='codex'?'Codex':antigravity?'Antigravity · Gemini':'Google Code Assist';
   const phase=auth?.phase;
   const step=connected?4:phase==='syncing'||phase==='cooldown'?2:phase==='connecting'||phase==='verifying'?1:0;
   card.querySelector('.connection-steps').style.setProperty('--progress',`${Math.min(100,step/3*100)}%`);
@@ -159,7 +179,7 @@ function renderConnection(id,s,auth){
   message.textContent=auth?.pending||['error','cooldown'].includes(auth?.phase)?auth.message:connected?'已連接，配額已自動同步':s.error||'完成授權後會自動同步配額。';
   message.classList.toggle('success',!!connected);message.classList.toggle('error',phase==='error'||(!auth?.pending&&phase!=='cooldown'&&['stale','unavailable'].includes(s.status)));
   const text=phase==='syncing'?'自動同步中…':phase==='connecting'?'連接中…':auth?.pending?'等待授權…':id==='codex'?(connected?'切換 Codex 帳號 →':'登入 Codex（ChatGPT） →'):connected?'重新連接':antigravity?'連接 Antigravity 並同步 →':`登入 ${id==='gemini'?'Google':names[id]} 並同步 →`;
-  for(const button of [card.querySelector('.login'),card.querySelector('.connect-primary')]){button.textContent=text;button.disabled=!!auth?.pending||!s.enabled;}
+  for(const button of [card.querySelector('.login'),card.querySelector('.connect-primary')]){button.textContent=text;button.disabled=!!auth?.pending||(!s.enabled&&!isExtra(id));}
   if(phase==='verifying')card.querySelector('.login').textContent='驗證授權碼中…';
   const limited=/429|限制查詢|查詢頻率/.test(s.error??'');
   card.querySelector('.connect-primary').hidden=false;
@@ -169,7 +189,7 @@ function renderConnection(id,s,auth){
   card.querySelector('.connection-note').textContent=limited?`目前限制的是配額查詢，不代表已登出。可登入或更新授權；重新登入不會解除限流。${retryLabel(s)||'冷卻後自動重試'}。`:'登入完成後自動更新，不必手動查用量。';
   if(id==='codex')card.querySelector('.connection-note').textContent+=' Codex 使用獨立的 OpenAI／ChatGPT 授權；切換會同步更新本機 Codex CLI 的帳號，不會登出 Claude 或 Gemini。瀏覽器若帶入其他帳號，請選擇使用其他帳號登入。';
   if(auth?.pending)card.querySelector('.connection-note').textContent=phase==='verifying'?'正在等待官方登入程序完成驗證；配額限流不會阻止帳號授權。':'請在瀏覽器完成登入；若選錯帳號，可取消後重試。';
-  card.querySelector('.cancel-login').hidden=id!=='claude'||!auth?.pending||phase==='syncing';
+  card.querySelector('.cancel-login').hidden=baseId(id)!=='claude'||!auth?.pending||phase==='syncing';
   card.querySelector('.auth-code-form').hidden=!auth?.pending||!auth?.codeRequired;
   card.querySelector('.reopen-login').hidden=!auth?.pending||!auth?.canReopen||phase==='syncing';
   card.querySelector('.provider-link').hidden=!s.reading;
@@ -181,7 +201,7 @@ function renderCard(id){
   const expired=s.updatedAt&&Date.now()-Date.parse(s.updatedAt)>24*3600000;
   const allWindows=s.enabled&&!expired?presentation.groupWindows(s.reading?.windows??[]):[];
   const grouped=allWindows.some(w=>w.group);
-  const scopedClaude=id==='claude'&&allWindows.some(w=>/^seven_day_/.test(w.id));
+  const scopedClaude=baseId(id)==='claude'&&allWindows.some(w=>/^seven_day_/.test(w.id));
   const primaryClaude=allWindows.filter(w=>['five_hour','seven_day'].includes(w.id));
   const windows=scopedClaude?(primaryClaude.length?primaryClaude:allWindows.slice(0,1)):grouped?[...allWindows].sort((a,b)=>b.usedPercent-a.usedPercent).slice(0,2):allWindows;
   const paceMode=!!state.settings.pacing&&currentView==='quota'&&activeDetail!==id;
@@ -232,11 +252,13 @@ function renderCard(id){
   renderConnection(id,s,auth);
   const accountActions=card.querySelector('.account-actions');accountActions.hidden=currentView!=='accounts'||activeDetail===id;
   const switchButton=card.querySelector('.account-switch');switchButton.textContent=usesAntigravity?'切換帳號':ready(s)?'切換帳號':'登入帳號';
-  switchButton.disabled=!!auth?.pending||logoutBusy===id||(!s.enabled&&!usesAntigravity);
+  switchButton.disabled=!!auth?.pending||logoutBusy===id||(!s.enabled&&!usesAntigravity&&!isExtra(id));
   const logoutButton=card.querySelector('.account-logout');logoutButton.textContent=usesAntigravity?'中斷連接':'登出';logoutButton.hidden=usesAntigravity?!s.enabled:id==='gemini'||!s.reading;logoutButton.disabled=!!auth?.pending||logoutBusy===id;
   card.querySelector('.logout-confirm').hidden=confirmLogout!==id;
+  if(isExtra(id))card.querySelector('.logout-confirm p').textContent='只登出此獨立帳號，不影響其他帳號。';
   for(const button of card.querySelectorAll('.logout-confirm button'))button.disabled=logoutBusy===id;
   const mini=$(`mini-${id}`),windowLabel=$(`window-${id}`),button=document.querySelector(`.compact-provider[data-provider="${id}"]`),w=windows[0];
+  if(!mini)return;
   button.classList.toggle('unconnected',!w);button.classList.toggle('disabled',!s.enabled);button.classList.toggle('stale',s.status==='stale');
   mini.className=`mini-value${w?'':' unknown'}`;
   mini.textContent=!s.enabled?'暫停':expired?'資料過期':s.status==='stale'?'更新失敗':w?`${percent(w)}%`:s.status==='loading'?'同步中':s.status==='signed_out'?'未連接':limited?'限流中':'讀取失敗';
@@ -276,6 +298,7 @@ function renderPaceDetails(){
   if(!paceDetailsProvider)return;
   const id=paceDetailsProvider,windows=presentation.groupWindows(state.providers[id].reading?.windows??[]),{w,p}=paceData(id,windows);
   $('pace-details-title').textContent=`${id==='gemini'?'Antigravity':names[id]} · 配速詳情`;
+  if(isExtra(id)){$('pace-details-title').textContent=`${names[id]} · ${paceText('配速詳情')}`;$('pace-details-title').setAttribute('data-localized-text','');}else $('pace-details-title').removeAttribute('data-localized-text');
   const select=$('pace-window');select.replaceChildren();
   for(const window of windows){const option=document.createElement('option');option.value=window.id;option.textContent=window.label;option.selected=window.id===w?.id;select.append(option);}
   select.disabled=!windows.length;$('pace-reserve').value=state.settings.reservePercent?.[id]??5;$('pace-reserve-value').textContent=`${$('pace-reserve').value}%`;
@@ -293,8 +316,10 @@ function renderPaceDetails(){
 function renderQuotaDetails(){
   const container=$('quota-groups');container.replaceChildren();
   const groups=new Map();
-  const claude=quotaDetailsProvider==='claude';
+  const claude=baseId(quotaDetailsProvider)==='claude';
   $('quota-details').querySelector('.quota-details-heading h2').textContent=claude?'Claude 模型配額':'Antigravity 配額';
+  const modelTitle=$('quota-details').querySelector('.quota-details-heading h2');
+  if(isExtra(quotaDetailsProvider)){modelTitle.textContent=`${names[quotaDetailsProvider]} · ${paceText('Claude 模型配額')}`;modelTitle.setAttribute('data-localized-text','');}else modelTitle.removeAttribute('data-localized-text');
   document.querySelector('.quota-details-note').textContent=claude?'模型專屬限制可能與所有模型限制同時適用，兩者不能相加。':'以下都是 Antigravity 內的配額，不是獨立 Claude Code／Codex 訂閱額度。';
   for(const window of state.providers[quotaDetailsProvider].reading?.windows??[]){
     const group=claude?(window.id==='five_hour'?null:'每週配額'):window.group;
@@ -317,7 +342,10 @@ function renderQuotaDetails(){
   if(!groups.size)container.textContent='來源尚未提供群組配額';
 }
 function render(next){
-  if(!next)return;state=next;
+  if(!next)return;syncAccounts(next);state=next;
+  if(activeDetail&&!state.providers[activeDetail])activeDetail=null;
+  if(paceDetailsProvider&&!state.providers[paceDetailsProvider])paceDetailsProvider=null;
+  if(!state.providers[quotaDetailsProvider]){quotaDetailsOpen=false;quotaDetailsProvider='claude';}
   if(paceDetailsProvider&&(!state.settings.pacing||currentView!=='quota'||settingsOpen||activeDetail||state.settings.visible?.[paceDetailsProvider]===false))paceDetailsProvider=null;
   if(!state.expanded)footerPopover=null;
   for(const id of ids){
@@ -358,7 +386,11 @@ function render(next){
   $('google-source').value=state.settings.googleSource;$('google-source').disabled=!!state.auth.gemini?.pending;
   for(const input of document.querySelectorAll('[data-enable]'))input.checked=state.settings.enabled[input.dataset.enable];
   ids.forEach(renderCard);
-  for(const id of ids){const visible=state.settings.visible?.[id]!==false;cardNodes[id].hidden=!visible;document.querySelector(`.compact-provider[data-provider="${id}"]`).hidden=!visible;}
+  for(const id of ids){const visible=state.settings.visible?.[id]!==false;cardNodes[id].hidden=!visible;const compact=document.querySelector(`.compact-provider[data-provider="${id}"]`);if(compact)compact.hidden=!visible;}
+  const extraSettings=$('extra-account-settings');extraSettings.replaceChildren();
+  for(const account of state.accounts??[]){const label=document.createElement('label'),name=document.createElement('span');name.textContent=account.label;name.setAttribute('data-localized-text','');const input=document.createElement('input');input.type='checkbox';input.setAttribute('role','switch');input.checked=state.settings.visible[account.id]!==false;input.addEventListener('change',()=>api.settings({visible:{[account.id]:input.checked}}));label.append(name,input);extraSettings.append(label);}
+  const accountCount=(state.accounts?.length??0)+1;$('claude-account-count').textContent=accountCount>1?String(accountCount):'';$('claude-account-count').hidden=accountCount===1;
+  $('add-account-area').hidden=settingsOpen||quotaDetailsOpen;
   for(const input of document.querySelectorAll('[data-visible]'))input.checked=state.settings.visible?.[input.dataset.visible]!==false;
   $('no-visible-providers').hidden=settingsOpen||quotaDetailsOpen||ids.some(id=>state.settings.visible?.[id]!==false);
   renderPaceDetails();
@@ -386,7 +418,7 @@ function render(next){
         card.style.minHeight=`${quotaCardHeights[id]??98}px`;
       }
     }
-    const content=(settingsOpen?$('settings'):quotaDetailsOpen?$('quota-details'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height;
+    const content=(settingsOpen?$('settings'):quotaDetailsOpen?$('quota-details'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height+(!settingsOpen&&!quotaDetailsOpen?$('add-account-area').getBoundingClientRect().height:0);
     const chrome=document.querySelector('.panel-header').getBoundingClientRect().height+document.querySelector('footer').getBoundingClientRect().height+18;
     const height=Math.max(480,Math.ceil(content+chrome+(settingsOpen?24:12)));
     if(!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider&&currentView==='quota')quotaPanelHeight=height;
@@ -394,6 +426,13 @@ function render(next){
   });
 }
 makeCards();
+$('add-account-toggle').addEventListener('click',()=>{$('add-account-form').hidden=!$('add-account-form').hidden;render(state);if(!$('add-account-form').hidden)$('account-label').focus();});
+$('cancel-add-account').addEventListener('click',()=>{$('add-account-form').hidden=true;$('add-account-error').textContent='';render(state);});
+$('add-account-form').addEventListener('submit',async event=>{
+  event.preventDefault();const result=await api.addAccount($('account-label').value);
+  if(!result.ok){$('add-account-error').textContent=result.message;render(state);return;}
+  $('add-account-form').hidden=true;$('account-label').value='';activeDetail=result.id;render(await api.getState());void api.login(result.id);
+});
 document.querySelectorAll('[data-expand]').forEach(button=>{
   enableReorder(button,button.dataset.provider);
   button.addEventListener('click',()=>{if(!draggedProvider&&Date.now()>suppressClickUntil)api.expand(true);});

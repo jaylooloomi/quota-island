@@ -22,7 +22,7 @@
       <div class="compact-brand drag" title="拖曳移動整座動態島" aria-label="拖曳移動動態島"><span class="compact-name">Quota Pebble</span><span id="compact-version"></span></div>
       <span class="compact-mode" id="compact-mode">剩餘</span>
       <div id="provider-strip" class="provider-strip">
-        <button class="compact-provider claude" data-provider="claude" data-expand draggable="true" title="拖曳排序；Alt + 左右鍵也可排序" aria-label="展開 Claude 配額"><img class="mini-logo" src="icons/claude.svg" alt="" draggable="false"><span class="mini-info"><span class="mini-value" id="mini-claude">同步中</span><span class="mini-window" id="window-claude"></span></span><span class="mini-alert" hidden>!</span></button>
+        <button class="compact-provider claude" data-provider="claude" data-expand draggable="true" title="拖曳排序；Alt + 左右鍵也可排序" aria-label="展開 Claude 配額"><img class="mini-logo" src="icons/claude.svg" alt="" draggable="false"><span class="mini-info"><span id="claude-account-count" class="account-count" hidden></span><span class="mini-value" id="mini-claude">同步中</span><span class="mini-window" id="window-claude"></span></span><span class="mini-alert" hidden>!</span></button>
         <button class="compact-provider gemini" data-provider="gemini" data-expand draggable="true" title="拖曳排序；Alt + 左右鍵也可排序" aria-label="展開 Gemini 配額"><img class="mini-logo" src="icons/gemini.svg" alt="" draggable="false"><span class="mini-info"><span class="mini-value" id="mini-gemini">同步中</span><span class="mini-window" id="window-gemini"></span></span><span class="mini-alert" hidden>!</span></button>
         <button class="compact-provider codex" data-provider="codex" data-expand draggable="true" title="拖曳排序；Alt + 左右鍵也可排序" aria-label="展開 Codex 配額"><img class="mini-logo" src="icons/codex.svg" alt="" draggable="false"><span class="mini-info"><span class="mini-value" id="mini-codex">同步中</span><span class="mini-window" id="window-codex"></span></span><span class="mini-alert" hidden>!</span></button>
       </div>
@@ -44,7 +44,7 @@
           <label>Claude<input type="checkbox" data-visible="claude" role="switch"></label>
           <label>Codex<input type="checkbox" data-visible="codex" role="switch"></label>
           <label>Antigravity / Gemini<input type="checkbox" data-visible="gemini" role="switch"></label>
-          <div class="settings-title sources-title">監控來源</div>
+          <div id="extra-account-settings"></div><div class="settings-title sources-title">監控來源</div>
           <label>Claude Code<input type="checkbox" data-enable="claude" role="switch"></label>
           <label>Gemini<input type="checkbox" data-enable="gemini" role="switch"></label>
           <label>Codex<input type="checkbox" data-enable="codex" role="switch"></label>
@@ -52,7 +52,7 @@
           <p>拖拉服務圖示或卡片標題可排序；左側把手移動整座島。Ctrl / ⌘ + Alt + Q 隱藏或顯示。</p>
           <div class="settings-actions"><button id="hide" class="text-button">隱藏到系統匣</button><button id="quit" class="text-button danger">結束 Quota Pebble</button></div>
         </section>
-        <div id="cards" class="cards" aria-live="polite"></div>
+        <div id="cards" class="cards" aria-live="polite"></div><section id="add-account-area"><button id="add-account-toggle" class="text-button">＋ 新增帳號</button><form id="add-account-form" hidden><label>Claude 帳號名稱<input id="account-label" maxlength="24" required placeholder="例如：Claude 工作帳號" autocomplete="off"></label><p>新增獨立 Claude 登入，不會更改目前的帳號。</p><div><button type="submit">新增並登入</button><button id="cancel-add-account" type="button">取消</button></div><p id="add-account-error" role="alert"></p></form></section>
         <section id="pace-details" hidden><div class="quota-details-heading"><h2 id="pace-details-title"></h2></div><label class="pace-setting">配額窗口<select id="pace-window"></select></label><label class="pace-setting">保留比例<span><input id="pace-reserve" type="range" min="0" max="100" step="1"><output id="pace-reserve-value"></output></span></label><p class="pace-explanation">保留比例以總配額為基準；各來源與窗口獨立計算。</p><div id="pace-summary"></div><p class="pace-explanation">這是平均分配建議，不是用量上限；少於一天的窗口改以每小時計算。</p></section>
         <p id="no-visible-providers" hidden>所有服務已隱藏，請到設定開啟顯示。</p>
         <section id="quota-details" hidden aria-label="所有配額"><div class="quota-details-heading"><h2>Antigravity 配額</h2><button id="close-quota-details" class="text-button">返回配額</button></div><p class="quota-details-note">以下都是 Antigravity 內的配額，不是獨立 Claude Code／Codex 訂閱額度。</p><div id="quota-groups"></div></section>
