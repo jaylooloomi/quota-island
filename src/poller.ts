@@ -58,7 +58,7 @@ export class Poller {
   async authenticated(id: ProviderId) {
     await this.inFlight.get(id);
     this.states[id].reading = null; this.states[id].updatedAt = null;
-    this.states[id].nextPollAt = 0; this.failures.delete(id);
+    this.states[id].nextPollAt = Math.max(0, this.rateLimitUntil.get(id) ?? 0); this.failures.delete(id);
     return this.refresh(id);
   }
   tick(manual = false) { return Promise.all(providerIds.map(id => this.refresh(id, manual))); }

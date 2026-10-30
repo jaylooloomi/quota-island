@@ -54,10 +54,16 @@ const os=require('node:os');
     limited.providers.claude.error='Claude 配額服務限制查詢頻率（HTTP 429）';limited.providers.claude.nextPollAt=Date.now()+3600000;
     await send(limited);await page.locator('.card.claude .status-label').filter({hasText:'服務限流'}).waitFor();
     assert.match(await page.locator('.card.claude .empty-message').textContent(),/1 小時.*自動重試/);
-    assert.equal(await page.locator('.card.claude .connect-primary').isDisabled(),true);
+    assert.equal(await page.locator('.card.claude .connect-primary').isEnabled(),true);
+    assert.match(await page.locator('.card.claude .connect-primary').textContent(),/登入 Claude.*管理授權/);
     const limitFits=await page.locator('.panel-body').evaluate(el=>el.scrollHeight<=el.clientHeight+1);
     assert.equal(limitFits,true,'A cooled-down provider must not push the other live quota cards out of view');
     await page.locator('.card.claude').screenshot({path:'test-results/design-rate-limit.png'});
+    await page.locator('.card.claude .connection-status').click();
+    assert.equal(await page.locator('.card.claude .login').isVisible(),true);
+    assert.equal(await page.locator('.card.claude .login').isEnabled(),true);
+    assert.match(await page.locator('.card.claude .connection-note').textContent(),/重新登入不會解除限流/);
+    await page.locator('.card.claude').screenshot({path:'test-results/design-rate-limit-login.png'});
     const report={passed:true,packaged:!!executablePath,checks:['bundled Inter font','reference card values and layout','three cards fit without scrollbar','expanded panel hides compact bar','bars match percentage values','vector icons load','four completed connection stages','connected success banner','explicit signed-out compact state','stale compact state retains labeled old value'],layout:fit};
     await fs.writeFile('test-results/design.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
   }finally{await app.close();await fs.rm(directory,{recursive:true,force:true,maxRetries:5,retryDelay:200});}

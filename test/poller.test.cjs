@@ -55,3 +55,17 @@ test('persisted Retry-After survives a new poller instance and expires automatic
   assert.equal(p.rateLimits().claude.until,now+3600000);
   now+=3600000;await p.refresh('claude');assert.equal(calls,1);assert.deepEqual(p.rateLimits(),{});
 });
+
+test('successful reauthorization preserves quota cooldown and resumes at its deadline',async()=>{
+  let now=1000000,calls=0;
+  const p=new Poller(async id=>{calls++;return reading(id);},()=>{},()=>now);
+  const deadline=now+3600000;
+  p.restoreRateLimits({claude:{until:deadline,message:'HTTP 429'}});
+  await p.authenticated('claude');
+  assert.equal(calls,0);
+  assert.equal(p.states.claude.nextPollAt,deadline,'Login must not erase the displayed retry deadline');
+  assert.equal(p.states.claude.status,'unavailable');
+  await p.refresh('claude',true);assert.equal(calls,0);
+  now=deadline;await p.refresh('claude');
+  assert.equal(calls,1);assert.equal(p.states.claude.status,'ready');
+});

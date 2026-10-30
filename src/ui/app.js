@@ -76,7 +76,7 @@ function makeCards(){
     const heading=card.querySelector('.card-heading');heading.title='拖曳調整卡片順序';enableReorder(heading,id,card);
     card.querySelector('.connection-status').addEventListener('click',()=>{activeDetail=activeDetail===id?null:id;render(state);});
     card.querySelector('.close-connection').addEventListener('click',()=>{activeDetail=null;render(state);});
-    card.querySelector('.connect-primary').addEventListener('click',()=>{if(state.providers[id].status==='unavailable')void api.refresh();else startLogin(id);});
+      card.querySelector('.connect-primary').addEventListener('click',()=>{const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
     card.querySelector('.login').addEventListener('click',()=>startLogin(id));
     card.querySelector('.provider-link').addEventListener('click',()=>api.openProvider(id));
     card.querySelector('.reopen-login').addEventListener('click',()=>api.reopenLogin(id));
@@ -105,11 +105,11 @@ function renderConnection(id,s,auth){
   const text=phase==='syncing'?'自動同步中…':phase==='connecting'?'連接中…':auth?.pending?'等待授權…':connected?'重新連接':antigravity?'連接 Antigravity 並同步 →':`登入 ${id==='gemini'?'Google':names[id]} 並同步 →`;
   for(const button of [card.querySelector('.login'),card.querySelector('.connect-primary')]){button.textContent=text;button.disabled=!!auth?.pending||!s.enabled;}
   const limited=/429|限制查詢|查詢頻率/.test(s.error??'');
-  card.querySelector('.connect-primary').hidden=limited;
-  if(limited){for(const button of [card.querySelector('.login'),card.querySelector('.connect-primary')]){button.textContent='冷卻後自動恢復';button.disabled=true;}}
+  card.querySelector('.connect-primary').hidden=false;
+  if(limited&&!auth?.pending){for(const button of [card.querySelector('.login'),card.querySelector('.connect-primary')])button.textContent=`登入 ${id==='gemini'?'Google':names[id]}（管理授權） →`;}
   else if(s.status==='unavailable')card.querySelector('.connect-primary').textContent='重新同步';
   else if(s.status==='loading'){card.querySelector('.connect-primary').textContent='同步中…';card.querySelector('.connect-primary').disabled=true;}
-  card.querySelector('.connection-note').textContent=limited?'服務要求冷卻，期滿會自動重試。':'登入完成後自動更新，不必手動查用量。';
+  card.querySelector('.connection-note').textContent=limited?`目前限制的是配額查詢，不代表已登出。可登入或更新授權；重新登入不會解除限流。${retryLabel(s)||'冷卻後自動重試'}。`:'登入完成後自動更新，不必手動查用量。';
   card.querySelector('.auth-code-form').hidden=!auth?.pending||!auth?.codeRequired;
   card.querySelector('.reopen-login').hidden=!auth?.pending||!auth?.canReopen||phase==='syncing';
   card.querySelector('.provider-link').hidden=!s.reading;

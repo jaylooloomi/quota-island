@@ -1,6 +1,6 @@
 {
   "name": "quota-island",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "A local-first desktop island for Claude, Gemini CLI and Codex quotas",
   "author": "Quota Island",
@@ -38,7 +38,9 @@
     ],
     "asar": true,
     "npmRebuild": false,
-    "portable": { "useZip": true },
+    "portable": {
+      "useZip": true
+    },
     "win": {
       "target": "portable",
       "signAndEditExecutable": false
