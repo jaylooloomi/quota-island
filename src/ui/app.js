@@ -294,6 +294,9 @@ function render(next){
   $('google-source').value=state.settings.googleSource;$('google-source').disabled=!!state.auth.gemini?.pending;
   for(const input of document.querySelectorAll('[data-enable]'))input.checked=state.settings.enabled[input.dataset.enable];
   ids.forEach(renderCard);
+  for(const id of ids){const visible=state.settings.visible?.[id]!==false;cardNodes[id].hidden=!visible;document.querySelector(`.compact-provider[data-provider="${id}"]`).hidden=!visible;}
+  for(const input of document.querySelectorAll('[data-visible]'))input.checked=state.settings.visible?.[input.dataset.visible]!==false;
+  $('no-visible-providers').hidden=settingsOpen||quotaDetailsOpen||ids.some(id=>state.settings.visible?.[id]!==false);
   renderQuotaDetails();
   renderFooter();
   $('language').value=state.settings.locale??'zh-TW';
@@ -338,5 +341,6 @@ $('close-quota-details').addEventListener('click',()=>{quotaDetailsOpen=false;re
 $('language').addEventListener('change',event=>api.settings({locale:event.target.value}));
 for(const key of ['alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
+for(const input of document.querySelectorAll('[data-visible]'))input.addEventListener('change',()=>api.settings({visible:{[input.dataset.visible]:input.checked}}));
 document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(footerPopover){closeFooterPopover(true);event.preventDefault();}else if(quotaDetailsOpen){quotaDetailsOpen=false;render(state);}else if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
 api.subscribe(render);api.getState().then(render);setInterval(()=>{if(state)render(state);},15000);

@@ -40,6 +40,10 @@
           <label>語言<select id="language" aria-label="語言"><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option></select></label>
           <label>保持最上層<input type="checkbox" id="alwaysOnTop" role="switch"></label>
           <label>用量達 90% 時提醒<input type="checkbox" id="notifications" role="switch"></label>
+          <div class="settings-title sources-title">顯示服務</div>
+          <label>Claude<input type="checkbox" data-visible="claude" role="switch"></label>
+          <label>Codex<input type="checkbox" data-visible="codex" role="switch"></label>
+          <label>Antigravity / Gemini<input type="checkbox" data-visible="gemini" role="switch"></label>
           <div class="settings-title sources-title">監控來源</div>
           <label>Claude Code<input type="checkbox" data-enable="claude" role="switch"></label>
           <label>Gemini<input type="checkbox" data-enable="gemini" role="switch"></label>
@@ -49,6 +53,7 @@
           <div class="settings-actions"><button id="hide" class="text-button">隱藏到系統匣</button><button id="quit" class="text-button danger">結束 Quota Island</button></div>
         </section>
         <div id="cards" class="cards" aria-live="polite"></div>
+        <p id="no-visible-providers" hidden>所有服務已隱藏，請到設定開啟顯示。</p>
         <section id="quota-details" hidden aria-label="所有配額"><div class="quota-details-heading"><h2>Antigravity 配額</h2><button id="close-quota-details" class="text-button">返回配額</button></div><p class="quota-details-note">以下都是 Antigravity 內的配額，不是獨立 Claude Code／Codex 訂閱額度。</p><div id="quota-groups"></div></section>
       </div>
       <div id="language-popover" class="footer-popover language-popover" role="menu" aria-label="語言" hidden><button role="menuitemradio" data-locale="zh-TW">繁體中文</button><button role="menuitemradio" data-locale="en">English</button><button role="menuitemradio" data-locale="ja">日本語</button><button role="menuitemradio" data-locale="ko">한국어</button></div>

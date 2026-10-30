@@ -2,6 +2,7 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['顯示服務','Visible services','表示するサービス','표시할 서비스'],['所有服務已隱藏，請到設定開啟顯示。','All services are hidden. Show them in Settings.','すべて非表示です。設定で表示を有効にしてください。','모든 서비스가 숨겨져 있습니다. 설정에서 표시를 켜세요.'],
     ['查看模型配額','View model limits','モデル利用枠を表示','모델 할당량 보기'],['Claude 模型配額','Claude model limits','Claude モデル利用枠','Claude 모델 할당량'],['每週配額','Weekly limits','週間利用枠','주간 할당량'],['模型專屬限制可能與所有模型限制同時適用，兩者不能相加。','Model-specific and all-model limits may apply together; their quotas cannot be added.','モデル別と全モデルの制限は同時に適用される場合があり、合算できません。','모델별 제한과 전체 모델 제한이 동시에 적용될 수 있으며 할당량을 합산할 수 없습니다.'],
     ['所有配額','All quota limits','すべての利用枠','모든 할당량'],['Antigravity 配額','Antigravity quotas','Antigravity 利用枠','Antigravity 할당량'],['查看所有配額','View all limits','すべて表示','모든 할당량 보기'],['返回配額','Back to quota','利用枠に戻る','할당량으로 돌아가기'],['來源尚未提供群組配額','Source has not provided group limits.','ソースにグループ利用枠がありません。','소스에서 그룹 할당량을 제공하지 않았습니다.'],
     ['以下都是 Antigravity 內的配額，不是獨立 Claude Code／Codex 訂閱額度。','All limits below belong to Antigravity, not your separate Claude Code or Codex subscriptions.','以下は Antigravity の利用枠です。独立した Claude Code／Codex のサブスクリプションとは異なります。','아래는 Antigravity 내부 할당량이며 별도의 Claude Code/Codex 구독 할당량과 다릅니다.'],

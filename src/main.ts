@@ -18,8 +18,8 @@ if (testing) {
   if (!testData) throw new Error('QUOTA_TEST_DATA required');
   app.setPath('userData', testData);
 }
-type Settings = { locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; alwaysOnTop: boolean; notifications: boolean; enabled: Record<ProviderId, boolean>; order: ProviderId[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; x?: number; y?: number };
-let settings: Settings = { locale:'zh-TW', remaining: true, alwaysOnTop: true, notifications: false, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
+type Settings = { locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: ProviderId[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; x?: number; y?: number };
+let settings: Settings = { locale:'zh-TW', remaining: true, alwaysOnTop: true, notifications: false, visible: { claude:true, codex:true, gemini:true }, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
 function validOrder(raw: unknown): raw is ProviderId[] {
   return Array.isArray(raw) && raw.length === providerIds.length && new Set(raw).size === providerIds.length && raw.every(id => providerIds.includes(id));
 }
@@ -55,6 +55,7 @@ function readSettings() {
     const s = JSON.parse(readFileSync(path.join(app.getPath('userData'), 'preferences.json'), 'utf8'));
     if (validOrder(s.order)) settings.order = [...s.order];
     settings.locale=normalizeLocale(s.locale);
+    for (const id of providerIds) if (typeof s.visible?.[id] === 'boolean') settings.visible[id] = s.visible[id];
     if (s.googleSource === 'antigravity' || s.googleSource === 'code_assist') settings.googleSource=s.googleSource;
     for (const key of ['remaining', 'alwaysOnTop', 'notifications'] as const) if (typeof s[key] === 'boolean' && (key!=='remaining'||s.presentationVersion===2)) settings[key] = s[key];
     for (const id of providerIds) if (typeof s.enabled?.[id] === 'boolean') settings.enabled[id] = s.enabled[id];
@@ -123,6 +124,7 @@ function installHandlers() {
     'open-provider': async (_event: any, id: unknown) => { if (typeof id === 'string' && external[id]) await shell.openExternal(external[id]!); },
     'settings': (_event: any, patch: any) => {
       if (!patch || typeof patch !== 'object') return;
+      for (const id of providerIds) if (typeof patch.visible?.[id] === 'boolean') settings.visible[id] = patch.visible[id];
       if (['zh-TW','en','ja','ko'].includes(patch.locale)) { settings.locale=patch.locale; updateTrayMenu(); }
       if (validOrder(patch.order)) settings.order = [...patch.order];
       const sourceChanged = !connections.states.gemini?.pending && (patch.googleSource === 'antigravity' || patch.googleSource === 'code_assist') && patch.googleSource !== settings.googleSource;
