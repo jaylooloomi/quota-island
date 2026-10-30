@@ -32,6 +32,13 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
       await page.locator('#mode-label').filter({hasText:names[locale]}).waitFor();
       assert.equal(await page.locator('#language-popover').isVisible(),false);
       assert.equal(await page.locator('#settings').isVisible(),false);
+      const switchStyles=await page.evaluate(()=>{
+        const pick=(selector,properties)=>{const s=getComputedStyle(document.querySelector(selector));return properties.map(p=>s[p]);};
+        const container=['backgroundColor','borderColor','borderRadius','padding','gap','boxShadow'];
+        const button=['height','borderRadius','color','backgroundImage','backgroundColor','boxShadow'];
+        return {containers:[pick('.segmented',container),pick('.view-tabs',container)],selected:[pick('.segmented [aria-pressed=true]',button),pick('.view-tabs [aria-selected=true]',button)],idle:[pick('.segmented [aria-pressed=false]',button),pick('.view-tabs [aria-selected=false]',button)]};
+      });
+      for(const [state,styles] of Object.entries(switchStyles))assert.deepEqual(styles[0],styles[1],`${locale}: both switches must share ${state} styling`);
       assert.equal(await page.locator('.panel-header').evaluate(el=>el.getBoundingClientRect().height),await page.locator('.bar').evaluate(el=>parseFloat(getComputedStyle(el).height)),`${locale}: title height must match compact bar`);
       const positions=await page.locator('.footer-preferences .footer-control').evaluateAll(nodes=>nodes.map(el=>{const r=el.getBoundingClientRect(),icon=el.querySelector('svg').getBoundingClientRect();return {x:r.x,width:r.width,iconX:icon.x,iconOffsetY:icon.y-r.y,iconWidth:icon.width};}));
       if(footerButtonPositions)assert.deepEqual(positions,footerButtonPositions,`${locale}: footer buttons must not move with language`);else footerButtonPositions=positions;
