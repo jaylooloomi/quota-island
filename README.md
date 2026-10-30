@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/version-0.4.4-informational" alt="Version 0.4.4">
+  <img src="https://img.shields.io/badge/version-0.5.0-informational" alt="Version 0.5.0">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
   <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-53%20passing-brightgreen" alt="53 core tests passed locally"></a>
@@ -59,7 +59,13 @@ Click a quota or chevron to expand. Drag the left grip to move the island. Drag 
 
 ## Everyday controls
 
-Version 0.4.4 uses the Compact Double-layer layout: a capsule with mini progress
+The footer now has distinct roles: **Language** opens an in-place four-language
+menu; **Sync status** opens provider timestamps, failures and retry countdowns
+with a refresh action; **Settings** opens preferences and returns to the same
+Quota/Accounts tab when closed. Popovers are mutually exclusive and close on
+outside click or Escape. Account management stays in the top Accounts tab.
+
+Version 0.5.0 uses the Compact Double-layer layout: a capsule with mini progress
 bars, flat provider rows, visible version labels, and **Quota / Accounts** tabs.
 Open Accounts to switch or sign out of Claude/Codex. Signing out requires
 confirmation and also affects the official CLI account on this computer.
@@ -104,7 +110,7 @@ These are **subscription quotas and reset windows**, not network traffic, API bi
 | Check | Latest local result |
 |---|---|
 | Core tests | **53 passed** |
-| Measured Node modules | **88.24% lines · 86.82% branches · 89.63% functions** |
+| Measured Node modules | **88.27% lines · 86.82% branches · 89.63% functions** |
 | Windows packaged app | Desktop controls, ordering and design checks passed |
 | Authorization integration | Fixture upstream responses; real local IPC, callbacks and child-process paths |
 | Real accounts | Gemini and Codex reads previously verified; Claude's last real check returned HTTP 429 |

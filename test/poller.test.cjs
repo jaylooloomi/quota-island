@@ -6,9 +6,11 @@ const reading = provider => ({ provider, plan: null, windows: [{ id: 'a', label:
 test('in-flight deduplication and refresh cooldown prevent request storms', async () => {
   let now = 1000000, calls = 0, resolve;
   const p = new Poller(id => { calls++; return new Promise(r => resolve = () => r(reading(id))); }, () => {}, () => now);
-  const first = p.refresh('claude'); const second = p.refresh('claude'); assert.equal(calls, 1); resolve();
+  const first = p.refresh('claude'); const second = p.refresh('claude'); assert.equal(calls, 1);
+  assert.equal(p.states.claude.refreshing,true);resolve();
   await Promise.all([first, second]); await p.refresh('claude'); assert.equal(calls, 1);
   assert.equal(p.states.claude.status, 'ready');
+  assert.equal(p.states.claude.refreshing,false);
 });
 test('Retry-After is respected by manual refresh; provider failures are independent', async () => {
   let now = 1000000, calls = { claude: 0, gemini: 0, codex: 0 };

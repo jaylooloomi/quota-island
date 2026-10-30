@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT 授權"></a>
-  <img src="https://img.shields.io/badge/version-0.4.4-informational" alt="版本 0.4.4">
+  <img src="https://img.shields.io/badge/version-0.5.0-informational" alt="版本 0.5.0">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows 已測試">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron 與 TypeScript">
   <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-53%20passing-brightgreen" alt="53 項核心測試於本機通過"></a>
@@ -59,7 +59,11 @@ npm start
 
 ## 日常操作
 
-0.4.4 採用「精簡雙層島」：膠囊迷你進度條、精簡服務列、明顯版本號，以及**配額／帳號**分頁。
+底欄分工：**語言**原地開啟四語選單；**同步狀態**查看三家同步時間、失敗原因與
+重試倒數，並可重新同步；**設定**管理偏好，關閉後回到原本的配額／帳號分頁。
+選單同時只開一個，點外部或按 Esc 關閉；帳號管理集中在上方「帳號」分頁。
+
+0.5.0 採用「精簡雙層島」：膠囊迷你進度條、精簡服務列、明顯版本號，以及**配額／帳號**分頁。
 在帳號頁可切換或登出 Claude、Codex；登出須確認，也會影響本機官方 CLI 使用的帳號。
 Gemini 個人版則透過專用按鈕開啟 Antigravity，在其中管理 Google 帳號。
 
@@ -100,7 +104,7 @@ Gemini 個人版則透過專用按鈕開啟 Antigravity，在其中管理 Google
 | 檢查 | 最近一次本機結果 |
 |---|---|
 | 核心測試 | **53 項通過** |
-| 納入統計的 Node 模組 | **行 88.24% · 分支 86.82% · 函式 89.63%** |
+| 納入統計的 Node 模組 | **行 88.27% · 分支 86.82% · 函式 89.63%** |
 | Windows 打包成品 | 桌面操作、排序、畫面檢查通過 |
 | 授權整合 | 模擬上游回應，搭配真實本機 IPC／回呼／子程序路徑 |
 | 真實帳號 | 曾驗證 Gemini、Codex 可讀取；Claude 最近一次真實查詢回傳 HTTP 429 |

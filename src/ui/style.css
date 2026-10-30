@@ -197,3 +197,20 @@ html:not([lang="zh-TW"]) .account-actions button{font-size:10px}
 .accounts-view .card .provider-subtitle{display:inline}
 .cards{gap:6px}
 .card{min-height:98px;padding-top:12px;padding-bottom:12px}
+.island{position:relative}
+.footer-popover{position:absolute;bottom:56px;z-index:20;border:1px solid #464c53;border-radius:12px;background:#202428;box-shadow:0 8px 28px #0009;padding:8px;max-height:360px;overflow-y:auto}
+.language-popover{left:130px;width:172px}
+.language-popover button{display:flex;align-items:center;justify-content:space-between;width:100%;padding:9px 12px;text-align:left;border-radius:7px;font-size:13px}
+.language-popover button:hover,.language-popover button:focus-visible{background:#ffffff0c}
+.language-popover button[aria-checked=true]{background:#ffffff12;color:#cad2ff}
+.language-popover button[aria-checked=true]:after{content:'✓'}
+.sync-popover{right:96px;width:310px;padding:14px}
+.sync-popover h3{font-size:14px;margin:0 0 8px}
+.sync-entry{border-top:1px solid #ffffff12;padding:8px 0}
+.sync-entry-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px}
+.sync-entry-heading span{color:#aeb8c3;font-size:11px}
+.sync-entry p{font-size:11px;line-height:1.6;color:#aab2bf;margin:2px 0;overflow-wrap:anywhere}
+.sync-entry .sync-error{color:#eab6aa}.sync-entry .sync-retry{color:#d0c7fa}
+.sync-note{font-size:10px;line-height:1.6;color:#919ba9;margin:5px 0 0}
+#sync-shortcut{font-size:11px;min-width:0}
+#sync-summary{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

@@ -8,7 +8,34 @@ const $=id=>document.getElementById(id);
 const cardNodes={};
 let state,settingsOpen=false,activeDetail=null,draggedProvider=null,suppressClickUntil=0;
 let currentView='quota',confirmLogout=null,logoutBusy=null;
-function setView(view){currentView=view;settingsOpen=false;activeDetail=null;confirmLogout=null;render(state);}
+let footerPopover=null,syncBusy=false;
+function closeFooterPopover(focus=false){const trigger=footerPopover==='language'?'language-shortcut':'sync-shortcut';footerPopover=null;render(state);if(focus)$(trigger).focus();}
+function openFooterPopover(kind){footerPopover=footerPopover===kind?null:kind;settingsOpen=false;render(state);if(footerPopover==='language')$('language-popover').querySelector('[aria-checked="true"]').focus();else if(footerPopover==='sync')$('sync-popover').focus();}
+function setView(view){currentView=view;settingsOpen=false;activeDetail=null;confirmLogout=null;footerPopover=null;render(state);}
+function renderFooter(){
+  const enabled=ids.map(id=>state.providers[id]).filter(s=>s.enabled);
+  const busy=syncBusy||enabled.some(s=>s.status==='loading'||s.refreshing);
+  const failed=enabled.some(s=>['unavailable','stale','signed_out'].includes(s.status));
+  const updated=enabled.map(s=>Date.parse(s.updatedAt)).filter(Number.isFinite);
+  $('sync-summary').textContent=state.paused||!enabled.length?'已暫停同步':busy?'同步中':failed?'部分失敗':updated.length?elapsed(new Date(Math.min(...updated)).toISOString()):'尚未同步';
+  $('sync-shortcut').title=$('sync-summary').textContent;
+  for(const kind of ['language','sync']){$(`${kind}-popover`).hidden=footerPopover!==kind;$(`${kind}-shortcut`).setAttribute('aria-expanded',String(footerPopover===kind));}
+  for(const button of $('language-popover').querySelectorAll('[data-locale]'))button.setAttribute('aria-checked',String(button.dataset.locale===(state.settings.locale??'zh-TW')));
+  const sources=$('sync-sources');sources.replaceChildren();
+  for(const id of state.settings.order??ids){
+    const s=state.providers[id],entry=document.createElement('div');entry.className='sync-entry';
+    const header=document.createElement('div');header.className='sync-entry-heading';
+    const name=document.createElement('strong');name.textContent=names[id];
+    const status=document.createElement('span');status.textContent=!s.enabled?'已暫停':s.refreshing||s.status==='loading'?'同步中':s.status==='ready'?'已連接':s.status==='signed_out'?'未連接':'更新失敗';header.append(name,status);
+    const time=document.createElement('p');time.textContent=elapsed(s.updatedAt);if(s.updatedAt){time.title=presentation.resetDate(s.updatedAt,state.settings.locale);time.setAttribute('data-localized-title','');}
+    entry.append(header,time);
+    if(s.error){const error=document.createElement('p');error.className='sync-error';error.textContent=s.error;entry.append(error);
+      if(s.enabled&&retryLabel(s)){const retry=document.createElement('p');retry.className='sync-retry';retry.textContent=retryLabel(s);entry.append(retry);}}
+    sources.append(entry);
+  }
+  $('sync-refresh').disabled=syncBusy||state.paused||!enabled.length;
+  $('sync-refresh').textContent=syncBusy?'自動同步中…':'重新同步';
+}
 const previousPending=new Map();
 function orderProviders(order){
   const strip=$('provider-strip');
@@ -198,6 +225,7 @@ function renderCard(id){
 }
 function render(next){
   if(!next)return;state=next;
+  if(!state.expanded)footerPopover=null;
   for(const id of ids){
     const wasPending=previousPending.get(id),pending=!!state.auth[id]?.pending;
     if(pending&&!wasPending)activeDetail=id;
@@ -223,6 +251,7 @@ function render(next){
   $('google-source').value=state.settings.googleSource;$('google-source').disabled=!!state.auth.gemini?.pending;
   for(const input of document.querySelectorAll('[data-enable]'))input.checked=state.settings.enabled[input.dataset.enable];
   ids.forEach(renderCard);
+  renderFooter();
   $('language').value=state.settings.locale??'zh-TW';
   window.QuotaI18n.localizeDocument(document,state.settings.locale);
   if(state.settings.locale==='en')$('compact-mode').textContent=state.settings.remaining?'Left':'Used';
@@ -235,17 +264,24 @@ document.querySelectorAll('[data-expand]').forEach(button=>{
 });
 $('toggle').addEventListener('click',()=>api.expand(true));$('collapse').addEventListener('click',()=>api.expand(false));
 $('refresh').addEventListener('click',async()=>{$('refresh').disabled=true;$('refresh').classList.add('spinning');try{await api.refresh();}finally{$('refresh').classList.remove('spinning');setTimeout(()=>{$('refresh').disabled=false;},700);}});
-$('settings-toggle').addEventListener('click',()=>{settingsOpen=!settingsOpen;$('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));render(state);});
+$('settings-toggle').addEventListener('click',()=>{footerPopover=null;settingsOpen=!settingsOpen;$('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));render(state);});
 $('mode-remaining').addEventListener('click',()=>api.settings({remaining:true}));$('mode-used').addEventListener('click',()=>api.settings({remaining:false}));
 $('hide').addEventListener('click',()=>api.hide());$('quit').addEventListener('click',()=>api.quit());
 $('google-source').addEventListener('change',event=>api.settings({googleSource:event.target.value}));
 for(const view of ['quota','accounts'])$(`tab-${view}`).addEventListener('click',()=>setView(view));
 document.querySelector('.view-tabs').addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();const view=event.key==='Home'?'quota':event.key==='End'?'accounts':currentView==='quota'?'accounts':'quota';setView(view);$(`tab-${view}`).focus();}});
-$('accounts-shortcut').addEventListener('click',()=>setView('accounts'));
-$('language-shortcut').addEventListener('click',()=>{settingsOpen=true;activeDetail=null;render(state);$('language').focus();});
+$('language-shortcut').addEventListener('click',()=>openFooterPopover('language'));
+$('sync-shortcut').addEventListener('click',()=>openFooterPopover('sync'));
+for(const button of $('language-popover').querySelectorAll('[data-locale]'))button.addEventListener('click',async()=>{await api.settings({locale:button.dataset.locale});closeFooterPopover(true);});
+$('language-popover').addEventListener('keydown',event=>{
+  const buttons=[...$('language-popover').querySelectorAll('button')],index=buttons.indexOf(document.activeElement);
+  if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();buttons[event.key==='Home'?0:event.key==='End'?buttons.length-1:(index+(event.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length].focus();}
+});
+$('sync-refresh').addEventListener('click',async()=>{syncBusy=true;render(state);try{await api.refresh();}finally{syncBusy=false;render(await api.getState());}});
+document.addEventListener('pointerdown',event=>{if(footerPopover&&!event.target.closest('.footer-popover,#language-shortcut,#sync-shortcut'))closeFooterPopover();});
 $('compact-refresh').addEventListener('click',()=>api.refresh());
 $('language').addEventListener('change',event=>api.settings({locale:event.target.value}));
 for(const key of ['alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
-document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
+document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(footerPopover){closeFooterPopover(true);event.preventDefault();}else if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
 api.subscribe(render);api.getState().then(render);setInterval(()=>{if(state)render(state);},15000);

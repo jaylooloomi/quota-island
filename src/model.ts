@@ -10,6 +10,7 @@ export interface ProviderState {
   provider: ProviderId; status: 'loading' | 'ready' | 'unavailable' | 'stale' | 'signed_out';
   reading: Reading | null; updatedAt: string | null; error: string | null;
   nextPollAt: number; enabled: boolean;
+  refreshing?: boolean;
 }
 export class ProviderError extends Error {
   constructor(public code: 'auth' | 'network' | 'schema' | 'missing_cli' | 'rate_limit', message: string, public retryAfterMs = 0) {

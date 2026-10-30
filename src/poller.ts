@@ -36,6 +36,7 @@ export class Poller {
   private async run(id: ProviderId) {
     const s = this.states[id];
     if (!s.reading) s.status = 'loading';
+    s.refreshing = true;
     this.changed();
     try {
       const reading = await this.fetcher(id);
@@ -52,7 +53,7 @@ export class Poller {
       s.error = err.message;
       s.nextPollAt = this.now() + Math.max(err.retryAfterMs, Math.min(30 * 60_000, 60_000 * 2 ** Math.min(n - 1, 5)));
       if (err.code === 'rate_limit') this.rateLimitUntil.set(id, s.nextPollAt);
-    } finally { this.changed(); }
+    } finally { s.refreshing = false; this.changed(); }
   }
   // Only called after explicit authentication completion, never by refresh buttons.
   async authenticated(id: ProviderId) {
