@@ -11,11 +11,12 @@ let currentView='quota',confirmLogout=null,logoutBusy=null;
 let footerPopover=null,syncBusy=false;
 let quotaDetailsOpen=false;
 let quotaDetailsProvider='gemini';
+let paceDetailsProvider=null;
 let quotaPanelHeight=480;
 const quotaCardHeights={};
 function closeFooterPopover(focus=false){const trigger=footerPopover==='language'?'language-shortcut':'sync-shortcut';footerPopover=null;render(state);if(focus)$(trigger).focus();}
 function openFooterPopover(kind){footerPopover=footerPopover===kind?null:kind;settingsOpen=false;render(state);if(footerPopover==='language')$('language-popover').querySelector('[aria-checked="true"]').focus();else if(footerPopover==='sync')$('sync-popover').focus();}
-function setView(view){currentView=view;settingsOpen=false;activeDetail=null;confirmLogout=null;footerPopover=null;quotaDetailsOpen=false;render(state);}
+function setView(view){currentView=view;settingsOpen=false;activeDetail=null;confirmLogout=null;footerPopover=null;quotaDetailsOpen=false;paceDetailsProvider=null;render(state);}
 function renderFooter(){
   const enabled=ids.map(id=>state.providers[id]).filter(s=>s.enabled);
   const busy=syncBusy||enabled.some(s=>s.status==='loading'||s.refreshing);
@@ -115,6 +116,7 @@ function makeCards(){
       card.querySelector('.connect-primary').addEventListener('click',()=>{const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
     card.querySelector('.login').addEventListener('click',()=>startLogin(id));
     card.querySelector('.quota-details-link').addEventListener('click',()=>{quotaDetailsProvider=id;quotaDetailsOpen=true;activeDetail=null;settingsOpen=false;footerPopover=null;render(state);});
+    card.querySelector('.pace-link').addEventListener('click',()=>{paceDetailsProvider=id;quotaDetailsOpen=false;activeDetail=null;footerPopover=null;render(state);});
     card.querySelector('.account-switch').addEventListener('click',async()=>{
       if(id==='gemini'&&state.settings.googleSource==='antigravity'){
         activeDetail=id;render(state);const result=await api.antigravityAccount('switch');
@@ -182,9 +184,11 @@ function renderCard(id){
   const scopedClaude=id==='claude'&&allWindows.some(w=>/^seven_day_/.test(w.id));
   const primaryClaude=allWindows.filter(w=>['five_hour','seven_day'].includes(w.id));
   const windows=scopedClaude?(primaryClaude.length?primaryClaude:allWindows.slice(0,1)):grouped?[...allWindows].sort((a,b)=>b.usedPercent-a.usedPercent).slice(0,2):allWindows;
+  const paceMode=!!state.settings.pacing&&currentView==='quota'&&activeDetail!==id;
   card.querySelector('.quota-details-link').hidden=(!grouped&&!scopedClaude)||currentView==='accounts'||activeDetail===id;
   card.querySelector('.quota-details-link').textContent=scopedClaude?'查看模型配額':`查看所有配額 (${allWindows.length})`;
   card.querySelector('.quota-details-link').title=scopedClaude?'Claude':`${allWindows.length} · Antigravity`;
+  if(paceMode)card.querySelector('.quota-details-link').hidden=true;
   card.querySelector('.provider-identity h2').textContent=id==='gemini'&&grouped?'Antigravity':names[id];
   card.classList.remove('ready','stale','signed_out','loading','unavailable','disabled');card.classList.add(!s.enabled?'disabled':expired?'unavailable':s.status);
   card.classList.toggle('pending',!!auth?.pending);
@@ -194,6 +198,7 @@ function renderCard(id){
   card.querySelector('.provider-subtitle').textContent=id==='gemini'?(state.demo?'CLI / Code Assist':usesAntigravity?'Antigravity':'Code Assist · 企業版'):subtitles[id];
   const plan=card.querySelector('.plan');plan.textContent=s.reading?.plan??'';plan.hidden=!s.reading?.plan;plan.title=s.reading?.plan??'';
   card.querySelector('.quota-display-mode').textContent=state.settings.remaining?'剩餘額度':'已用額度';
+  if(state.settings.pacing)card.querySelector('.quota-display-mode').textContent='配速建議';
   let status=!s.enabled?'已暫停':s.status==='ready'?'已連接':s.status==='stale'?'更新失敗':s.status==='loading'?'同步中':s.status==='signed_out'?'未連接':limited?'服務限流':'讀取失敗';
   if(expired)status='資料過期';if(auth?.pending)status=auth.phase==='syncing'?'同步中':'連接中';
   card.querySelector('.status-label').textContent=status;
@@ -215,6 +220,8 @@ function renderCard(id){
     }
     container.append(row);
   }
+  const paceContent=card.querySelector('.pacing-content');paceContent.hidden=!paceMode||!windows.length;
+  if(paceMode&&windows.length){container.hidden=true;renderPaceCard(id,allWindows);}
   const empty=card.querySelector('.empty-state');empty.hidden=!!windows.length;
   card.querySelector('.empty-title').textContent=!s.enabled?'已暫停此來源':auth?.pending?(auth.codeRequired?'等待授權碼':auth.phase==='syncing'?'連接完成，正在同步…':'等待帳號連接…'):s.status==='signed_out'?'連接你的帳號':s.status==='loading'?'正在讀取配額…':expired?'資料已過期':limited?'配額服務暫時限流':'暫時無法取得配額';
   const errorText=limited?['服務回覆 HTTP 429',retryLabel(s)].filter(Boolean).join(' · '):s.error?[s.error,retryLabel(s)].filter(Boolean).join(' · '):'';
@@ -240,11 +247,53 @@ function renderCard(id){
   button.querySelector('.mini-track').hidden=!w;
   button.querySelector('.mini-track span').style.width=w?`${percent(w)}%`:'0%';
 }
+function paceNumber(value){return new Intl.NumberFormat(state.settings.locale,{maximumFractionDigits:1,roundingMode:'floor'}).format(value);}
+function paceData(id,windows){const w=presentation.paceWindow(windows,state.settings.paceWindows?.[id]);return {w,p:ready(state.providers[id])&&!state.paused?presentation.pacing(w,state.settings.reservePercent?.[id]??10):null};}
+function paceText(text){return window.QuotaI18n.translate(text,state.settings.locale);}
+function fillPaceBar(bar,p){
+  bar.replaceChildren();bar.hidden=!p;if(!p)return;
+  for(const [kind,value] of [['available',p.available],['reserve',p.reserve],['used',p.used]]){
+    const segment=document.createElement('span');segment.className=`pace-segment ${kind}`;segment.style.width=`${value}%`;
+    if(value>=8)segment.textContent=`${paceNumber(value)}%`;
+    const label=kind==='available'?'可分配':kind==='reserve'?'保留比例':'已用';segment.title=`${paceText(label)} ${paceNumber(value)}%`;segment.setAttribute('data-localized-title','');bar.append(segment);
+  }
+  bar.setAttribute('aria-label',`可分配 ${paceNumber(p.available)}%, 保留比例 ${paceNumber(p.reserve)}%, 已用 ${paceNumber(p.used)}%`);
+}
+function renderPaceCard(id,windows){
+  const card=cardNodes[id],{w,p}=paceData(id,windows),row=card.querySelector('.pacing-content');
+  row.querySelector('.pace-value').textContent=p?paceNumber(p.allowance):'—';
+  row.querySelector('.pace-unit').textContent=p?(p.unit==='hour'?'%／小時':'%／天'):'配速暫不可用';
+  row.querySelector('.pace-value').title=w?.label??'';
+  row.querySelector('.pace-reserve-label').textContent=`保留 ${paceNumber(state.settings.reservePercent?.[id]??10)}%`;
+  row.querySelector('.pace-reserve-label').title=paceText('保留比例以總配額為基準；各來源與窗口獨立計算。');row.querySelector('.pace-reserve-label').setAttribute('data-localized-title','');
+  fillPaceBar(row.querySelector('.pace-bar'),p);
+  row.querySelector('.pace-remaining').textContent=p?`剩餘 ${paceNumber(p.remaining)}%`:w?.label??'';
+  row.querySelector('.pace-reset').textContent=w?countdown(w.resetsAt):'等待配額資料';
+  row.querySelector('.pace-reset').title=w?presentation.resetDate(w.resetsAt,state.settings.locale)??'':'';row.querySelector('.pace-reset').setAttribute('data-localized-title','');
+}
+function renderPaceDetails(){
+  if(!paceDetailsProvider)return;
+  const id=paceDetailsProvider,windows=presentation.groupWindows(state.providers[id].reading?.windows??[]),{w,p}=paceData(id,windows);
+  $('pace-details-title').textContent=`${id==='gemini'?'Antigravity':names[id]} · 配速詳情`;
+  const select=$('pace-window');select.replaceChildren();
+  for(const window of windows){const option=document.createElement('option');option.value=window.id;option.textContent=window.label;option.selected=window.id===w?.id;select.append(option);}
+  select.disabled=!windows.length;$('pace-reserve').value=state.settings.reservePercent?.[id]??10;$('pace-reserve-value').textContent=`${$('pace-reserve').value}%`;
+  const summary=$('pace-summary');summary.setAttribute('data-localized-text','');summary.replaceChildren();
+  if(!p){summary.textContent=paceText('配速暫不可用');return;}
+  const heading=document.createElement('h3');heading.textContent=paceText('配速建議');
+  const budget=document.createElement('strong');budget.className='pace-detail-value';budget.textContent=`${paceNumber(p.allowance)} ${paceText(p.unit==='hour'?'%／小時':'%／天')}`;
+  const formula=document.createElement('p');formula.textContent=`(${paceNumber(p.remaining)}% − ${paceNumber(p.reserve)}%) ÷ ${paceNumber(p.periods)} ${paceText(p.unit==='hour'?'小時':'天')} ≈ ${paceNumber(p.allowance)}%`;
+  const track=document.createElement('div');track.className=`pace-bar ${id}`;track.setAttribute('role','img');fillPaceBar(track,p);
+  const reset=document.createElement('p');reset.textContent=paceText(countdown(w.resetsAt));reset.title=presentation.resetDate(w.resetsAt,state.settings.locale);reset.setAttribute('data-localized-title','');
+  summary.append(heading,budget,formula,track,reset);
+  if(p.hours<1){const note=document.createElement('p');note.textContent=paceText('不足一小時，建議量以可分配餘額為上限。');summary.append(note);}
+  if(p.available===0){const note=document.createElement('p');note.textContent=paceText('剩餘額度已在保留範圍內，建議暫停使用。');summary.append(note);}
+}
 function renderQuotaDetails(){
   const container=$('quota-groups');container.replaceChildren();
   const groups=new Map();
   const claude=quotaDetailsProvider==='claude';
-  document.querySelector('.quota-details-heading h2').textContent=claude?'Claude 模型配額':'Antigravity 配額';
+  $('quota-details').querySelector('.quota-details-heading h2').textContent=claude?'Claude 模型配額':'Antigravity 配額';
   document.querySelector('.quota-details-note').textContent=claude?'模型專屬限制可能與所有模型限制同時適用，兩者不能相加。':'以下都是 Antigravity 內的配額，不是獨立 Claude Code／Codex 訂閱額度。';
   for(const window of state.providers[quotaDetailsProvider].reading?.windows??[]){
     const group=claude?(window.id==='five_hour'?null:'每週配額'):window.group;
@@ -278,17 +327,20 @@ function render(next){
   orderProviders(state.settings.order??ids);$('island').classList.toggle('expanded',state.expanded);$('panel').hidden=!state.expanded;
   $('toggle').setAttribute('aria-expanded',String(state.expanded));
   $('compact-mode').textContent=state.settings.remaining?'剩餘':'已用';$('mode-label').textContent=state.settings.remaining?'剩餘額度':'已用額度';
-  $('mode-remaining').setAttribute('aria-pressed',String(state.settings.remaining));$('mode-used').setAttribute('aria-pressed',String(!state.settings.remaining));
+  $('mode-remaining').setAttribute('aria-pressed',String(!state.settings.pacing&&state.settings.remaining));$('mode-used').setAttribute('aria-pressed',String(!state.settings.pacing&&!state.settings.remaining));$('mode-pacing').setAttribute('aria-pressed',String(!!state.settings.pacing));
+  if(state.settings.pacing)$('mode-label').textContent='配速建議';
   $('demo-banner').hidden=!state.demo;$('app-version').textContent=`v${state.version}`;
   for(const id of ['compact-version','header-version','footer-version'])$(id).textContent=`v${state.version}`;
   $('island').classList.toggle('accounts-view',currentView==='accounts');
   $('island').classList.toggle('settings-view',settingsOpen);
   $('island').classList.toggle('quota-details-view',quotaDetailsOpen&&!settingsOpen);
+  $('island').classList.toggle('pacing-view',!!state.settings.pacing);
   $('settings').hidden=!settingsOpen;
   $('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));
   $('cards').hidden=settingsOpen;
-  $('cards').hidden=settingsOpen||quotaDetailsOpen;
-  $('quota-details').hidden=!quotaDetailsOpen||settingsOpen;
+  $('cards').hidden=settingsOpen||quotaDetailsOpen||!!paceDetailsProvider;
+  $('quota-details').hidden=!quotaDetailsOpen||settingsOpen||!!paceDetailsProvider;
+  $('pace-details').hidden=!paceDetailsProvider||settingsOpen;
   for(const view of ['quota','accounts']){$(`tab-${view}`).setAttribute('aria-selected',String(view===currentView));$(`tab-${view}`).tabIndex=view===currentView?0:-1;}
   $('cards').setAttribute('role','tabpanel');$('cards').setAttribute('aria-labelledby',`tab-${currentView}`);
   const healthy=!state.paused&&ids.some(id=>ready(state.providers[id]));$('live-dot').classList.toggle('off',!healthy);
@@ -299,21 +351,22 @@ function render(next){
   ids.forEach(renderCard);
   for(const id of ids){const visible=state.settings.visible?.[id]!==false;cardNodes[id].hidden=!visible;document.querySelector(`.compact-provider[data-provider="${id}"]`).hidden=!visible;}
   for(const input of document.querySelectorAll('[data-visible]'))input.checked=state.settings.visible?.[input.dataset.visible]!==false;
-  $('no-visible-providers').hidden=settingsOpen||quotaDetailsOpen||ids.some(id=>state.settings.visible?.[id]!==false);
+  $('no-visible-providers').hidden=settingsOpen||quotaDetailsOpen||!!paceDetailsProvider||ids.some(id=>state.settings.visible?.[id]!==false);
+  renderPaceDetails();
   renderQuotaDetails();
   renderFooter();
   $('language').value=state.settings.locale??'zh-TW';
   window.QuotaI18n.localizeDocument(document,state.settings.locale);
   if(state.settings.locale==='en')$('compact-mode').textContent=state.settings.remaining?'Left':'Used';
   requestAnimationFrame(()=>{
-    if(!settingsOpen&&!quotaDetailsOpen&&!activeDetail){
+    if(!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider){
       for(const id of ids){const card=cardNodes[id];if(currentView==='quota'){card.style.minHeight='';quotaCardHeights[id]=Math.ceil(card.getBoundingClientRect().height);}card.style.minHeight=`${quotaCardHeights[id]??98}px`;}
     }
-    const content=(settingsOpen?$('settings'):quotaDetailsOpen?$('quota-details'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height;
+    const content=(settingsOpen?$('settings'):paceDetailsProvider?$('pace-details'):quotaDetailsOpen?$('quota-details'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height;
     const chrome=document.querySelector('.panel-header').getBoundingClientRect().height+document.querySelector('footer').getBoundingClientRect().height+18;
     const height=Math.max(480,Math.ceil(content+chrome+(settingsOpen?24:12)));
-    if(!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&currentView==='quota')quotaPanelHeight=height;
-    api.panelHeight(!settingsOpen&&!quotaDetailsOpen&&!activeDetail?quotaPanelHeight:height);
+    if(!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider&&currentView==='quota')quotaPanelHeight=height;
+    api.panelHeight(!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider?quotaPanelHeight:height);
   });
 }
 makeCards();
@@ -325,7 +378,12 @@ document.querySelectorAll('[data-expand]').forEach(button=>{
 $('toggle').addEventListener('click',()=>api.expand(true));$('collapse').addEventListener('click',()=>api.expand(false));
 $('refresh').addEventListener('click',async()=>{$('refresh').disabled=true;$('refresh').classList.add('spinning');try{await api.refresh();}finally{$('refresh').classList.remove('spinning');setTimeout(()=>{$('refresh').disabled=false;},700);}});
 $('settings-toggle').addEventListener('click',()=>{footerPopover=null;settingsOpen=!settingsOpen;$('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));render(state);});
-$('mode-remaining').addEventListener('click',()=>api.settings({remaining:true}));$('mode-used').addEventListener('click',()=>api.settings({remaining:false}));
+$('mode-remaining').addEventListener('click',()=>{paceDetailsProvider=null;api.settings({remaining:true,pacing:false});});$('mode-used').addEventListener('click',()=>{paceDetailsProvider=null;api.settings({remaining:false,pacing:false});});
+$('mode-pacing').addEventListener('click',()=>api.settings({pacing:true}));
+$('close-pace-details').addEventListener('click',()=>{paceDetailsProvider=null;render(state);});
+$('pace-window').addEventListener('change',event=>{if(paceDetailsProvider)api.settings({paceWindows:{[paceDetailsProvider]:event.target.value}});});
+$('pace-reserve').addEventListener('input',event=>{$('pace-reserve-value').textContent=`${event.target.value}%`;});
+$('pace-reserve').addEventListener('change',event=>{if(paceDetailsProvider)api.settings({reservePercent:{[paceDetailsProvider]:Number(event.target.value)}});});
 $('hide').addEventListener('click',()=>api.hide());$('quit').addEventListener('click',()=>api.quit());
 $('google-source').addEventListener('change',event=>api.settings({googleSource:event.target.value}));
 for(const view of ['quota','accounts'])$(`tab-${view}`).addEventListener('click',()=>setView(view));
@@ -345,5 +403,5 @@ $('language').addEventListener('change',event=>api.settings({locale:event.target
 for(const key of ['alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
 for(const input of document.querySelectorAll('[data-visible]'))input.addEventListener('change',()=>api.settings({visible:{[input.dataset.visible]:input.checked}}));
-document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(footerPopover){closeFooterPopover(true);event.preventDefault();}else if(quotaDetailsOpen){quotaDetailsOpen=false;render(state);}else if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
+document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(footerPopover){closeFooterPopover(true);event.preventDefault();}else if(paceDetailsProvider){paceDetailsProvider=null;render(state);}else if(quotaDetailsOpen){quotaDetailsOpen=false;render(state);}else if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
 api.subscribe(render);api.getState().then(render);setInterval(()=>{if(state)render(state);},15000);

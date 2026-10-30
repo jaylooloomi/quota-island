@@ -282,3 +282,26 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
 .bar .compact-provider{padding:0 4px;gap:6px}
 .bar .mini-logo{width:26px;height:26px}
 .bar .mini-value{font-size:17px;line-height:21px}
+/* Pacing mode shares the existing provider row geometry. */
+.panel-header .segmented button{width:48px;font-size:11px}
+.panel-header .tools{gap:5px}
+.pacing-content{min-width:0;position:relative;padding-bottom:12px}
+.pace-heading,.pace-meta{display:flex;align-items:center;justify-content:space-between;gap:5px}
+.pace-value{font-size:18px;line-height:22px;font-variant-numeric:tabular-nums}
+.pace-unit{font-size:9px;margin-left:3px;color:#b8bdc5}
+.pace-reserve-label{font-size:10px;white-space:nowrap;color:#d0d3d8}
+.pace-bar{display:flex;height:12px;margin:5px 0;border-radius:5px;overflow:hidden;background:#34373b}
+.pace-segment{flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;line-height:12px;color:#111;font-weight:650;overflow:hidden;white-space:nowrap}
+.pace-segment.available{background:var(--provider,#b4a1ff)}
+.pace-segment.reserve{background:repeating-linear-gradient(125deg,#ffffff25 0 2px,#24272b 2px 4px);color:#d7dbe0}
+.pace-segment.used{background:#42464d;color:#e0e3e8}
+.pace-meta{font-size:9px;color:#a6acb6;line-height:14px}
+.pace-reset{white-space:nowrap}
+.pace-link{position:absolute;right:0;bottom:-3px;font-size:9px;padding:0;line-height:12px;color:#babdf6}
+.pace-setting{display:flex;flex-direction:column;gap:9px;font-size:12px;margin:18px 0}
+.pace-setting select{width:100%;min-width:0;background:#252930;color:#e0e3e8;border:1px solid #555b65;border-radius:7px;padding:8px;font-size:12px}
+.pace-setting>span{display:flex;gap:12px;align-items:center}.pace-setting input{flex:1;min-width:0;accent-color:#aaa4f8}.pace-setting output{width:42px;text-align:right}
+.pace-explanation{font-size:11px;line-height:1.7;color:#a8b0ba}
+#pace-summary{border:1px solid #34383e;border-radius:12px;padding:14px;margin:15px 0;font-size:12px;line-height:1.6}
+#pace-summary h3{font-size:12px;margin:0 0 8px}.pace-detail-value{font-size:25px}#pace-summary .pace-bar{height:18px}
+#pace-details .quota-details-heading h2{font-size:14px}

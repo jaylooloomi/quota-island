@@ -4,10 +4,10 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/version-0.7.0-informational" alt="Version 0.7.0">
+  <img src="https://img.shields.io/badge/version-0.8.0-informational" alt="Version 0.8.0">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
-  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-58%20passing-brightgreen" alt="58 core tests passed locally"></a>
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-63%20passing-brightgreen" alt="63 core tests passed locally"></a>
   <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/lang-繁體中文-green" alt="Traditional Chinese"></a>
 </p>
 
@@ -65,7 +65,7 @@ with a refresh action; **Settings** opens preferences and returns to the same
 Quota/Accounts tab when closed. Popovers are mutually exclusive and close on
 outside click or Escape. Account management stays in the top Accounts tab.
 
-Version 0.7.0 uses the Compact Double-layer layout: a capsule with mini progress
+Version 0.8.0 uses the Compact Double-layer layout: a capsule with mini progress
 bars, flat provider rows, visible version labels, and **Quota / Accounts** tabs.
 Open Accounts to switch or sign out of Claude/Codex. Signing out requires
 confirmation and also affects the official CLI account on this computer.
@@ -121,8 +121,8 @@ These are **subscription quotas and reset windows**, not network traffic, API bi
 
 | Check | Latest local result |
 |---|---|
-| Core tests | **58 passed** |
-| Measured Node modules | **90.75% lines · 87.68% branches · 89.19% functions** |
+| Core tests | **63 passed** |
+| Measured Node modules | **90.95% lines · 87.82% branches · 89.61% functions** |
 | Windows packaged app | Desktop controls, ordering and design checks passed |
 | Authorization integration | Fixture upstream responses; real local IPC, callbacks and child-process paths |
 | Real accounts | Gemini and Codex reads previously verified; Claude's last real check returned HTTP 429 |
@@ -192,3 +192,6 @@ README presentation inspired by [i-want-to-sleep](https://github.com/jaylooloomi
 [MIT](LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md) for fonts and bundled material.
 
 Antigravity account controls: **Switch account** opens the official app, clears old quota, and automatically refreshes after a different account is detected. **Disconnect** only stops monitoring in Quota Pebble and persists across restarts; it does not sign out of Antigravity. Direct native logout is not enabled because no supported external logout entry point was verified for the installed 2.27.0 app.
+
+### Pacing mode
+Choose **Remaining / Used / Pace** without changing the provider row layout. Pacing uses an independent selected quota window, reserves 10% of total quota by default, and divides the available balance by the actual time until reset. Windows under one day use hourly advice. Details let you choose the window and reserve percentage; both persist locally. Missing or expired reset times, stale data and paused monitoring suppress guidance. These are average budgeting suggestions, not additional provider allowances.

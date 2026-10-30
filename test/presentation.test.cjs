@@ -35,3 +35,26 @@ test('compact window names retain the actual model or cadence',()=>{
   assert.equal(shortWindow('7 天'),'7d');assert.equal(shortWindow('5 小時'),'5h');
   assert.equal(shortWindow('Gemini 4 Argon'),'Argon');assert.equal(shortWindow('unknown window'),'unknown window');
 });
+
+test('pacing reserves a percentage of total quota and divides actual time without rounding days up',()=>{
+  const {pacing}=require('../src/ui/presentation');const now=Date.UTC(2026,9,31);
+  const w={usedPercent:20,resetsAt:new Date(now+4*86400000).toISOString()};
+  const p=pacing(w,10,now);assert.equal(p.allowance,17.5);assert.equal(p.reserve,10);assert.equal(p.available,70);assert.equal(p.used,20);assert.equal(p.unit,'day');
+  assert.equal(pacing({...w,resetsAt:new Date(now+3.5*86400000).toISOString()},10,now).allowance,20);
+  const h=pacing({...w,resetsAt:new Date(now+5*3600000).toISOString()},10,now);assert.equal(h.unit,'hour');assert.equal(h.allowance,14);
+  assert.equal(pacing({...w,resetsAt:new Date(now+1800000).toISOString()},10,now).allowance,70);
+  assert.equal(pacing({...w,usedPercent:95},10,now).allowance,0);
+  assert.equal(pacing(w,0,now).allowance,20);assert.equal(pacing(w,100,now).allowance,0);
+});
+test('pacing handles absent malformed expired and exhausted quota without invented allowance',()=>{
+  const {pacing}=require('../src/ui/presentation');const now=Date.now();
+  for(const w of [null,{usedPercent:NaN,resetsAt:'2099-01-01'},{usedPercent:-1,resetsAt:'2099-01-01'},{usedPercent:101,resetsAt:'2099-01-01'},{usedPercent:20,resetsAt:null},{usedPercent:20,resetsAt:'bad'},{usedPercent:20,resetsAt:new Date(now).toISOString()}])assert.equal(pacing(w,10,now),null);
+  assert.equal(pacing({usedPercent:100,resetsAt:new Date(now+86400000).toISOString()},10,now).allowance,0);
+  assert.equal(pacing({usedPercent:0,resetsAt:new Date(now+86400000).toISOString()},NaN,now).configured,10);
+});
+test('pacing keeps selected windows separate and defaults to all-model weekly rather than scoped models',()=>{
+  const {paceWindow}=require('../src/ui/presentation');const windows=[{id:'five_hour',usedPercent:12},{id:'seven_day_fable',usedPercent:80},{id:'seven_day',usedPercent:15}];
+  assert.equal(paceWindow(windows).id,'seven_day');assert.equal(paceWindow(windows,'five_hour').id,'five_hour');
+  assert.equal(paceWindow([{id:'a-weekly',usedPercent:5},{id:'b-weekly',usedPercent:20}]).id,'b-weekly');
+  assert.equal(paceWindow([{id:'session',usedPercent:12}]).id,'session');assert.equal(paceWindow([]),null);
+});

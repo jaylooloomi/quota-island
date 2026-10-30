@@ -31,7 +31,7 @@
     <section id="panel" class="panel" hidden>
       <header class="panel-header">
         <div class="app-title"><h1>Quota Pebble</h1><span id="header-version"></span><span class="live-dot" id="live-dot"></span></div>
-        <div class="tools"><div class="segmented" role="group" aria-label="配額顯示方式"><button id="mode-remaining" aria-pressed="true">剩餘</button><button id="mode-used" aria-pressed="false">已用</button></div><span class="tool-divider"></span><button id="collapse" class="icon" aria-label="收合配額面板" title="收合"><svg><use href="#i-chevron"/></svg></button></div>
+        <div class="tools"><div class="segmented" role="group" aria-label="配額顯示方式"><button id="mode-remaining" aria-pressed="true">剩餘</button><button id="mode-used" aria-pressed="false">已用</button><button id="mode-pacing" aria-pressed="false">配速</button></div><span class="tool-divider"></span><button id="collapse" class="icon" aria-label="收合配額面板" title="收合"><svg><use href="#i-chevron"/></svg></button></div>
       </header>
       <div class="panel-body">
         <div class="context-line"><div class="view-tabs" role="tablist" aria-label="配額與帳號"><button id="tab-quota" role="tab" aria-selected="true" aria-controls="cards"><svg><use href="#i-chart"/></svg>配額</button><button id="tab-accounts" role="tab" aria-selected="false" aria-controls="cards"><svg><use href="#i-user"/></svg>帳號</button></div><h2 id="mode-label">剩餘額度</h2></div>
@@ -53,6 +53,7 @@
           <div class="settings-actions"><button id="hide" class="text-button">隱藏到系統匣</button><button id="quit" class="text-button danger">結束 Quota Pebble</button></div>
         </section>
         <div id="cards" class="cards" aria-live="polite"></div>
+        <section id="pace-details" hidden><div class="quota-details-heading"><h2 id="pace-details-title"></h2><button id="close-pace-details" class="text-button">返回配額</button></div><label class="pace-setting">配額窗口<select id="pace-window"></select></label><label class="pace-setting">保留比例<span><input id="pace-reserve" type="range" min="0" max="100" step="1"><output id="pace-reserve-value"></output></span></label><p class="pace-explanation">保留比例以總配額為基準；各來源與窗口獨立計算。</p><div id="pace-summary"></div><p class="pace-explanation">這是平均分配建議，不是用量上限；少於一天的窗口改以每小時計算。</p></section>
         <p id="no-visible-providers" hidden>所有服務已隱藏，請到設定開啟顯示。</p>
         <section id="quota-details" hidden aria-label="所有配額"><div class="quota-details-heading"><h2>Antigravity 配額</h2><button id="close-quota-details" class="text-button">返回配額</button></div><p class="quota-details-note">以下都是 Antigravity 內的配額，不是獨立 Claude Code／Codex 訂閱額度。</p><div id="quota-groups"></div></section>
       </div>
@@ -66,6 +67,7 @@
       <div class="card-heading"><div class="provider-icon"></div><div class="provider-identity"><h2></h2><div class="provider-description"><span class="provider-subtitle"></span><span class="plan"></span></div><span class="quota-display-mode"></span></div><button class="connection-status" aria-expanded="false" title="管理帳號連接"><span class="connection-label"><i></i><span class="status-label"></span></span><span class="updated"></span></button></div>
       <div class="quota-windows"></div>
       <button class="quota-details-link text-button" hidden>查看所有配額</button>
+      <div class="pacing-content" hidden><div class="pace-heading"><span><strong class="pace-value"></strong><span class="pace-unit"></span></span><span class="pace-reserve-label"></span></div><div class="pace-bar" role="img"></div><div class="pace-meta"><span class="pace-remaining"></span><span class="pace-reset"></span></div><button class="pace-link text-button">配速詳情 ›</button></div>
       <div class="empty-state"><div class="empty-title"></div><p class="empty-message"></p><button class="connect-primary text-button"></button></div>
       <div class="account-actions" hidden><button class="account-switch">切換帳號</button><button class="account-logout danger">登出</button><div class="logout-confirm" hidden><p>登出也會影響本機官方 CLI，確定繼續？</p><button class="confirm-logout danger">確認登出</button><button class="cancel-logout">取消</button></div></div>
       <section class="connection-details" hidden aria-label="帳號連接">

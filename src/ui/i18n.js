@@ -2,6 +2,11 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['剩餘額度已在保留範圍內，建議暫停使用。','The remaining quota is within your reserve. Consider pausing usage.','残りの利用枠は予備枠内です。利用の一時停止を推奨します。','남은 할당량이 예비 범위 내에 있습니다. 사용을 잠시 중단하는 것을 권장합니다.'],
+    ['配速','Pace','ペース','페이스'],['配速建議','Pacing advice','ペース目安','페이스 권장'],['配速詳情','Pacing details','ペース詳細','페이스 상세'],['配速詳情 ›','Pace details ›','ペース詳細 ›','페이스 상세 ›'],['配額窗口','Quota window','利用枠の期間','할당량 기간'],['保留比例','Reserve','予備枠','예비 비율'],['保留','Reserve','予備','예비'],['可分配','Available to budget','配分可能','배분 가능'],['配速暫不可用','Pacing unavailable','ペース算出不可','페이스 계산 불가'],['等待配額資料','Waiting for quota','利用枠データ待ち','할당량 대기 중'],['%／天','% / day','% / 日','% / 일'],['%／小時','% / hour','% / 時間','% / 시간'],['小時','hours','時間','시간'],['天','days','日','일'],
+    ['保留比例以總配額為基準；各來源與窗口獨立計算。','Reserve is a percentage of total quota. Each source and window is calculated separately.','予備枠は総利用枠に対する割合です。各ソース・期間は個別に計算します。','예비 비율은 전체 할당량 기준입니다. 각 소스와 기간은 별도로 계산합니다.'],
+    ['這是平均分配建議，不是用量上限；少於一天的窗口改以每小時計算。','This is an average budget, not a usage limit. Windows under one day use hourly pacing.','平均配分の目安であり、利用上限ではありません。1日未満の期間は時間単位で計算します。','평균 배분 권장량이며 사용 한도가 아닙니다. 하루 미만의 기간은 시간 단위로 계산합니다.'],
+    ['不足一小時，建議量以可分配餘額為上限。','Under one hour remains; guidance is capped at the available balance.','残り1時間未満のため、配分可能な残量を上限とします。','남은 시간이 1시간 미만이면 배분 가능한 잔여량을 넘지 않도록 제한합니다.'],
     ['已中斷連接','Disconnected','接続解除済み','연결 해제됨'],['Antigravity 仍保持登入，可在帳號頁重新連接。','Antigravity stays signed in. Reconnect from Accounts.','Antigravity はログインしたままです。アカウント画面で再接続できます。','Antigravity 로그인은 유지됩니다. 계정 화면에서 다시 연결하세요.'],
     ['中斷連接','Disconnect','接続を解除','연결 해제'],['等待在 Antigravity 切換帳號，完成後會自動更新配額','Waiting for an account change in Antigravity. Quotas update automatically.','Antigravity でアカウントを切り替えると利用枠が自動更新されます。','Antigravity에서 계정을 전환하면 할당량이 자동으로 업데이트됩니다.'],
     ['顯示服務','Visible services','表示するサービス','표시할 서비스'],['所有服務已隱藏，請到設定開啟顯示。','All services are hidden. Show them in Settings.','すべて非表示です。設定で表示を有効にしてください。','모든 서비스가 숨겨져 있습니다. 설정에서 표시를 켜세요.'],
@@ -120,13 +125,14 @@
     const cache=localizeDocument.cache??=new WeakMap();
     const walker=document.createTreeWalker(document.body,4);
     for(let node;node=walker.nextNode();){
-      if(node.parentElement.closest('script,style,#language,#language-popover'))continue;
+      if(node.parentElement.closest('script,style,#language,#language-popover,[data-localized-text]'))continue;
       const old=cache.get(node),original=old&&node.nodeValue===old.output?old.original:node.nodeValue;
       const output=translate(original.trim(),locale);
       const value=original.replace(original.trim(),output);
       cache.set(node,{original,output:value});node.nodeValue=value;
     }
     for(const el of document.querySelectorAll('[title],[aria-label],[placeholder]')){
+      if(el.closest?.('[data-localized-text]'))continue;
       const old=cache.get(el)||{};
       for(const attr of ['title','aria-label','placeholder'])if(el.hasAttribute(attr)){
         if(attr==='title'&&el.hasAttribute('data-localized-title'))continue;
