@@ -242,3 +242,9 @@ footer{justify-content:space-between;gap:8px;padding:0 18px}
 #sync-summary{max-width:110px}
 .language-popover{left:230px}
 .sync-popover{right:14px}
+/* Shared sync control: balanced circular arrows and a quiet hover target. */
+#compact-refresh,#refresh{width:30px;height:30px;padding:6px;border-radius:50%;color:#aeb3bc;transition:color .15s,background .15s}
+#compact-refresh svg,#refresh svg{width:18px;height:18px;stroke-width:1.55}
+#compact-refresh:hover,#refresh:hover{color:#f5f6f8;background:#ffffff0c}
+#compact-refresh:active,#refresh:active{background:#ffffff16}
+@media(prefers-reduced-motion:reduce){#compact-refresh,#refresh{transition:none}}

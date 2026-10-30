@@ -17,6 +17,7 @@ function setView(view){currentView=view;settingsOpen=false;activeDetail=null;con
 function renderFooter(){
   const enabled=ids.map(id=>state.providers[id]).filter(s=>s.enabled);
   const busy=syncBusy||enabled.some(s=>s.status==='loading'||s.refreshing);
+  for(const id of ['compact-refresh','refresh'])$(id).classList.toggle('spinning',busy);
   const failed=enabled.some(s=>['unavailable','stale','signed_out'].includes(s.status));
   const updated=enabled.map(s=>Date.parse(s.updatedAt)).filter(Number.isFinite);
   $('sync-summary').textContent=state.paused||!enabled.length?'已暫停同步':busy?'同步中':failed?'部分失敗':updated.length?elapsed(new Date(Math.min(...updated)).toISOString()):'尚未同步';
