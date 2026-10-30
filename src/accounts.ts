@@ -17,7 +17,7 @@ export class Accounts {
     let saved:any=[];try{saved=JSON.parse(readFileSync(this.file,'utf8'));}catch{}
     if(Array.isArray(saved))for(const raw of saved.slice(0,20)){
       if(!validId(raw?.id)||typeof raw.label!=='string'||!raw.label.trim()||raw.label.length>24||this.entries.has(raw.id))continue;
-      this.attach({id:raw.id,label:raw.label,enabled:raw.enabled!==false,visible:raw.visible!==false,reserve:typeof raw.reserve==='number'&&Number.isFinite(raw.reserve)&&raw.reserve>=0&&raw.reserve<=100?raw.reserve:10,window:typeof raw.window==='string'?raw.window.slice(0,160):'',limits:raw.limits});
+      this.attach({id:raw.id,label:raw.label,enabled:raw.enabled!==false,visible:raw.visible!==false,reserve:typeof raw.reserve==='number'&&Number.isFinite(raw.reserve)&&raw.reserve>=0&&raw.reserve<=100?(raw.reserveDefaultsVersion!==3&&raw.reserve===5?10:raw.reserve):10,window:typeof raw.window==='string'?raw.window.slice(0,160):'',limits:raw.limits});
     }
   }
   private directory(id:string){if(!validId(id))throw new ProviderError('auth','帳號不存在');const dir=path.resolve(this.root,id);if(path.dirname(dir)!==path.resolve(this.root))throw new ProviderError('auth','帳號不存在');return dir;}
@@ -31,7 +31,7 @@ export class Accounts {
     this.entries.set(profile.id,{profile,service,poller,connections,removed:false});
   }
   private save(){
-    const profiles=[...this.entries.values()].map(e=>({...e.profile,limits:e.poller.rateLimits()}));
+    const profiles=[...this.entries.values()].map(e=>({...e.profile,reserveDefaultsVersion:3,limits:e.poller.rateLimits()}));
     writeFileSync(this.file+'.tmp',JSON.stringify(profiles),{mode:0o600});renameSync(this.file+'.tmp',this.file);
   }
   has(id:unknown):id is string{return typeof id==='string'&&this.entries.has(id);}

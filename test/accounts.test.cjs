@@ -32,6 +32,15 @@ test('rate limits remain isolated per account and survive restarting monitoring'
     a.patch({enabled:{[y]:false}});assert.equal(a.snapshot().enabled[y],false);
   }finally{a.close();f.cleanup();}
 });
+test('legacy added accounts migrate five percent once while explicit later choices persist',()=>{
+  const f=fixture();let a=f.create();try{
+    const x=a.add('old'),y=a.add('custom');a.patch({reservePercent:{[x]:5,[y]:20}});a.close();
+    const file=path.join(f.root,'accounts.json'),saved=JSON.parse(fs.readFileSync(file,'utf8'));for(const p of saved)delete p.reserveDefaultsVersion;fs.writeFileSync(file,JSON.stringify(saved));
+    a=f.create();assert.equal(a.snapshot().reservePercent[x],10);assert.equal(a.snapshot().reservePercent[y],20);
+    a.patch({reservePercent:{[x]:5}});a.close();a=f.create();assert.equal(a.snapshot().reservePercent[x],5);
+    const added=a.add('new');assert.equal(a.snapshot().reservePercent[added],10);
+  }finally{a.close();f.cleanup();}
+});
 test('profile input never chooses arbitrary filesystem paths',async()=>{
   const f=fixture();let a=f.create();try{
     for(const value of ['',null,'x'.repeat(25),'bad\nname'])assert.throws(()=>a.add(value));
