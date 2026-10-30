@@ -71,6 +71,12 @@ const os=require('node:os');
     const send=state=>app.evaluate(({BrowserWindow},snapshot)=>BrowserWindow.getAllWindows()[0].webContents.send('state',snapshot),state);
     const unsigned=structuredClone(baseline);unsigned.providers.claude.status='signed_out';unsigned.providers.claude.reading=null;unsigned.providers.claude.error='請完成帳號連接';
     await send(unsigned);await page.locator('#mini-claude').filter({hasText:'未連接'}).waitFor();
+    for(const locale of ['zh-TW','en','ja','ko']){
+      const localized=structuredClone(unsigned);localized.settings.locale=locale;await send(localized);
+      const status=await page.locator('#mini-claude').evaluate(el=>{const text=el.getBoundingClientRect(),alert=el.closest('button').querySelector('.mini-alert').getBoundingClientRect();return {font:parseFloat(getComputedStyle(el).fontSize),textRight:text.right,alertLeft:alert.left};});
+      assert.ok(status.font<=10,`${locale}: compact status text must stay small`);assert.ok(status.textRight<=status.alertLeft,`${locale}: status text must not overlap alert ${JSON.stringify(status)}`);
+    }
+    await send(unsigned);
     await page.screenshot({path:'test-results/design-unsigned.png'});
     const stale=structuredClone(baseline);stale.providers.codex.status='stale';stale.providers.codex.error='暫時無法連線';
     await send(stale);await page.locator('#mini-codex').filter({hasText:'更新失敗'}).waitFor();

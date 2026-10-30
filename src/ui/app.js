@@ -289,7 +289,7 @@ function renderCompact(id,slot=id){
   const mini=$(`mini-${slot}`),windowLabel=$(`window-${slot}`),button=document.querySelector(`.compact-provider[data-provider="${slot}"]`),w=presentation.weeklyWindow(allWindows);
   if(!mini)return;
   button.classList.toggle('unconnected',!w);button.classList.toggle('disabled',!s.enabled);button.classList.toggle('stale',s.status==='stale');
-  mini.className=`mini-value${w?'':' unknown'}`;
+  mini.className=`mini-value${w&&s.enabled&&!expired&&s.status!=='stale'?'':' unknown'}`;
   mini.textContent=!s.enabled?'暫停':expired?'資料過期':s.status==='stale'?'更新失敗':w?`${percent(w)}%`:s.status==='loading'?'同步中':s.status==='signed_out'?'未連接':limited?'限流中':s.reading?'未提供週額度':'讀取失敗';
   mini.textContent=paceText(mini.textContent);
   windowLabel.textContent=s.status==='stale'&&w?`${percent(w)}%`:w?presentation.shortWindow(w.label):'';
