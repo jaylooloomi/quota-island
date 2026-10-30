@@ -19,7 +19,7 @@ if (testing) {
   app.setPath('userData', testData);
 }
 type Settings = { locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; alwaysOnTop: boolean; notifications: boolean; enabled: Record<ProviderId, boolean>; order: ProviderId[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; x?: number; y?: number };
-let settings: Settings = { locale:'zh-TW', remaining: true, alwaysOnTop: true, notifications: false, enabled: { claude: true, gemini: true, codex: true }, order: [...providerIds], googleSource:'antigravity', presentationVersion:2 };
+let settings: Settings = { locale:'zh-TW', remaining: true, alwaysOnTop: true, notifications: false, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
 function validOrder(raw: unknown): raw is ProviderId[] {
   return Array.isArray(raw) && raw.length === providerIds.length && new Set(raw).size === providerIds.length && raw.every(id => providerIds.includes(id));
 }

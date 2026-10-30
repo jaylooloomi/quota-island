@@ -22,7 +22,7 @@ const os=require('node:os');
     const fit=await page.locator('.panel-body').evaluate(el=>({visible:el.clientHeight,content:el.scrollHeight}));
     assert.ok(fit.content<=fit.visible+1,`Reference cards must fit without scrolling: ${JSON.stringify(fit)}`);
     assert.equal(await page.locator('.bar').isVisible(),false);
-    const labels=await page.locator('.quota-number').allTextContents();assert.deepEqual(labels,['36%','57%','62%','88%','12%']);
+    const labels=await page.locator('.quota-number').allTextContents();assert.deepEqual(labels,['36%','57%','12%','62%','88%']);
     const fills=await page.locator('.track').evaluateAll(nodes=>nodes.map(el=>({value:Number(el.getAttribute('aria-valuenow')),fill:el.firstElementChild.getBoundingClientRect().width/el.getBoundingClientRect().width*100})));
     for(const row of fills)assert.ok(Math.abs(row.value-row.fill)<1,'Bar length and numerical percentage must agree');
     const iconStatus=await page.locator('.provider-icon img').evaluateAll(images=>images.every(image=>image.complete&&image.naturalWidth>0));assert.equal(iconStatus,true);
