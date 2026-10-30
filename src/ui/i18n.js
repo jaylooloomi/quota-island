@@ -2,6 +2,7 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['本次工作階段','Current session','現在のセッション','현재 세션'],['每週 · 所有模型','Weekly · All models','週間・全モデル','주간 · 모든 모델'],['模型專屬','Model-specific','モデル別','모델별'],
     ['配額','Quota','利用枠','할당량'],['帳號','Accounts','アカウント','계정'],['配額與帳號','Quota and accounts','利用枠とアカウント','할당량 및 계정'],
     ['切換帳號','Switch account','アカウント切替','계정 전환'],['登入帳號','Sign in','ログイン','로그인'],['登出','Sign out','ログアウト','로그아웃'],
     ['確認登出','Confirm sign out','ログアウトを確認','로그아웃 확인'],['取消','Cancel','キャンセル','취소'],

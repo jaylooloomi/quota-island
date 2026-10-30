@@ -4,10 +4,10 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/version-0.4.1-informational" alt="Version 0.4.1">
+  <img src="https://img.shields.io/badge/version-0.4.2-informational" alt="Version 0.4.2">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
-  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-51%20passing-brightgreen" alt="51 core tests passed locally"></a>
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-53%20passing-brightgreen" alt="53 core tests passed locally"></a>
   <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/lang-繁體中文-green" alt="Traditional Chinese"></a>
 </p>
 
@@ -59,7 +59,7 @@ Click a quota or chevron to expand. Drag the left grip to move the island. Drag 
 
 ## Everyday controls
 
-Version 0.4.1 uses the Compact Double-layer layout: a capsule with mini progress
+Version 0.4.2 uses the Compact Double-layer layout: a capsule with mini progress
 bars, flat provider rows, visible version labels, and **Quota / Accounts** tabs.
 Open Accounts to switch or sign out of Claude/Codex. Signing out requires
 confirmation and also affects the official CLI account on this computer.
@@ -102,8 +102,8 @@ These are **subscription quotas and reset windows**, not network traffic, API bi
 
 | Check | Latest local result |
 |---|---|
-| Core tests | **51 passed** |
-| Measured Node modules | **88.04% lines · 85.84% branches · 89.63% functions** |
+| Core tests | **53 passed** |
+| Measured Node modules | **88.24% lines · 86.82% branches · 89.63% functions** |
 | Windows packaged app | Desktop controls, ordering and design checks passed |
 | Authorization integration | Fixture upstream responses; real local IPC, callbacks and child-process paths |
 | Real accounts | Gemini and Codex reads previously verified; Claude's last real check returned HTTP 429 |

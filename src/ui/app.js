@@ -148,11 +148,12 @@ function renderCard(id){
   const limited=/429|限制查詢|查詢頻率/.test(s.error??'');
   card.querySelector('.provider-subtitle').textContent=id==='gemini'?(state.demo?'CLI / Code Assist':usesAntigravity?'Antigravity':'Code Assist · 企業版'):subtitles[id];
   const plan=card.querySelector('.plan');plan.textContent=s.reading?.plan??'';plan.hidden=!s.reading?.plan;plan.title=s.reading?.plan??'';
+  card.querySelector('.quota-display-mode').textContent=state.settings.remaining?'剩餘額度':'已用額度';
   let status=!s.enabled?'已暫停':s.status==='ready'?'已連接':s.status==='stale'?'更新失敗':s.status==='loading'?'同步中':s.status==='signed_out'?'未連接':limited?'服務限流':'讀取失敗';
   if(expired)status='資料過期';if(auth?.pending)status=auth.phase==='syncing'?'同步中':'連接中';
   card.querySelector('.status-label').textContent=status;
   const updated=card.querySelector('.updated');updated.textContent=elapsed(s.updatedAt);updated.title=s.error??(s.updatedAt?new Date(s.updatedAt).toLocaleString():'尚未同步');
-  const container=card.querySelector('.quota-windows');container.replaceChildren();container.classList.toggle('single',windows.length===1);container.hidden=!windows.length;
+  const container=card.querySelector('.quota-windows');container.replaceChildren();container.classList.toggle('single',windows.length===1);container.classList.toggle('many',windows.length>2);container.hidden=!windows.length;
   for(const w of windows){
     const row=$('window-template').content.firstElementChild.cloneNode(true);if(tone(w))row.classList.add(tone(w));
     row.querySelector('.window-label').textContent=presentation.windowLabel(w.label);row.querySelector('.window-label').title=w.variants.join(' / ');

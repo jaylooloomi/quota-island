@@ -3,6 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs/promises');
 const path=require('node:path');
 const os=require('node:os');
+const {parseClaude}=require('../dist/model');
 (async()=>{
   const directory=await fs.mkdtemp(path.join(os.tmpdir(),'quota-languages-'));
   const env={...process.env,QUOTA_TEST_DATA:directory};delete env.ELECTRON_RUN_AS_NODE;
@@ -55,6 +56,28 @@ const os=require('node:os');
       if(locale==='en')assert.match(await page.locator('.card.codex .login').textContent(),/Switch Codex account/);
       await page.locator('.card.codex .close-connection').click();
       const baseline=await page.evaluate(()=>window.quota.getState());
+      const modern=structuredClone(baseline);
+      modern.providers.claude.reading=parseClaude({limits:[
+        {kind:'session',group:'session',percent:12,is_active:false,resets_at:'2026-11-01T00:00:00Z'},
+        {kind:'weekly_all',group:'weekly',percent:15,is_active:false,resets_at:'2026-11-04T13:59:59Z'},
+        {kind:'weekly_scoped',group:'weekly',percent:20,is_active:true,scope:{model:{display_name:'Fable'}},resets_at:'2026-11-04T13:59:59Z'}]},'team');
+      modern.settings.remaining=true;
+      await app.evaluate(({BrowserWindow},value)=>BrowserWindow.getAllWindows()[0].webContents.send('state',value),modern);
+      await page.waitForFunction(()=>document.querySelectorAll('.card.claude .quota-row').length===3);
+      assert.deepEqual(await page.locator('.card.claude .quota-number').allTextContents(),['88%','85%','80%']);
+      assert.match(await page.locator('.card.claude .quota-windows').textContent(),/Fable/);
+      const fitModern=await page.locator('.panel-body').evaluate(el=>({visible:el.clientHeight,content:el.scrollHeight,cards:[...el.querySelectorAll('.card')].map(card=>({height:card.getBoundingClientRect().height,rows:[...card.querySelectorAll('.quota-row')].map(row=>row.getBoundingClientRect().height)}))}));
+      await page.screenshot({path:`test-results/language-${locale}-claude-modern-remaining.png`});
+      assert.ok(fitModern.content<=fitModern.visible+1,`${locale}: Fable fit ${JSON.stringify(fitModern)}`);
+      assert.equal(await page.locator('.card.claude .window-label').evaluateAll(nodes=>nodes.every(el=>el.scrollWidth<=el.clientWidth+1)),true,`${locale}: Claude limit names must not be truncated`);
+      await page.screenshot({path:`test-results/language-${locale}-claude-modern-remaining.png`});
+      modern.settings.remaining=false;
+      await app.evaluate(({BrowserWindow},value)=>BrowserWindow.getAllWindows()[0].webContents.send('state',value),modern);
+      await page.locator('.card.claude .quota-number').first().filter({hasText:'12%'}).waitFor();
+      assert.deepEqual(await page.locator('.card.claude .quota-number').allTextContents(),['12%','15%','20%']);
+      await page.screenshot({path:`test-results/language-${locale}-claude-modern-used.png`});
+      await app.evaluate(({BrowserWindow},value)=>BrowserWindow.getAllWindows()[0].webContents.send('state',value),baseline);
+      await page.waitForFunction(()=>document.querySelectorAll('.card.claude .quota-row').length===2);
       const limited=structuredClone(baseline);
       limited.providers.claude.status='unavailable';limited.providers.claude.reading=null;
       limited.providers.claude.error='服務暫時限制查詢頻率，等待後將自動重試';limited.providers.claude.nextPollAt=Date.now()+3600000;

@@ -5,7 +5,7 @@ test suite, saves `test-results/coverage.txt`, and fails below 85% lines,
 80% branches, or 85% functions. GitHub Actions runs the same gate on
 Windows, macOS, and Linux and uploads each coverage report.
 
-Windows local result: **51 tests passed**, **88.04% lines**, **85.84%
+Windows local result: **53 tests passed**, **88.24% lines**, **86.82%
 branches**, **89.63% functions** across modules loaded by the Node tests.
 This is not a whole-application coverage percentage. Node's report includes
 the loaded compiled service modules and `src/ui/presentation.js`; it does
