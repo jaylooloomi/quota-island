@@ -337,6 +337,14 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
 .rename-editor{flex-basis:100%;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:4px 0}
 .rename-input{min-width:0;flex:1;width:100px;padding:7px;border:1px solid #555e6c;border-radius:7px;background:#191c20;color:#eef0f4;font-size:11px;user-select:text}
 .rename-editor p{flex-basis:100%;margin:0;font-size:10px;color:#edb3a6}
+/* Stable primary-action columns; account maintenance occupies a separate row. */
+.accounts-view .account-actions{display:grid;grid-template-columns:repeat(2,minmax(0,96px));justify-content:end;align-self:start;align-items:stretch;gap:6px}
+.accounts-view .account-actions>button{min-height:30px;padding:5px 7px;line-height:16px;width:100%;margin:0}
+.account-actions>.account-switch{grid-column:1;grid-row:1}
+.account-actions>.account-logout{grid-column:2;grid-row:1}
+.account-actions>.rename-account{grid-column:1;grid-row:2}
+.account-actions>.remove-account{grid-column:2;grid-row:2}
+.account-actions>.rename-editor,.account-actions>.remove-confirm,.account-actions>.logout-confirm{grid-column:1/-1;grid-row:3}
 /* Match the compact and expanded chevron's right inset. */
 .bar,.panel-header{position:relative}
 #toggle,#collapse{position:absolute;right:14px;top:12px;width:34px;height:34px;margin:0}

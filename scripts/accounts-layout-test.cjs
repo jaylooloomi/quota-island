@@ -20,6 +20,8 @@ const {_electron:electron}=require('playwright'),assert=require('node:assert/str
       assert.equal(await page.locator(`[data-provider="${first}"] h2`).textContent(),'工作帳號','Account names must not be translated into status messages');
       const identity=()=>page.locator(`[data-provider="${first}"]`).evaluate(el=>{const r=el.querySelector('.card-heading').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};});
       const quota=await identity();await page.locator('#tab-accounts').click();assert.deepEqual(await identity(),quota);
+      const actionColumns=await page.locator('.card').evaluateAll(cards=>cards.map(card=>['.account-switch','.account-logout'].map(selector=>{const r=card.querySelector(selector).getBoundingClientRect();return {x:r.x,width:r.width,offsetY:r.y-card.getBoundingClientRect().y};})));
+      for(const columns of actionColumns)assert.deepEqual(columns,actionColumns[0],`${locale}: primary account actions share columns and row offset`);
       const card=page.locator(`[data-provider="${first}"]`);
       await card.locator('.rename-account').click();await card.locator('.rename-input').fill('改名測試');await card.locator('.rename-editor button[type="submit"]').click();
       await card.locator('h2').filter({hasText:'改名測試'}).waitFor();
