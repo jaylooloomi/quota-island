@@ -90,7 +90,7 @@ function renderConnection(id,s,auth){
   const details=card.querySelector('.connection-details');details.hidden=activeDetail!==id;
   card.classList.toggle('details-open',!details.hidden);
   card.querySelector('.connection-status').setAttribute('aria-expanded',String(!details.hidden));
-  card.querySelector('.connection-description').textContent=antigravity?'沿用 Antigravity 的 Google 帳號，讀取 Gemini 配額資訊。':`連接你的 ${id==='codex'?'ChatGPT':id==='gemini'?'Google':names[id]} 帳號以讀取配額資訊。`;
+  card.querySelector('.connection-description').textContent=id==='codex'?'登入要監控的 ChatGPT 訂閱帳號，可與 Claude、Gemini 使用不同帳號。':antigravity?'沿用 Antigravity 的 Google 帳號，讀取 Gemini 配額資訊。':`連接你的 ${id==='gemini'?'Google':names[id]} 帳號以讀取配額資訊。`;
   card.querySelector('.connection-account h4').textContent=id==='claude'?'Claude Code':id==='codex'?'Codex':antigravity?'Antigravity · Gemini':'Google Code Assist';
   const phase=auth?.phase;
   const step=connected?4:phase==='syncing'?2:phase==='connecting'?1:0;
@@ -102,7 +102,7 @@ function renderConnection(id,s,auth){
   const message=card.querySelector('.auth-message');
   message.textContent=auth?.pending||auth?.phase==='error'?auth.message:connected?'已連接，配額已自動同步':s.error||'完成授權後會自動同步配額。';
   message.classList.toggle('success',!!connected);message.classList.toggle('error',phase==='error'||(!auth?.pending&&['stale','unavailable'].includes(s.status)));
-  const text=phase==='syncing'?'自動同步中…':phase==='connecting'?'連接中…':auth?.pending?'等待授權…':connected?'重新連接':antigravity?'連接 Antigravity 並同步 →':`登入 ${id==='gemini'?'Google':names[id]} 並同步 →`;
+  const text=phase==='syncing'?'自動同步中…':phase==='connecting'?'連接中…':auth?.pending?'等待授權…':id==='codex'?(connected?'切換 Codex 帳號 →':'登入 Codex（ChatGPT） →'):connected?'重新連接':antigravity?'連接 Antigravity 並同步 →':`登入 ${id==='gemini'?'Google':names[id]} 並同步 →`;
   for(const button of [card.querySelector('.login'),card.querySelector('.connect-primary')]){button.textContent=text;button.disabled=!!auth?.pending||!s.enabled;}
   const limited=/429|限制查詢|查詢頻率/.test(s.error??'');
   card.querySelector('.connect-primary').hidden=false;
@@ -110,6 +110,7 @@ function renderConnection(id,s,auth){
   else if(s.status==='unavailable')card.querySelector('.connect-primary').textContent='重新同步';
   else if(s.status==='loading'){card.querySelector('.connect-primary').textContent='同步中…';card.querySelector('.connect-primary').disabled=true;}
   card.querySelector('.connection-note').textContent=limited?`目前限制的是配額查詢，不代表已登出。可登入或更新授權；重新登入不會解除限流。${retryLabel(s)||'冷卻後自動重試'}。`:'登入完成後自動更新，不必手動查用量。';
+  if(id==='codex')card.querySelector('.connection-note').textContent+=' Codex 使用獨立的 OpenAI／ChatGPT 授權；切換會同步更新本機 Codex CLI 的帳號，不會登出 Claude 或 Gemini。瀏覽器若帶入其他帳號，請選擇使用其他帳號登入。';
   card.querySelector('.auth-code-form').hidden=!auth?.pending||!auth?.codeRequired;
   card.querySelector('.reopen-login').hidden=!auth?.pending||!auth?.canReopen||phase==='syncing';
   card.querySelector('.provider-link').hidden=!s.reading;

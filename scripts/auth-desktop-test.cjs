@@ -39,7 +39,26 @@ const os = require('node:os');
     assert.equal(state.providers.gemini.status,'ready'); assert.equal(state.auth.gemini.phase,'ready');
     const bytes=await fs.readFile(path.join(dir,'gemini-session.bin'));
     assert.ok(!bytes.includes(Buffer.from('TEST-GOOGLE-NOT-REAL')));
-    const report={passed:true,checks:['Claude manual authorization code returns through CLI stdin','Google real loopback callback and encrypted vault','wrong OAuth state rejected','auth completion bypasses stale auth backoff','quota cards update without refresh click','app restores and expands after browser authorization','no misleading external sign-in link','authorization code input cleared']};
+    const beforeSwitch=await page.evaluate(()=>window.quota.getState());
+    await page.locator('.card.codex .connection-status').click();
+    assert.match(await page.locator('.card.codex .connection-description').textContent(),/不同帳號/);
+    assert.match(await page.locator('.card.codex .connection-note').textContent(),/本機 Codex CLI/);
+    await page.locator('.card.codex .login').filter({hasText:'切換 Codex 帳號'}).click();
+    for(let i=0;i<100;i++){
+      const opened=await application.evaluate(()=>globalThis.__AUTH_TEST_URLS.some(url=>new URL(url).hostname==='auth.openai.com'));
+      if(opened)break;
+      if(i===99)throw Error('Codex did not open its own OpenAI login');
+      await new Promise(resolve=>setTimeout(resolve,20));
+    }
+    await application.evaluate(()=>globalThis.__AUTH_TEST_CODEX_COMPLETE());
+    await page.locator('.card.codex .quota-number').filter({hasText:'35%'}).waitFor();
+    const afterSwitch=await page.evaluate(()=>window.quota.getState());
+    assert.equal(afterSwitch.auth.codex.phase,'ready');
+    for(const id of ['claude','gemini']){
+      assert.deepEqual(afterSwitch.providers[id],beforeSwitch.providers[id]);
+      assert.deepEqual(afterSwitch.auth[id],beforeSwitch.auth[id]);
+    }
+    const report={passed:true,checks:['Codex opens its own OpenAI login and switches quota automatically','Codex account switch preserves Claude and Gemini state','Claude manual authorization code returns through CLI stdin','Google real loopback callback and encrypted vault','wrong OAuth state rejected','auth completion bypasses stale auth backoff','quota cards update without refresh click','app restores and expands after browser authorization','no misleading external sign-in link','authorization code input cleared']};
     await fs.mkdir('test-results',{recursive:true}); await fs.writeFile('test-results/auth-desktop.json',JSON.stringify(report,null,2)); console.log(JSON.stringify(report,null,2));
   } finally {await application.close();await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
 })().catch(e=>{console.error(e);process.exitCode=1;});
