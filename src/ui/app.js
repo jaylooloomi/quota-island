@@ -117,11 +117,11 @@ function makeCards(){
     card.querySelector('.quota-details-link').addEventListener('click',()=>{quotaDetailsProvider=id;quotaDetailsOpen=true;activeDetail=null;settingsOpen=false;footerPopover=null;render(state);});
     card.querySelector('.account-switch').addEventListener('click',async()=>{
       if(id==='gemini'&&state.settings.googleSource==='antigravity'){
-        activeDetail=id;render(state);const result=await api.openAntigravity();
+        activeDetail=id;render(state);const result=await api.antigravityAccount('switch');
         if(!result.ok){state.auth[id]={pending:false,phase:'error',message:result.message};render(state);}
       }else startLogin(id);
     });
-    card.querySelector('.account-logout').addEventListener('click',()=>{confirmLogout=id;render(state);});
+    card.querySelector('.account-logout').addEventListener('click',async()=>{if(id==='gemini'&&state.settings.googleSource==='antigravity'){await api.antigravityAccount('disconnect');render(await api.getState());return;}confirmLogout=id;render(state);});
     card.querySelector('.cancel-logout').addEventListener('click',()=>{confirmLogout=null;render(state);});
     card.querySelector('.confirm-logout').addEventListener('click',async()=>{
       logoutBusy=id;render(state);
@@ -189,6 +189,7 @@ function renderCard(id){
   card.classList.remove('ready','stale','signed_out','loading','unavailable','disabled');card.classList.add(!s.enabled?'disabled':expired?'unavailable':s.status);
   card.classList.toggle('pending',!!auth?.pending);
   const usesAntigravity=id==='gemini'&&state.settings.googleSource==='antigravity';
+  const disconnected=usesAntigravity&&!s.enabled&&s.status==='signed_out';
   const limited=/429|限制查詢|查詢頻率/.test(s.error??'');
   card.querySelector('.provider-subtitle').textContent=id==='gemini'?(state.demo?'CLI / Code Assist':usesAntigravity?'Antigravity':'Code Assist · 企業版'):subtitles[id];
   const plan=card.querySelector('.plan');plan.textContent=s.reading?.plan??'';plan.hidden=!s.reading?.plan;plan.title=s.reading?.plan??'';
@@ -196,6 +197,7 @@ function renderCard(id){
   let status=!s.enabled?'已暫停':s.status==='ready'?'已連接':s.status==='stale'?'更新失敗':s.status==='loading'?'同步中':s.status==='signed_out'?'未連接':limited?'服務限流':'讀取失敗';
   if(expired)status='資料過期';if(auth?.pending)status=auth.phase==='syncing'?'同步中':'連接中';
   card.querySelector('.status-label').textContent=status;
+  if(disconnected)card.querySelector('.status-label').textContent='已中斷連接';
   const updated=card.querySelector('.updated');updated.textContent=elapsed(s.updatedAt);updated.title=s.error??(s.updatedAt?new Date(s.updatedAt).toLocaleString():'尚未同步');
   const container=card.querySelector('.quota-windows');container.replaceChildren();container.classList.toggle('single',windows.length===1);container.classList.toggle('many',windows.length>2);container.hidden=!windows.length;
   for(const w of windows){
@@ -217,12 +219,13 @@ function renderCard(id){
   card.querySelector('.empty-title').textContent=!s.enabled?'已暫停此來源':auth?.pending?(auth.codeRequired?'等待授權碼':auth.phase==='syncing'?'連接完成，正在同步…':'等待帳號連接…'):s.status==='signed_out'?'連接你的帳號':s.status==='loading'?'正在讀取配額…':expired?'資料已過期':limited?'配額服務暫時限流':'暫時無法取得配額';
   const errorText=limited?['服務回覆 HTTP 429',retryLabel(s)].filter(Boolean).join(' · '):s.error?[s.error,retryLabel(s)].filter(Boolean).join(' · '):'';
   card.querySelector('.empty-message').textContent=!s.enabled?'在設定中開啟來源即可恢復同步。':auth?.pending||auth?.phase==='error'?auth.message:errorText||'完成連接後，配額會自動出現在這裡。';
+  if(disconnected){card.querySelector('.empty-title').textContent='已中斷連接';card.querySelector('.empty-message').textContent='Antigravity 仍保持登入，可在帳號頁重新連接。';}
   card.querySelector('.empty-message').title=s.error??'';
   renderConnection(id,s,auth);
   const accountActions=card.querySelector('.account-actions');accountActions.hidden=currentView!=='accounts'||activeDetail===id;
-  const switchButton=card.querySelector('.account-switch');switchButton.textContent=usesAntigravity?'前往 Antigravity 切換':ready(s)?'切換帳號':'登入帳號';
-  switchButton.disabled=!!auth?.pending||logoutBusy===id||!s.enabled;
-  const logoutButton=card.querySelector('.account-logout');logoutButton.hidden=id==='gemini'||!s.reading;logoutButton.disabled=!!auth?.pending||logoutBusy===id;
+  const switchButton=card.querySelector('.account-switch');switchButton.textContent=usesAntigravity?'切換帳號':ready(s)?'切換帳號':'登入帳號';
+  switchButton.disabled=!!auth?.pending||logoutBusy===id||(!s.enabled&&!usesAntigravity);
+  const logoutButton=card.querySelector('.account-logout');logoutButton.textContent=usesAntigravity?'中斷連接':'登出';logoutButton.hidden=usesAntigravity?!s.enabled:id==='gemini'||!s.reading;logoutButton.disabled=!!auth?.pending||logoutBusy===id;
   card.querySelector('.logout-confirm').hidden=confirmLogout!==id;
   for(const button of card.querySelectorAll('.logout-confirm button'))button.disabled=logoutBusy===id;
   const mini=$(`mini-${id}`),windowLabel=$(`window-${id}`),button=document.querySelector(`.compact-provider[data-provider="${id}"]`),w=windows[0];

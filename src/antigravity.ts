@@ -103,6 +103,17 @@ export function localAntigravityStatus(candidate: Candidate, port: number, metho
   });
 }
 export class Antigravity {
+  private identity:string|undefined;
+  private switching=false;
+  beginSwitch(){this.switching=true;}
+  cancelSwitch(){this.switching=false;}
+  get waitingForAccount(){return this.switching;}
+  private acceptIdentity(value:unknown){
+    const identity=typeof value==='string'?value.trim().toLowerCase():undefined;
+    if(this.switching&&(!identity||identity===this.identity))throw new ProviderError('auth','等待在 Antigravity 切換帳號，完成後會自動更新配額');
+    if(identity)this.identity=identity;
+    this.switching=false;
+  }
   constructor(private discover=discoverAntigravity,private status=localAntigravityStatus){}
   async read():Promise<Reading>{
     const candidates=await this.discover();
@@ -119,13 +130,13 @@ export class Antigravity {
           const identity=metadata?.userStatus?.email;
           if(fallbackIdentity&&(typeof identity!=='string'||identity.trim().toLowerCase()!==fallbackIdentity))continue;
           const plan=metadata?.userStatus?.planStatus?.planInfo?.planName;if(typeof plan==='string')reading.plan=plan;
-          return reading;
-        }catch{/* Older local services may not implement grouped summaries. */}
+          this.acceptIdentity(identity);return reading;
+        }catch(e){if(e instanceof ProviderError&&e.code==='auth'&&this.switching)throw e;/* Older local services may not implement grouped summaries. */}
       }
       try{const metadata=await this.status(candidate,port);const reading=parseAntigravity(metadata);if(!fallback){fallback=reading;const identity=metadata?.userStatus?.email;if(typeof identity==='string')fallbackIdentity=identity.trim().toLowerCase();}}
       catch(e){if(e instanceof ProviderError)error=e;}
     }
-    if(fallback)return fallback;
+    if(fallback){this.acceptIdentity(fallbackIdentity);return fallback;}
     throw error??new ProviderError('network','Antigravity 配額服務尚未就緒，稍後會自動重試');
   }
   async connect(){

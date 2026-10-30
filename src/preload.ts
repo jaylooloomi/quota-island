@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('quota', {
   getState: () => ipcRenderer.invoke('get-state'),
   expand: (value: boolean) => ipcRenderer.invoke('expand', value),
+  antigravityAccount: (action: 'switch'|'disconnect') => ipcRenderer.invoke('antigravity-account',action),
   panelHeight: (value: number) => ipcRenderer.invoke('panel-height', value),
   refresh: () => ipcRenderer.invoke('refresh'),
   login: (id: string) => ipcRenderer.invoke('login', id),

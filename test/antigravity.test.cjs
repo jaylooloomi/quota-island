@@ -81,3 +81,18 @@ test('unavailable and unknown Antigravity quotas are not rendered as zero',async
   await assert.rejects(new Antigravity(async()=>[]).read(),{code:'auth'});
   await assert.rejects(localAntigravityStatus({pid:1,token:'TEST',ports:[]},-1),{code:'network'});
 });
+
+test('account switching rejects the old identity and automatically accepts only new-account quotas',async()=>{
+  let email='first@example.invalid';
+  const adapter=new Antigravity(async()=>[{pid:1,token:'private',ports:[1234]}],async(_candidate,_port,method)=>method==='RetrieveUserQuotaSummary'?summary:{userStatus:{email,planStatus:{planInfo:{planName:'Pro'}}}});
+  await adapter.read();adapter.beginSwitch();
+  await assert.rejects(adapter.read());assert.equal(adapter.waitingForAccount,true);
+  email='second@example.invalid';const reading=await adapter.read();
+  assert.equal(adapter.waitingForAccount,false);assert.equal(reading.windows.length,5);
+  assert.equal(JSON.stringify(reading).includes('@example.invalid'),false);
+});
+test('switching never accepts quota with missing identity metadata',async()=>{
+  const adapter=new Antigravity(async()=>[{pid:1,token:'private',ports:[1234]}],async(_candidate,_port,method)=>method==='RetrieveUserQuotaSummary'?summary:{});
+  adapter.beginSwitch();await assert.rejects(adapter.read());assert.equal(adapter.waitingForAccount,true);
+  adapter.cancelSwitch();assert.equal((await adapter.read()).windows.length,5);
+});

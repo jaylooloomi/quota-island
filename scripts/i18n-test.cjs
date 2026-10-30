@@ -198,11 +198,18 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
     }
     await page.locator('#language').selectOption('ko');
     await page.locator('html[lang="ko"]').waitFor();
+    await page.evaluate(()=>window.quota.antigravityAccount('disconnect'));
+    const disconnected=await page.evaluate(()=>window.quota.getState());
+    assert.equal(disconnected.settings.enabled.gemini,false);
+    assert.equal(disconnected.providers.gemini.reading,null);
+    await page.evaluate(()=>window.quota.refresh());
+    assert.equal((await page.evaluate(()=>window.quota.getState())).providers.gemini.reading,null,'Manual refresh must not reconnect a disconnected source');
     await page.locator('[data-visible="codex"]').uncheck();
     await page.waitForFunction(()=>document.querySelector('.compact-provider.codex').hidden&&document.querySelector('.card.codex').hidden);
     assert.equal((await page.evaluate(()=>window.quota.getState())).settings.enabled.codex,true,'Hiding a service must preserve its monitoring setting');
     await app.close();app=await launch();page=await app.firstWindow();
     await page.locator('html[lang="ko"]').waitFor();
+    assert.equal((await page.evaluate(()=>window.quota.getState())).settings.enabled.gemini,false,'Disconnect survives restart');
     assert.equal((await page.evaluate(()=>window.quota.getState())).settings.visible.codex,false,'Visibility must survive restart');
     await page.evaluate(()=>window.quota.settings({visible:{claude:false,codex:false,gemini:false}}));
     await page.locator('#toggle').click();

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>Token Killer</title><link rel="stylesheet" href="style.css">
+  <title>Quota Pebble</title><link rel="stylesheet" href="style.css">
 </head>
 <body>
   <svg class="svg-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -30,7 +30,7 @@
     </header>
     <section id="panel" class="panel" hidden>
       <header class="panel-header">
-        <div class="app-title"><h1>Token Killer</h1><span id="header-version"></span><span class="live-dot" id="live-dot"></span></div>
+        <div class="app-title"><h1>Quota Pebble</h1><span id="header-version"></span><span class="live-dot" id="live-dot"></span></div>
         <div class="tools"><div class="segmented" role="group" aria-label="配額顯示方式"><button id="mode-remaining" aria-pressed="true">剩餘</button><button id="mode-used" aria-pressed="false">已用</button></div><span class="tool-divider"></span><button id="collapse" class="icon" aria-label="收合配額面板" title="收合"><svg><use href="#i-chevron"/></svg></button></div>
       </header>
       <div class="panel-body">
@@ -50,7 +50,7 @@
           <label>Codex<input type="checkbox" data-enable="codex" role="switch"></label>
           <label>Google 配額來源<select id="google-source"><option value="antigravity">Antigravity（個人版）</option><option value="code_assist">Code Assist（企業版）</option></select></label>
           <p>拖拉服務圖示或卡片標題可排序；左側把手移動整座島。Ctrl / ⌘ + Alt + Q 隱藏或顯示。</p>
-          <div class="settings-actions"><button id="hide" class="text-button">隱藏到系統匣</button><button id="quit" class="text-button danger">結束 Quota Island</button></div>
+          <div class="settings-actions"><button id="hide" class="text-button">隱藏到系統匣</button><button id="quit" class="text-button danger">結束 Quota Pebble</button></div>
         </section>
         <div id="cards" class="cards" aria-live="polite"></div>
         <p id="no-visible-providers" hidden>所有服務已隱藏，請到設定開啟顯示。</p>

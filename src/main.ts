@@ -159,6 +159,18 @@ function installHandlers() {
       const error=await shell.openPath(file);
       return error?{ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'}:{ok:true};
     },
+    'antigravity-account': async (_event:any,action:unknown) => {
+      if(settings.googleSource!=='antigravity'||!['disconnect','switch'].includes(String(action)))return {ok:false};
+      if(action==='disconnect'){
+        providers.cancelAntigravitySwitch();
+        settings.enabled.gemini=false;poller.setEnabled('gemini',false);await poller.signedOut('gemini');delete connections.states.gemini;saveSettings();publish();return {ok:true};
+      }
+      if(demo)return {ok:false,message:'展示模式不會開啟外部應用'};
+      const file=process.platform==='win32'?path.join(homedir(),'AppData/Local/Programs/Antigravity/Antigravity.exe'):process.platform==='darwin'?'/Applications/Antigravity.app':null;
+      if(!file)return {ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'};
+      const error=await shell.openPath(file);if(error)return {ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'};
+      providers.beginAntigravitySwitch();settings.enabled.gemini=true;poller.setEnabled('gemini',true);saveSettings();await poller.signedOut('gemini');void poller.authenticated('gemini');publish();return {ok:true};
+    },
     'submit-code': (_event: any, raw: unknown, code: unknown) => connections.submitCode(validateId(raw), code),
   })) {
     ipcMain.handle(channel, (event, ...args) => {
@@ -175,12 +187,12 @@ function makeTray() {
     if (inside) { pixels[offset] = 221; pixels[offset + 1] = 210; pixels[offset + 2] = 130; pixels[offset + 3] = 255; }
   }
   tray = new Tray(nativeImage.createFromBitmap(pixels, { width: 32, height: 32 }));
-  tray.setToolTip('Quota Island · Claude / Gemini / Codex');
+  tray.setToolTip('Quota Pebble · Claude / Gemini / Codex');
   const updateMenu = () => tray.setContextMenu(Menu.buildFromTemplate([
     { label: t('顯示動態島'), click: () => { win.show(); win.focus(); } },
     { label: t('展開配額面板'), click: () => { setExpanded(true); win.show(); win.focus(); } },
     { label: t(paused ? '繼續更新' : '暫停更新'), click: () => { paused = !paused; updateMenu(); publish(); if (!paused) void poller.tick(); } },
-    { type: 'separator' }, { label: t('結束 Quota Island'), click: () => { quitting = true; app.quit(); } }
+    { type: 'separator' }, { label: t('結束 Quota Pebble'), click: () => { quitting = true; app.quit(); } }
   ]));
   updateTrayMenu=updateMenu;
   updateMenu(); tray.on('click', () => { win.show(); win.focus(); });
@@ -209,7 +221,7 @@ else {
     const area = screen.getPrimaryDisplay().workArea;
     win = new BrowserWindow({ width: 464, height: 76, x: settings.x ?? Math.round(area.x + (area.width - 464) / 2), y: settings.y ?? area.y + 12,
       frame: false, transparent: true, resizable: false, maximizable: false, fullscreenable: false, hasShadow: false,
-      alwaysOnTop: settings.alwaysOnTop, skipTaskbar: true, show: false, title: 'Quota Island',
+      alwaysOnTop: settings.alwaysOnTop, skipTaskbar: true, show: false, title: 'Quota Pebble',
       webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true }
     });
     win.setMenu(null); reposition();
@@ -228,7 +240,7 @@ else {
     win.show();
     if (!demo) await credentialWatch.scan();
     void poller.tick();
-    interval = setInterval(() => { if (!paused) { if (!demo) void credentialWatch.scan(); void poller.tick(); } }, 5000);
+    interval = setInterval(() => { if (!paused) { if (!demo) void credentialWatch.scan(); if(!demo&&settings.enabled.gemini&&settings.googleSource==='antigravity'&&providers.waitingForAntigravityAccount)void poller.authenticated('gemini'); void poller.tick(); } }, 5000);
   });
   app.on('before-quit', () => { quitting = true; clearInterval(interval); clearTimeout(saveTimer); providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
   app.on('window-all-closed', () => { if (quitting) app.quit(); });

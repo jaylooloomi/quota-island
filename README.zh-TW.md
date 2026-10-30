@@ -1,10 +1,10 @@
-<h1 align="center">Quota Island 🏝️</h1>
+<h1 align="center">Quota Pebble 🏝️</h1>
 
 <p align="center"><b>三家 AI 訂閱，一座小島掌握。</b><br>Claude、Gemini、Codex 還剩多少，一眼就知道。需要細節再展開，其他時間專心寫程式。</p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT 授權"></a>
-  <img src="https://img.shields.io/badge/version-0.6.2-informational" alt="版本 0.6.2">
+  <img src="https://img.shields.io/badge/version-0.7.0-informational" alt="版本 0.6.2">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows 已測試">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron 與 TypeScript">
   <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-58%20passing-brightgreen" alt="58 項核心測試於本機通過"></a>
@@ -181,3 +181,5 @@ README 呈現參考 [i-want-to-sleep](https://github.com/jaylooloomi/i-want-to-s
 ## 授權
 
 [MIT](LICENSE)。字型等隨附素材請見[第三方聲明](THIRD_PARTY_NOTICES.md)。
+
+Antigravity 帳號操作：**切換帳號**會開啟官方 App、清除舊配額，偵測到不同帳號後自動更新。**中斷連接**只停止 Quota Pebble 的監控並保存狀態，不會登出 Antigravity。安裝版 2.27.0 尚未驗證可用的外部登出入口，因此未提供直接原生登出。

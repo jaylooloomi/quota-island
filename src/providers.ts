@@ -16,6 +16,9 @@ export class Providers {
   private claudeLogin = new ClaudeLogin();
   private authJobs = new Map<ProviderId, Promise<void>>();
   private antigravity = new Antigravity();
+  beginAntigravitySwitch(){this.antigravity.beginSwitch();}
+  cancelAntigravitySwitch(){this.antigravity.cancelSwitch();}
+  get waitingForAntigravityAccount(){return this.antigravity.waitingForAccount;}
   constructor(private gemini: Gemini, private googleSource: () => 'antigravity' | 'code_assist' = () => 'code_assist') {}
   async read(id: ProviderId): Promise<Reading> {
     if (id === 'codex') {
