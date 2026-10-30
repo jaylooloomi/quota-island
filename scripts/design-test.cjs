@@ -10,6 +10,13 @@ const os=require('node:os');
   const app=await electron.launch({...(executablePath?{executablePath}:{}),args:[...(executablePath?[]:['.']),'--demo','--test-mode'],env});
   try{
     const page=await app.firstWindow();await page.locator('#mini-codex').filter({hasText:'12%'}).waitFor();
+    const compactFit=await page.locator('.compact-provider').evaluateAll(nodes=>nodes.every(node=>{
+      const outer=node.getBoundingClientRect();
+      const logo=node.querySelector('.mini-logo').getBoundingClientRect();
+      const info=node.querySelector('.mini-info').getBoundingClientRect();
+      return logo.right<=info.left+1&&info.right<=outer.right+1&&logo.top>=outer.top&&info.bottom<=outer.bottom;
+    }));
+    assert.equal(compactFit,true,'Compact icons and quota text must fit without overlap');
     assert.equal(await page.evaluate(async()=>{await document.fonts.ready;return document.fonts.check('16px Inter');}),true);
     await page.locator('#toggle').click();
     const fit=await page.locator('.panel-body').evaluate(el=>({visible:el.clientHeight,content:el.scrollHeight}));
@@ -19,6 +26,12 @@ const os=require('node:os');
     const fills=await page.locator('.track').evaluateAll(nodes=>nodes.map(el=>({value:Number(el.getAttribute('aria-valuenow')),fill:el.firstElementChild.getBoundingClientRect().width/el.getBoundingClientRect().width*100})));
     for(const row of fills)assert.ok(Math.abs(row.value-row.fill)<1,'Bar length and numerical percentage must agree');
     const iconStatus=await page.locator('.provider-icon img').evaluateAll(images=>images.every(image=>image.complete&&image.naturalWidth>0));assert.equal(iconStatus,true);
+    const headingsFit=await page.locator('.card-heading').evaluateAll(nodes=>nodes.every(node=>{
+      const identity=node.querySelector('.provider-identity').getBoundingClientRect();
+      const status=node.querySelector('.connection-status').getBoundingClientRect();
+      return identity.right<=status.left+1;
+    }));
+    assert.equal(headingsFit,true,'Small cards must keep account identity and connection status separate');
     await fs.mkdir('test-results',{recursive:true});await page.mouse.move(0,0);await page.screenshot({path:'test-results/design-expanded.png'});
     await page.locator('.card.claude .connection-status').click();
     assert.equal(await page.locator('.card.claude .connection-steps li.done').count(),4);

@@ -10,6 +10,7 @@
     "build": "tsc && node scripts/copy-ui.cjs",
     "start": "npm run build && electron .",
     "test": "npm run build && node --test test/*.test.cjs",
+    "test:coverage": "npm run build && node scripts/test-coverage.cjs",
     "test:desktop": "npm run build && node scripts/desktop-test.cjs",
     "test:auth": "npm run build && node scripts/auth-desktop-test.cjs",
     "test:order": "npm run build && node scripts/order-test.cjs",

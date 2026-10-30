@@ -23,7 +23,12 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm test
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ runner.os }}
+          path: test-results/coverage.txt
       - run: npm audit --omit=dev
       - if: runner.os == 'Linux'
         run: xvfb-run -a npm run test:desktop
