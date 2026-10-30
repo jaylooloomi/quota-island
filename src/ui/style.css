@@ -324,7 +324,8 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
 .pace-budget{display:flex;align-items:baseline;gap:4px;white-space:nowrap;min-width:0}.pace-budget-label{font-size:9px;color:#b7bdc7;flex-shrink:0}.pace-budget .pace-unit{margin-left:0;font-size:9px}.pace-budget .pace-value{font-size:17px}
 #add-account-area{margin:0;padding:5px 0;height:auto;min-height:28px}
 #add-account-toggle{display:flex;align-items:center;justify-content:center;width:100%;height:23px;padding:0 10px;font-size:11px;font-weight:500;line-height:1;color:#aeb5bf;background:linear-gradient(#1d2024,#191c20);border:1px solid #343940;border-radius:7px;box-shadow:inset 0 1px 0 #ffffff04;text-align:center;transition:background .15s,border-color .15s,color .15s}
-#add-account-toggle:hover{background:#282d34;border-color:#555e6c;color:#eef0f4}
+#add-account-toggle,#add-account-toggle:hover,#add-account-toggle:focus-visible,#add-account-toggle:active{text-decoration:none}
+#add-account-toggle:hover{background:#282d34;border-color:#555e6c;color:#eef0f4;box-shadow:inset 0 1px 0 #ffffff08,0 1px 4px #0002}
 #add-account-toggle:active{background:#303640;border-color:#697487}
 #add-account-toggle:focus-visible{outline:2px solid #a6b4f5;outline-offset:2px}
 @media(prefers-reduced-motion:reduce){#add-account-toggle{transition:none}}
