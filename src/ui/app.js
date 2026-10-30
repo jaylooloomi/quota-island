@@ -59,7 +59,7 @@ function retryLabel(s){
 }
 function resetLabel(id,date){
   const formatted=presentation.resetDate(date,state.settings.locale);
-  return formatted?`下次重置 ${formatted}`:'重設時間未提供';
+  return formatted?countdown(date):'重設時間未提供';
 }
 function tone(w){return w.usedPercent>=95?'danger':w.usedPercent>=80?'warning':'';}
 function ready(s){return s.enabled&&s.status==='ready'&&s.reading&&(!s.updatedAt||Date.now()-Date.parse(s.updatedAt)<24*3600000);}
@@ -161,7 +161,7 @@ function renderCard(id){
     row.querySelector('.fill').style.width=`${value}%`;
     row.querySelector('.reset').textContent=resetLabel(id,w.resetsAt);
     if(presentation.resetDate(w.resetsAt,state.settings.locale)){
-      row.querySelector('.reset').title=new Intl.DateTimeFormat(state.settings.locale,{dateStyle:'full',timeStyle:'long'}).format(new Date(w.resetsAt));
+      row.querySelector('.reset').title=new Intl.DateTimeFormat(state.settings.locale,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23',timeZoneName:'short'}).format(new Date(w.resetsAt));
       row.querySelector('.reset').setAttribute('data-localized-title','');
       row.querySelector('.reset').dataset.countdown=countdown(w.resetsAt);
       row.querySelector('.reset').title+=' · '+window.QuotaI18n.translate(countdown(w.resetsAt),state.settings.locale);

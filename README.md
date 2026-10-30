@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/version-0.4.0-informational" alt="Version 0.4.0">
+  <img src="https://img.shields.io/badge/version-0.4.1-informational" alt="Version 0.4.1">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
   <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-51%20passing-brightgreen" alt="51 core tests passed locally"></a>
@@ -59,7 +59,7 @@ Click a quota or chevron to expand. Drag the left grip to move the island. Drag 
 
 ## Everyday controls
 
-Version 0.4.0 uses the Compact Double-layer layout: a capsule with mini progress
+Version 0.4.1 uses the Compact Double-layer layout: a capsule with mini progress
 bars, flat provider rows, visible version labels, and **Quota / Accounts** tabs.
 Open Accounts to switch or sign out of Claude/Codex. Signing out requires
 confirmation and also affects the official CLI account on this computer.
@@ -83,9 +83,10 @@ quota countdowns, account controls and accessibility labels are localized too.
 
 Background polling runs every two minutes. Disabling a source stops its polling. `Retry-After` survives restarts; refresh cannot bypass it. Unknown quotas remain unknown, and stale readings are labeled.
 
-Every quota window shows its next reset date and time in your computer's
-timezone and selected language. Hover for the full timestamp, timezone and
-countdown. If the provider supplies no reset time, the app says so.
+Every quota window shows how many days/hours remain until reset in your selected
+language. Hover for the exact date/time and your computer's timezone. If the
+provider supplies no reset time, the app says so. Pacing guidance is currently
+in the [concept selection stage](docs/design/pacing-proposals/README.md).
 
 ## What the numbers mean
 

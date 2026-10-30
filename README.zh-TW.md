@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT 授權"></a>
-  <img src="https://img.shields.io/badge/version-0.4.0-informational" alt="版本 0.4.0">
+  <img src="https://img.shields.io/badge/version-0.4.1-informational" alt="版本 0.4.1">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows 已測試">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron 與 TypeScript">
   <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-51%20passing-brightgreen" alt="51 項核心測試於本機通過"></a>
@@ -59,7 +59,7 @@ npm start
 
 ## 日常操作
 
-0.4.0 採用「精簡雙層島」：膠囊迷你進度條、精簡服務列、明顯版本號，以及**配額／帳號**分頁。
+0.4.1 採用「精簡雙層島」：膠囊迷你進度條、精簡服務列、明顯版本號，以及**配額／帳號**分頁。
 在帳號頁可切換或登出 Claude、Codex；登出須確認，也會影響本機官方 CLI 使用的帳號。
 Gemini 個人版則透過專用按鈕開啟 Antigravity，在其中管理 Google 帳號。
 
@@ -80,8 +80,9 @@ Gemini 個人版則透過專用按鈕開啟 Antigravity，在其中管理 Google
 
 背景每兩分鐘更新。停用來源後停止查詢。服務的 `Retry-After` 冷卻時間會保留到下次啟動，手動更新也不會繞過。未知配額不會當成零，舊資料也會明確標示。
 
-每個配額窗口都會直接顯示「下次重置」的完整日期與時間，依電腦時區及所選語言呈現。
-滑鼠移上去可查看完整時間、時區與倒數；上游未提供時間時會明確標示，不自行推算。
+每個配額窗口直接顯示「幾天／幾小時後重置」，依所選語言呈現；滑鼠移上去可查看
+完整日期、時間與電腦時區。上游未提供時間時會明確標示，不自行推算。
+配速建議目前是[五方案概念稿](docs/design/pacing-proposals/README.md)，尚未加入 App。
 
 ## 數字從哪裡來
 
