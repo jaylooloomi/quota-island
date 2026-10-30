@@ -275,3 +275,10 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
 .footer-preferences .footer-control{position:relative;justify-content:flex-start;padding-left:28px;padding-right:0;gap:0}
 .footer-preferences .footer-control>svg{position:absolute;left:6px;top:50%;transform:translateY(-50%);width:17px;height:17px}
 @media(max-width:480px){.footer-preferences .footer-control{padding-left:25px;font-size:10px}.footer-preferences .footer-control>svg{left:4px;width:16px;height:16px}}
+/* Two-line compact identity within the unchanged 464 × 76 window. */
+.compact-brand{width:74px;gap:3px;justify-content:center}
+.compact-name{font-size:10px;font-weight:650;line-height:13px;white-space:nowrap;color:#d6d9df;-webkit-app-region:drag}
+#compact-version{-webkit-app-region:drag}
+.bar .compact-provider{padding:0 4px;gap:6px}
+.bar .mini-logo{width:26px;height:26px}
+.bar .mini-value{font-size:17px;line-height:21px}
