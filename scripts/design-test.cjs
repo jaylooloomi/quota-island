@@ -23,6 +23,7 @@ const os=require('node:os');
     assert.ok(fit.content<=fit.visible+1,`Reference cards must fit without scrolling: ${JSON.stringify(fit)}`);
     assert.equal(await page.locator('.bar').isVisible(),false);
     const labels=await page.locator('.quota-number').allTextContents();assert.deepEqual(labels,['36%','57%','12%','62%','88%']);
+    assert.equal(await page.locator('.card .plan').evaluateAll(nodes=>nodes.every(el=>el.getClientRects().length>0&&el.scrollWidth<=el.clientWidth+1)),true,'All source-provided plans must be visible without clipping');
     const fills=await page.locator('.track').evaluateAll(nodes=>nodes.map(el=>({value:Number(el.getAttribute('aria-valuenow')),fill:el.firstElementChild.getBoundingClientRect().width/el.getBoundingClientRect().width*100})));
     for(const row of fills)assert.ok(Math.abs(row.value-row.fill)<1,'Bar length and numerical percentage must agree');
     const iconStatus=await page.locator('.provider-icon img').evaluateAll(images=>images.every(image=>image.complete&&image.naturalWidth>0));assert.equal(iconStatus,true);

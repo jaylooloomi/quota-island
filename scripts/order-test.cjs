@@ -23,6 +23,12 @@ const os = require('node:os');
     assert.equal(await page.locator('#panel').isVisible(), false, 'Dragging must not expand the island');
     await page.locator('#toggle').click();
     assert.deepEqual(await cardOrder(page), ['codex','claude','gemini']);
+    await page.locator('.card.claude .card-grip').dragTo(page.locator('.card.codex .card-grip'));
+    await page.waitForFunction(()=>document.querySelector('#cards').firstElementChild.dataset.provider==='claude');
+    assert.deepEqual(await cardOrder(page),['claude','codex','gemini']);
+    await page.locator('.card.claude .card-grip').focus();await page.keyboard.press('Alt+ArrowDown');
+    await page.waitForFunction(()=>document.querySelector('#cards').firstElementChild.dataset.provider==='codex');
+    assert.deepEqual(await cardOrder(page),['codex','claude','gemini']);
     // Expanded cards use the same shared order.
     await page.locator('.card.gemini .card-heading').dragTo(page.locator('.card.codex .card-heading'));
     await page.waitForFunction(() => document.querySelector('.provider-strip').firstElementChild.dataset.provider === 'gemini');

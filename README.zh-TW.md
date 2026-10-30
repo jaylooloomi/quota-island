@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT 授權"></a>
-  <img src="https://img.shields.io/badge/version-0.4.2-informational" alt="版本 0.4.2">
+  <img src="https://img.shields.io/badge/version-0.4.3-informational" alt="版本 0.4.3">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows 已測試">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron 與 TypeScript">
   <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-53%20passing-brightgreen" alt="53 項核心測試於本機通過"></a>
@@ -59,7 +59,7 @@ npm start
 
 ## 日常操作
 
-0.4.2 採用「精簡雙層島」：膠囊迷你進度條、精簡服務列、明顯版本號，以及**配額／帳號**分頁。
+0.4.3 採用「精簡雙層島」：膠囊迷你進度條、精簡服務列、明顯版本號，以及**配額／帳號**分頁。
 在帳號頁可切換或登出 Claude、Codex；登出須確認，也會影響本機官方 CLI 使用的帳號。
 Gemini 個人版則透過專用按鈕開啟 Antigravity，在其中管理 Google 帳號。
 
@@ -74,6 +74,7 @@ Gemini 個人版則透過專用按鈕開啟 Antigravity，在其中管理 Google
 | 重新整理 | 5 秒防連點後可更新，仍尊重服務冷卻時間 |
 | 連接狀態 | 管理帳號授權、查看資料來源 |
 | 聚焦精簡服務後 `Alt + ← / →` | 鍵盤排序 |
+| 小卡左側把手／聚焦後 `Alt + ↑ / ↓` | 拖拉或鍵盤排序；顯示來源實際提供的訂閱方案 |
 | `Esc` | 依序關閉連接詳情、設定，再收合面板 |
 | `Ctrl / ⌘ + Alt + Q` | 隱藏或顯示 App |
 | 設定／系統匣 | 調整置頂、來源、用量提醒、隱藏或結束 |

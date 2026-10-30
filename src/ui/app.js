@@ -75,6 +75,9 @@ function makeCards(){
     const logo=document.createElement('img');logo.src=`icons/${id}.svg`;logo.alt='';logo.draggable=false;card.querySelector('.provider-icon').append(logo);
     card.querySelector('.connection-logo').src=`icons/${id}.svg`;
     const heading=card.querySelector('.card-heading');heading.title='拖曳調整卡片順序';enableReorder(heading,id,card);
+    const grip=document.createElement('button');grip.className='card-grip';grip.type='button';grip.title='拖曳調整卡片順序';grip.setAttribute('aria-label',`${names[id]} · 拖曳調整卡片順序`);grip.textContent='⠿';
+    enableReorder(grip,id,card);card.prepend(grip);
+    grip.addEventListener('keydown',event=>{if(!event.altKey||!['ArrowUp','ArrowDown'].includes(event.key))return;const order=state.settings.order,index=order.indexOf(id),target=order[index+(event.key==='ArrowUp'?-1:1)];if(target){event.preventDefault();moveProvider(id,target);grip.focus();}});
     card.querySelector('.connection-status').addEventListener('click',()=>{activeDetail=activeDetail===id?null:id;render(state);});
     card.querySelector('.close-connection').addEventListener('click',()=>{activeDetail=null;render(state);});
       card.querySelector('.connect-primary').addEventListener('click',()=>{const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
