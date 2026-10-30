@@ -150,14 +150,14 @@ footer{height:52px;padding:0 20px;gap:12px;background:none;border:0}
 .footer-control svg{width:17px;height:17px}
 .footer-control .small-chevron{width:11px;height:11px}
 .settings{margin:4px 0 12px;background:#1b1e21}
-.accounts-view .card{grid-template-columns:170px minmax(0,1fr);min-height:94px;gap:12px}
+
 .accounts-view .tools .segmented,.settings-view .tools .segmented,.accounts-view #mode-label{visibility:hidden}
 .accounts-view .quota-windows,.accounts-view .empty-state{display:none}
-.accounts-view .provider-description{display:flex;margin-top:2px;gap:5px}
-.accounts-view .provider-subtitle{font-size:10px;max-width:95px}
-.accounts-view .provider-identity h2{font-size:17px}
-.accounts-view .provider-icon{grid-row:1/3}
-.accounts-view .connection-label{font-size:10px}
+
+
+
+
+
 .account-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap}
 .account-actions button{border:1px solid #555b62;border-radius:7px;padding:7px 11px;font-size:11px;background:#1e2225;white-space:normal}
 .account-actions button:hover{background:#30363a}
@@ -175,7 +175,7 @@ html:not([lang="zh-TW"]) .context-line h2{font-size:10px}
 html:not([lang="zh-TW"]) .account-actions button{font-size:10px}
 @media(max-width:560px){.tools{gap:6px}.panel-header{padding:0 14px}.card{grid-template-columns:120px minmax(0,1fr);gap:8px}}
 .quota-display-mode{display:block;font-size:9px;line-height:13px;color:#a3a8b1}
-.accounts-view .quota-display-mode{display:none}
+.accounts-view .quota-display-mode{visibility:hidden}
 .card:has(.quota-windows.many){padding-top:4px;padding-bottom:4px}
 .quota-windows.many{row-gap:7px}
 .quota-windows.many .quota-row:first-child{grid-row:span 2;align-self:center}
@@ -197,7 +197,7 @@ html:not([lang="zh-TW"]) .account-actions button{font-size:10px}
 .card .plan{font-size:9px;line-height:12px;max-width:88px;padding:0 7px}
 .card.details-open>.card-grip{display:none}
 .card:has(.quota-windows.many){padding-top:3px}
-.accounts-view .card .provider-subtitle{display:inline}
+
 .cards{gap:6px}
 .card{min-height:98px;padding-top:12px;padding-bottom:12px}
 .island{position:relative}
@@ -263,7 +263,7 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
   .provider-icon,.provider-icon img{width:30px;height:30px}.provider-identity h2{font-size:16px}
   .quota-windows{gap:10px}.quota-number{font-size:18px}.window-label{font-size:10px}
   .quota-row:nth-child(2) .quota-label{padding:1px 4px}.quota-row:nth-child(2) .quota-number{font-size:14px}
-  .accounts-view .card{grid-template-columns:145px minmax(0,1fr);gap:8px}
+
   .account-actions{gap:6px}.account-actions button{padding:7px;font-size:10px}
   footer{padding:0 12px;grid-template-columns:minmax(0,1fr) 144px minmax(0,1fr);gap:4px}
   .footer-preferences{width:144px}.footer-preferences .footer-control{width:72px;flex-basis:72px;font-size:10px;gap:5px}

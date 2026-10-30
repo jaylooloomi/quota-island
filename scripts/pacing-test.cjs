@@ -46,6 +46,10 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
         const current=await shape();if(groupedShape)assert.deepEqual(current,groupedShape,`${locale}: real Antigravity groups must keep card, identity and footer coordinates across ${mode}`);else groupedShape=current;
         await page.screenshot({path:`test-results/pacing-${locale}-grouped-${mode}.png`});
       }
+      await page.locator('#tab-accounts').click();
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      assert.deepEqual(await shape(),groupedShape,`${locale}: grouped Antigravity identity must align between quota and accounts`);
+      await page.locator('#tab-quota').click();
       const invalid=structuredClone(fixture);invalid.providers.codex.reading.windows[0].resetsAt=null;await send(invalid);
       assert.equal(await page.locator('.card.codex .pace-value').textContent(),'—','Missing reset must not invent guidance');
       const stale=structuredClone(fixture);stale.providers.codex.status='stale';await send(stale);assert.equal(await page.locator('.card.codex .pace-value').textContent(),'—');
