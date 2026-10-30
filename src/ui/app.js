@@ -11,6 +11,8 @@ let currentView='quota',confirmLogout=null,logoutBusy=null;
 let footerPopover=null,syncBusy=false;
 let quotaDetailsOpen=false;
 let quotaDetailsProvider='gemini';
+let quotaPanelHeight=480;
+const quotaCardHeights={};
 function closeFooterPopover(focus=false){const trigger=footerPopover==='language'?'language-shortcut':'sync-shortcut';footerPopover=null;render(state);if(focus)$(trigger).focus();}
 function openFooterPopover(kind){footerPopover=footerPopover===kind?null:kind;settingsOpen=false;render(state);if(footerPopover==='language')$('language-popover').querySelector('[aria-checked="true"]').focus();else if(footerPopover==='sync')$('sync-popover').focus();}
 function setView(view){currentView=view;settingsOpen=false;activeDetail=null;confirmLogout=null;footerPopover=null;quotaDetailsOpen=false;render(state);}
@@ -298,9 +300,14 @@ function render(next){
   window.QuotaI18n.localizeDocument(document,state.settings.locale);
   if(state.settings.locale==='en')$('compact-mode').textContent=state.settings.remaining?'Left':'Used';
   requestAnimationFrame(()=>{
+    if(!settingsOpen&&!quotaDetailsOpen&&!activeDetail){
+      for(const id of ids){const card=cardNodes[id];if(currentView==='quota'){card.style.minHeight='';quotaCardHeights[id]=Math.ceil(card.getBoundingClientRect().height);}card.style.minHeight=`${quotaCardHeights[id]??98}px`;}
+    }
     const content=(settingsOpen?$('settings'):quotaDetailsOpen?$('quota-details'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height;
     const chrome=document.querySelector('.panel-header').getBoundingClientRect().height+document.querySelector('footer').getBoundingClientRect().height+18;
-    api.panelHeight(Math.max(480,Math.ceil(content+chrome+(settingsOpen?24:12))));
+    const height=Math.max(480,Math.ceil(content+chrome+(settingsOpen?24:12)));
+    if(!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&currentView==='quota')quotaPanelHeight=height;
+    api.panelHeight(!settingsOpen&&!quotaDetailsOpen&&!activeDetail?quotaPanelHeight:height);
   });
 }
 makeCards();
