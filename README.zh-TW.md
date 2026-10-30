@@ -4,10 +4,10 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT 授權"></a>
-  <img src="https://img.shields.io/badge/version-1.0.0-informational" alt="版本 1.0.0">
+  <img src="https://img.shields.io/badge/version-1.1.0-informational" alt="版本 1.1.0">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows 已測試">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron 與 TypeScript">
-  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-66%20passing-brightgreen" alt="66 項核心測試於本機通過"></a>
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-69%20passing-brightgreen" alt="69 項核心測試於本機通過"></a>
   <a href="README.md"><img src="https://img.shields.io/badge/lang-English-blue" alt="English README"></a>
 </p>
 
@@ -112,8 +112,8 @@ Claude／GPT 群組各自的每週與 5 小時限制，以及 Argon 等模型專
 
 | 檢查 | 最近一次本機結果 |
 |---|---|
-| 核心測試 | **66 項通過** |
-| 納入統計的 Node 模組 | **行 91.78% · 分支 88.15% · 函式 91.06%** |
+| 核心測試 | **69 項通過** |
+| 納入統計的 Node 模組 | **行 91.91% · 分支 88.63% · 函式 91.26%** |
 | Windows 打包成品 | 桌面操作、排序、畫面檢查通過 |
 | 授權整合 | 模擬上游回應，搭配真實本機 IPC／回呼／子程序路徑 |
 | 真實帳號 | 曾驗證 Gemini、Codex 可讀取；Claude 最近一次真實查詢回傳 HTTP 429 |
@@ -191,3 +191,5 @@ Antigravity 帳號操作：**切換帳號**會開啟官方 App、清除舊配額
 
 ### 多個 Claude 帳號
 卡片清單底部的 **＋ 新增帳號** 可命名並登入其他 Claude 帳號。每個帳號在 App 本機資料夾內使用獨立的官方 Claude Code 設定目錄；配額、冷卻、配速、顯示、排序與登出互相隔離。移除新增帳號只會清除該帳號的本機設定，授權不會傳給 renderer 或存入帳號清單。請在瀏覽器選擇要新增的帳號。收合列的 Claude 小標顯示設定的帳號數，展開後可查看各帳號卡片。本版先提供 Claude 多帳號，未提供額外 Codex、Antigravity 帳號設定。
+
+拖到螢幕邊緣或角落附近會自動吸附到工作區邊界；展開、收合及設定高度改變時維持貼齊。拖離邊緣即可解除吸附，重啟後保留吸附位置。

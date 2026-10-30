@@ -7,6 +7,7 @@ import { Gemini, GeminiVault } from './gemini';
 import { Connections } from './connections';
 import { CredentialWatch } from './credential-watch';
 import {Accounts} from './accounts';
+import {fitWindow,snapWindow,Dock,Rect} from './window-position';
 import { homedir } from 'node:os';
 import { ProviderError, ProviderId, ProviderState, providerIds, Reading } from './model';
 const demo = process.argv.includes('--demo');
@@ -19,7 +20,7 @@ if (testing) {
   if (!testData) throw new Error('QUOTA_TEST_DATA required');
   app.setPath('userData', testData);
 }
-type Settings = { locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; pacing: boolean; reserveDefaultsVersion:2; reservePercent: Record<ProviderId, number>; paceWindows: Partial<Record<ProviderId, string>>; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: string[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; x?: number; y?: number };
+type Settings = { locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; pacing: boolean; reserveDefaultsVersion:2; reservePercent: Record<ProviderId, number>; paceWindows: Partial<Record<ProviderId, string>>; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: string[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; dock?:Dock; x?: number; y?: number };
 let settings: Settings = { locale:'zh-TW', remaining: true, pacing:false, reserveDefaultsVersion:2, reservePercent:{claude:5,codex:5,gemini:5}, paceWindows:{}, alwaysOnTop: true, notifications: false, visible: { claude:true, codex:true, gemini:true }, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
 function validOrder(raw: unknown): raw is string[] {
   return Array.isArray(raw) && raw.length >= 3 && raw.length <= 23 && new Set(raw).size === raw.length && providerIds.every(id=>raw.includes(id)) && raw.every(id => providerIds.includes(id) || (typeof id === 'string' && /^claude-account-[0-9a-f-]{36}$/.test(id)));
@@ -32,7 +33,6 @@ let paused = false;
 let providers: Providers;
 let poller: Poller;
 let interval: NodeJS.Timeout;
-let saveTimer: NodeJS.Timeout;
 let connections: Connections;
 let credentialWatch: CredentialWatch;
 const warned = new Map<string, string>();
@@ -56,6 +56,7 @@ function readSettings() {
     const s = JSON.parse(readFileSync(path.join(app.getPath('userData'), 'preferences.json'), 'utf8'));
     if (validOrder(s.order)) settings.order = [...s.order];
     settings.locale=normalizeLocale(s.locale);
+    if(s.dock&&[null,'left','right'].includes(s.dock.horizontal)&&[null,'top','bottom'].includes(s.dock.vertical))settings.dock={horizontal:s.dock.horizontal,vertical:s.dock.vertical};
     for(const id of providerIds){if(typeof s.reservePercent?.[id]==='number'&&Number.isFinite(s.reservePercent[id])&&s.reservePercent[id]>=0&&s.reservePercent[id]<=100)settings.reservePercent[id]=s.reserveDefaultsVersion!==2&&s.reservePercent[id]===10?5:s.reservePercent[id];if(typeof s.paceWindows?.[id]==='string'&&s.paceWindows[id].length<=160)settings.paceWindows[id]=s.paceWindows[id];}
     for (const id of providerIds) if (typeof s.visible?.[id] === 'boolean') settings.visible[id] = s.visible[id];
     if (s.googleSource === 'antigravity' || s.googleSource === 'code_assist') settings.googleSource=s.googleSource;
@@ -85,12 +86,23 @@ function publish() {
   }
 }
 let panelHeight = 480;
+let expectedBounds:Rect|undefined;
+let dragTimer:NodeJS.Timeout|undefined;
+let userDragging=false;
+function applyBounds(bounds:Rect){const current=win.getBounds();expectedBounds=bounds;if(['x','y','width','height'].some(key=>current[key as keyof Rect]!==bounds[key as keyof Rect]))win.setBounds(bounds);}
+function settlePosition(){
+  if(!win||win.isDestroyed())return;
+  const bounds=win.getBounds();if(expectedBounds&&bounds.x===expectedBounds.x&&bounds.y===expectedBounds.y)return;
+  const result=snapWindow(bounds,screen.getDisplayMatching(bounds).workArea);settings.dock=result.dock;
+  applyBounds(result.bounds);settings.x=result.bounds.x;settings.y=result.bounds.y;saveSettings();
+}
 function reposition() {
+  if(!win||win.isDestroyed()||userDragging)return;
   const bounds = win.getBounds();
   const area = screen.getDisplayMatching(bounds).workArea;
   const width = Math.min(464, area.width);
   const height = Math.min(expanded ? panelHeight : 76, area.height);
-  win.setBounds({ width, height, x: Math.max(area.x, Math.min(bounds.x, area.x + area.width - width)), y: Math.max(area.y, Math.min(bounds.y, area.y + area.height - height)) });
+  applyBounds(fitWindow(bounds,area,width,height,settings.dock));
 }
 function setExpanded(value: boolean) { expanded = value; reposition(); publish(); }
 const external: Record<string, string> = {
@@ -243,7 +255,13 @@ else {
     win.webContents.on('will-navigate', event => event.preventDefault());
     win.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
     win.on('close', event => { if (!quitting) { event.preventDefault(); win.hide(); } });
-    win.on('moved', () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { const b = win.getBounds(); settings.x = b.x; settings.y = b.y; saveSettings(); }, 500); });
+    win.on('will-move',()=>{expectedBounds=undefined;settings.dock=undefined;userDragging=true;});
+    win.on('move',()=>{
+      const b=win.getBounds();if(expectedBounds&&b.x===expectedBounds.x&&b.y===expectedBounds.y)return;
+      if(process.platform==='win32'&&userDragging)return;
+      clearTimeout(dragTimer);dragTimer=setTimeout(()=>{userDragging=false;settlePosition();reposition();},180);
+    });
+    win.on('moved',()=>{if(process.platform==='win32'){clearTimeout(dragTimer);userDragging=false;settlePosition();reposition();}});
     screen.on('display-metrics-changed', reposition);
     screen.on('display-removed', reposition);
     installHandlers(); makeTray();
@@ -257,6 +275,6 @@ else {
     void accounts.tick();
     interval = setInterval(() => { if (!paused) { if (!demo) void credentialWatch.scan(); if(!demo&&settings.enabled.gemini&&settings.googleSource==='antigravity'&&providers.waitingForAntigravityAccount)void poller.authenticated('gemini'); void poller.tick();void accounts.tick(); } }, 5000);
   });
-  app.on('before-quit', () => { quitting = true; clearInterval(interval); clearTimeout(saveTimer); accounts?.close();providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
+  app.on('before-quit', () => { quitting = true; clearInterval(interval); clearTimeout(dragTimer); accounts?.close();providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
   app.on('window-all-closed', () => { if (quitting) app.quit(); });
 }

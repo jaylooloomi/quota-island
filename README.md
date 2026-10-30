@@ -4,10 +4,10 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/version-1.0.0-informational" alt="Version 1.0.0">
+  <img src="https://img.shields.io/badge/version-1.1.0-informational" alt="Version 1.1.0">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
-  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-66%20passing-brightgreen" alt="66 core tests passed locally"></a>
+  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-69%20passing-brightgreen" alt="69 core tests passed locally"></a>
   <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/lang-繁體中文-green" alt="Traditional Chinese"></a>
 </p>
 
@@ -65,7 +65,7 @@ with a refresh action; **Settings** opens preferences and returns to the same
 Quota/Accounts tab when closed. Popovers are mutually exclusive and close on
 outside click or Escape. Account management stays in the top Accounts tab.
 
-Version 1.0.0 uses the Compact Double-layer layout: a capsule with mini progress
+Version 1.1.0 uses the Compact Double-layer layout: a capsule with mini progress
 bars, flat provider rows, visible version labels, and **Quota / Accounts** tabs.
 Open Accounts to switch or sign out of Claude/Codex. Signing out requires
 confirmation and also affects the official CLI account on this computer.
@@ -121,8 +121,8 @@ These are **subscription quotas and reset windows**, not network traffic, API bi
 
 | Check | Latest local result |
 |---|---|
-| Core tests | **66 passed** |
-| Measured Node modules | **91.78% lines · 88.15% branches · 91.06% functions** |
+| Core tests | **69 passed** |
+| Measured Node modules | **91.91% lines · 88.63% branches · 91.26% functions** |
 | Windows packaged app | Desktop controls, ordering and design checks passed |
 | Authorization integration | Fixture upstream responses; real local IPC, callbacks and child-process paths |
 | Real accounts | Gemini and Codex reads previously verified; Claude's last real check returned HTTP 429 |
@@ -200,3 +200,5 @@ Pacing details expand inline beneath the selected provider row. Only one provide
 
 ### Multiple Claude accounts
 Use **＋ Add account** below the cards to name and sign into an additional Claude account. Each account uses a separate official Claude Code config directory under the local app data folder. Quotas, cooldowns, pacing preferences, visibility, ordering and logout are isolated. Removing an added account deletes only its managed local profile. Credentials stay in the official CLI profile and never enter renderer state or account metadata. Select the intended account in the browser. The compact Claude badge shows the configured account count; the expanded panel lists every account. This release adds multiple Claude accounts; additional Codex and Antigravity profiles are not offered.
+
+Drag near a screen edge or corner to snap the visible island to the display work area. Expand, collapse and settings changes keep the selected edge anchored. Drag away to release the anchor; docking is saved across restarts.
