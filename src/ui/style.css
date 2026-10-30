@@ -315,3 +315,4 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
 .pace-expanded #pace-summary{padding:10px;margin:10px 0}.pace-expanded #pace-summary p{margin:6px 0}.pace-expanded .pace-detail-value{font-size:21px}
 .card.pace-expanded>.card-grip{top:calc(13px + var(--pace-row-height,72px)/2)}
 .panel-header{height:58px;min-height:58px}
+.card .provider-description{min-width:0}.card .plan{flex-shrink:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-overflow:clip}

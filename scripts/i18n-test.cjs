@@ -124,12 +124,20 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
       await page.locator('#close-quota-details').click();
       await app.evaluate(({BrowserWindow},value)=>BrowserWindow.getAllWindows()[0].webContents.send('state',value),baseline);
       const modern=structuredClone(baseline);
+      modern.providers.codex.reading.plan='prolite';
       modern.providers.claude.reading=parseClaude({limits:[
         {kind:'session',group:'session',percent:12,is_active:false,resets_at:'2026-11-01T00:00:00Z'},
         {kind:'weekly_all',group:'weekly',percent:15,is_active:false,resets_at:'2026-11-04T13:59:59Z'},
         {kind:'weekly_scoped',group:'weekly',percent:20,is_active:true,scope:{model:{display_name:'Fable'}},resets_at:'2026-11-04T13:59:59Z'}]},'team');
       modern.settings.remaining=true;
       await app.evaluate(({BrowserWindow},value)=>BrowserWindow.getAllWindows()[0].webContents.send('state',value),modern);
+      for(const view of ['quota','accounts']){
+        await page.locator(`#tab-${view}`).click();
+        assert.equal(await page.locator('.card.codex .plan').textContent(),'prolite');
+        assert.equal(await page.locator('.card.codex .plan').evaluate(el=>{const r=el.getBoundingClientRect(),parent=el.closest('.provider-identity').getBoundingClientRect();return el.scrollWidth<=el.clientWidth+1&&el.scrollHeight<=el.clientHeight+1&&r.left>=parent.left&&r.right<=parent.right+1;}),true,`${locale}: full prolite plan must fit in ${view}`);
+        if(view==='accounts')await page.screenshot({path:`test-results/language-${locale}-prolite.png`});
+      }
+      await page.locator('#tab-quota').click();
       await page.locator('.card.claude .quota-details-link').waitFor({state:'visible'});
       assert.deepEqual(await page.locator('.card.claude .quota-number').allTextContents(),['88%','85%']);
       assert.doesNotMatch(await page.locator('.card.claude .quota-windows').textContent(),/Fable/);
