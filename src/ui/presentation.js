@@ -29,6 +29,10 @@
     const supported=['zh-TW','en','ja','ko'].includes(locale)?locale:'zh-TW';
     return new Intl.DateTimeFormat(supported,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23',...(timeZone?{timeZone}:{})}).format(value);
   }
+  function weeklyWindow(windows){
+    const weekly=windows.filter(w=>/weekly|seven_day|每週|每周|7\s*天/i.test(`${w.id} ${w.label}`)&&Number.isFinite(w.usedPercent));
+    return weekly.find(w=>w.id==='seven_day')??[...weekly].sort((a,b)=>b.usedPercent-a.usedPercent)[0]??null;
+  }
   function paceWindow(windows,selected){
     const exact=windows.find(w=>w.id===selected);if(exact)return exact;
     const all=windows.find(w=>w.id==='seven_day');if(all)return all;
@@ -46,6 +50,6 @@
     const allowance=Math.min(available,available/periods);
     return {remaining,reserve,configured,available,used:window.usedPercent,hours,unit,periods,allowance};
   }
-  const api={groupWindows,shortWindow,windowLabel,resetDate,paceWindow,pacing};
+  const api={groupWindows,shortWindow,windowLabel,resetDate,weeklyWindow,paceWindow,pacing};
   if(typeof module==='object'&&module.exports)module.exports=api;else root.QuotaPresentation=api;
 })(globalThis);

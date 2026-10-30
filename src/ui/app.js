@@ -267,11 +267,11 @@ function renderCard(id){
   card.querySelector('.logout-confirm').hidden=confirmLogout!==id;
   if(isExtra(id))card.querySelector('.logout-confirm p').textContent='只登出此獨立帳號，不影響其他帳號。';
   for(const button of card.querySelectorAll('.logout-confirm button'))button.disabled=logoutBusy===id;
-  const mini=$(`mini-${id}`),windowLabel=$(`window-${id}`),button=document.querySelector(`.compact-provider[data-provider="${id}"]`),w=windows[0];
+  const mini=$(`mini-${id}`),windowLabel=$(`window-${id}`),button=document.querySelector(`.compact-provider[data-provider="${id}"]`),w=presentation.weeklyWindow(allWindows);
   if(!mini)return;
   button.classList.toggle('unconnected',!w);button.classList.toggle('disabled',!s.enabled);button.classList.toggle('stale',s.status==='stale');
   mini.className=`mini-value${w?'':' unknown'}`;
-  mini.textContent=!s.enabled?'暫停':expired?'資料過期':s.status==='stale'?'更新失敗':w?`${percent(w)}%`:s.status==='loading'?'同步中':s.status==='signed_out'?'未連接':limited?'限流中':'讀取失敗';
+  mini.textContent=!s.enabled?'暫停':expired?'資料過期':s.status==='stale'?'更新失敗':w?`${percent(w)}%`:s.status==='loading'?'同步中':s.status==='signed_out'?'未連接':limited?'限流中':s.reading?'未提供週額度':'讀取失敗';
   windowLabel.textContent=s.status==='stale'&&w?`${percent(w)}%`:w?presentation.shortWindow(w.label):'';
   windowLabel.setAttribute('aria-label',s.status==='stale'&&w?`上次資料 ${percent(w)}%`:windowLabel.textContent);
   if(id==='codex')button.querySelector('.mini-logo').src=s.status==='stale'?'icons/codex-error.svg':'icons/codex.svg';

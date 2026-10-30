@@ -1,5 +1,12 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
+test('compact weekly selection never substitutes session quota and prefers all-model weekly',()=>{
+  const {weeklyWindow}=require('../src/ui/presentation');
+  const session={id:'five_hour',label:'5 小時',usedPercent:99},all={id:'seven_day',label:'每週 · 所有模型',usedPercent:15},scoped={id:'seven_day_fable',label:'Fable 每週',usedPercent:80};
+  assert.equal(weeklyWindow([session,scoped,all]),all);assert.equal(weeklyWindow([session]),null);
+  assert.equal(weeklyWindow([{id:'primary',label:'7 天',usedPercent:30}]).usedPercent,30);
+  assert.equal(weeklyWindow([{id:'a-weekly',label:'A',usedPercent:25},{id:'b-weekly',label:'B',usedPercent:50},session]).usedPercent,50);
+});
 const {groupWindows,shortWindow,windowLabel,resetDate}=require('../src/ui/presentation');
 test('equal Antigravity variants become one visible row without merging different models or quotas',()=>{
   const rows=[{id:'a',label:'Gemini Argon (High)',usedPercent:75,resetsAt:'2026-11-01'},
