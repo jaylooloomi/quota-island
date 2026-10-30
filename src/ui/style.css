@@ -321,3 +321,4 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
 .quota-details-link,.pace-link{position:absolute;right:7px;bottom:2px;padding:1px 0;font-size:9px;line-height:12px;white-space:nowrap;color:#b8bbf6}
 .card.pace-expanded{row-gap:12px}
 .card.pace-expanded .pace-link{top:calc(var(--pace-row-height,72px) + 8px);bottom:auto}
+.pace-budget{display:flex;align-items:baseline;gap:4px;white-space:nowrap;min-width:0}.pace-budget-label{font-size:9px;color:#b7bdc7;flex-shrink:0}.pace-budget .pace-unit{margin-left:0;font-size:9px}.pace-budget .pace-value{font-size:17px}

@@ -27,6 +27,9 @@ const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=r
       fixture.providers.claude.reading.windows.push({id:'seven_day_fable',label:'Fable · 每週',usedPercent:20,resetsAt:new Date(Date.now()+4*86400000).toISOString()});
       await send(fixture);await page.locator('.card.codex .pace-value').filter({hasText:'17.5'}).waitFor();
       assert.equal(await page.locator('.pacing-content:not([hidden])').count(),3);
+      const suggestionLabels={'zh-TW':'建議用量',en:'Suggested use',ja:'推奨使用量',ko:'권장 사용량'};
+      assert.deepEqual(await page.locator('.pace-budget-label').allTextContents(),[suggestionLabels[locale],suggestionLabels[locale],suggestionLabels[locale]]);
+      assert.equal(await page.locator('.pace-budget').evaluateAll(nodes=>nodes.every(el=>{const label=el.querySelector('.pace-budget-label').getBoundingClientRect(),value=el.querySelector('.pace-value').getBoundingClientRect(),reserve=el.parentElement.querySelector('.pace-reserve-label').getBoundingClientRect();return label.right<=value.left&&el.getBoundingClientRect().right<=reserve.left;})),true,`${locale}: suggested-use label must precede the value without overlapping reserve`);
       for(const row of await page.locator('.pacing-content').evaluateAll(nodes=>nodes.map(el=>({text:el.textContent,width:el.clientWidth,scroll:el.scrollWidth,segments:[...el.querySelectorAll('.pace-segment')].map(s=>parseFloat(s.style.width))})))){
         assert.ok(row.scroll<=row.width+1,`${locale}: pacing row overflow`);assert.ok(row.text.includes('10%'));assert.ok(!row.text.includes('10 點'));assert.equal(row.segments.reduce((a,b)=>a+b,0),100);
       }

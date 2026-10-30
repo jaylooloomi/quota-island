@@ -2,6 +2,7 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['建議用量','Suggested use','推奨使用量','권장 사용량'],
     ['收起配速詳情 ⌃','Hide pace details ⌃','ペース詳細を閉じる ⌃','페이스 상세 접기 ⌃'],
     ['剩餘額度已在保留範圍內，建議暫停使用。','The remaining quota is within your reserve. Consider pausing usage.','残りの利用枠は予備枠内です。利用の一時停止を推奨します。','남은 할당량이 예비 범위 내에 있습니다. 사용을 잠시 중단하는 것을 권장합니다.'],
     ['配速','Pace','ペース','페이스'],['配速建議','Pacing advice','ペース目安','페이스 권장'],['配速詳情','Pacing details','ペース詳細','페이스 상세'],['配速詳情 ›','Pace details ›','ペース詳細 ›','페이스 상세 ›'],['配額窗口','Quota window','利用枠の期間','할당량 기간'],['保留比例','Reserve','予備枠','예비 비율'],['保留','Reserve','予備','예비'],['可分配','Available to budget','配分可能','배분 가능'],['配速暫不可用','Pacing unavailable','ペース算出不可','페이스 계산 불가'],['等待配額資料','Waiting for quota','利用枠データ待ち','할당량 대기 중'],['%／天','% / day','% / 日','% / 일'],['%／小時','% / hour','% / 時間','% / 시간'],['小時','hours','時間','시간'],['天','days','日','일'],

@@ -281,7 +281,7 @@ function renderPaceDetails(){
   select.disabled=!windows.length;$('pace-reserve').value=state.settings.reservePercent?.[id]??5;$('pace-reserve-value').textContent=`${$('pace-reserve').value}%`;
   const summary=$('pace-summary');summary.setAttribute('data-localized-text','');summary.replaceChildren();
   if(!p){summary.textContent=paceText('配速暫不可用');return;}
-  const heading=document.createElement('h3');heading.textContent=paceText('配速建議');
+  const heading=document.createElement('h3');heading.textContent=paceText('建議用量');
   const budget=document.createElement('strong');budget.className='pace-detail-value';budget.textContent=`${paceNumber(p.allowance)} ${paceText(p.unit==='hour'?'%／小時':'%／天')}`;
   const formula=document.createElement('p');formula.textContent=`(${paceNumber(p.remaining)}% − ${paceNumber(p.reserve)}%) ÷ ${paceNumber(p.periods)} ${paceText(p.unit==='hour'?'小時':'天')} ≈ ${paceNumber(p.allowance)}%`;
   const track=document.createElement('div');track.className=`pace-bar ${id}`;track.setAttribute('role','img');fillPaceBar(track,p);
