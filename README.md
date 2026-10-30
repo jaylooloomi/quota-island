@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/version-0.4.3-informational" alt="Version 0.4.3">
+  <img src="https://img.shields.io/badge/version-0.4.4-informational" alt="Version 0.4.4">
   <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
   <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
   <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-53%20passing-brightgreen" alt="53 core tests passed locally"></a>
@@ -59,7 +59,7 @@ Click a quota or chevron to expand. Drag the left grip to move the island. Drag 
 
 ## Everyday controls
 
-Version 0.4.3 uses the Compact Double-layer layout: a capsule with mini progress
+Version 0.4.4 uses the Compact Double-layer layout: a capsule with mini progress
 bars, flat provider rows, visible version labels, and **Quota / Accounts** tabs.
 Open Accounts to switch or sign out of Claude/Codex. Signing out requires
 confirmation and also affects the official CLI account on this computer.

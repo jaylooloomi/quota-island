@@ -195,3 +195,5 @@ html:not([lang="zh-TW"]) .account-actions button{font-size:10px}
 .card.details-open>.card-grip{display:none}
 .card:has(.quota-windows.many){padding-top:3px}
 .accounts-view .card .provider-subtitle{display:inline}
+.cards{gap:6px}
+.card{min-height:98px;padding-top:12px;padding-bottom:12px}
