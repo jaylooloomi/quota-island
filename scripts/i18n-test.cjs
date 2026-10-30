@@ -33,6 +33,8 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
       assert.equal(await page.locator('#settings').isVisible(),false);
       await page.locator('#settings-toggle').click();
       assert.equal(await page.locator('html').getAttribute('lang'),locale);
+      await page.waitForFunction(()=>{const body=document.querySelector('.panel-body');return window.innerHeight>520&&body.scrollHeight<=body.clientHeight+1;});
+      assert.equal(await page.locator('#quit').evaluate(el=>el.getBoundingClientRect().bottom<=document.querySelector('footer').getBoundingClientRect().top),true,`${locale}: settings actions must be visible without scrolling`);
       await audit(`${locale} settings`);
       await page.locator('#settings').screenshot({path:`test-results/language-${locale}-settings.png`});
       assert.equal(await page.locator('.segmented button').evaluateAll(buttons=>buttons.every(button=>{
@@ -40,6 +42,7 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
         return style.whiteSpace==='nowrap'&&button.scrollWidth<=button.clientWidth&&button.scrollHeight<=button.clientHeight;
       })),true,`${locale}: percentage toggle labels must fit on one line`);
       await page.locator('#settings-toggle').click();
+      await page.waitForFunction(()=>window.innerHeight===520);
       assert.equal(await page.locator('.panel-body').evaluate(el=>el.scrollHeight<=el.clientHeight+1),true,`${locale}: cards must fit`);
       assert.equal(await page.locator('.quota-number').count(),5);
       const resetLabels=await page.locator('.reset').evaluateAll(nodes=>nodes.map(el=>({text:el.textContent,title:el.title,width:el.clientWidth,scroll:el.scrollWidth})));

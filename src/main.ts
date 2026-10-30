@@ -80,11 +80,12 @@ function publish() {
     }
   }
 }
+let panelHeight = 520;
 function reposition() {
   const bounds = win.getBounds();
   const area = screen.getDisplayMatching(bounds).workArea;
   const width = Math.min(expanded ? 616 : 464, area.width);
-  const height = Math.min(expanded ? 520 : 76, area.height);
+  const height = Math.min(expanded ? panelHeight : 76, area.height);
   win.setBounds({ width, height, x: Math.max(area.x, Math.min(bounds.x, area.x + area.width - width)), y: Math.max(area.y, Math.min(bounds.y, area.y + area.height - height)) });
 }
 function setExpanded(value: boolean) { expanded = value; reposition(); publish(); }
@@ -115,6 +116,7 @@ function installHandlers() {
   for (const [channel, handler] of Object.entries({
     'get-state': () => snapshot(),
     'expand': (_event: any, value: unknown) => { if (typeof value === 'boolean') setExpanded(value); },
+    'panel-height': (_event: any, value: unknown) => { if (typeof value === 'number' && Number.isFinite(value)) { const height = Math.max(520, Math.min(1200, Math.ceil(value))); if (height !== panelHeight) { panelHeight = height; reposition(); } } },
     'refresh': async () => { if (!paused) await poller.tick(true); return snapshot(); },
     'hide': () => win.hide(),
     'quit': () => { quitting = true; app.quit(); },

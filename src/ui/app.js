@@ -296,6 +296,11 @@ function render(next){
   $('language').value=state.settings.locale??'zh-TW';
   window.QuotaI18n.localizeDocument(document,state.settings.locale);
   if(state.settings.locale==='en')$('compact-mode').textContent=state.settings.remaining?'Left':'Used';
+  requestAnimationFrame(()=>{
+    const content=settingsOpen?$('settings').getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height:0;
+    const chrome=document.querySelector('.panel-header').getBoundingClientRect().height+document.querySelector('footer').getBoundingClientRect().height+18;
+    api.panelHeight(settingsOpen?Math.ceil(content+chrome+24):520);
+  });
 }
 makeCards();
 document.querySelectorAll('[data-expand]').forEach(button=>{
