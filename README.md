@@ -198,6 +198,10 @@ Choose **Remaining / Used / Pace** without changing the provider row layout. Pac
 
 Pacing details expand inline beneath the selected provider row. Only one provider is expanded at a time; the other provider cards remain visible and the fixed-width window grows to fit. Collapse the same row to restore the original height.
 
+### Space rescue companions
+
+Claude is an orange space cat, Codex an ivory maintenance robot, and Antigravity a lavender star rabbit. Optional idle pets briefly replace the compact brand; quota alerts open a 4.4-second miniature stage at 20%, 5% remaining and exhaustion, without moving quota controls. Settings offers separate switches and **Preview rescue crew**. Account/window/reset-based deduplication survives renderer restarts; animations never refresh quotas. Reduced motion uses a static alert scene and disables idle motion. See [implementation and validation](docs/pet-theater-implementation.md).
+
 ### Automatic Hello
 
 Settings provides an automatic Hello switch. At any time of day, each connected, enabled Claude profile is checked independently: the five-hour usage must explicitly be 0%, and its reset must be absent or expired. An active reset timestamp, even with 0% usage, prevents sending. Missing session data is never treated as unused quota. It uses the official CLI and Haiku to send one short Hello, which consumes quota and can establish a new five-hour window; it cannot reset an active window early.

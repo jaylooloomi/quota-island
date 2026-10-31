@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('quota', {
   expand: (value: boolean) => ipcRenderer.invoke('expand', value),
   antigravityAccount: (action: 'switch'|'disconnect') => ipcRenderer.invoke('antigravity-account',action),
   panelHeight: (value: number) => ipcRenderer.invoke('panel-height', value),
+  petHeight: (value: number) => ipcRenderer.invoke('pet-height',value),
+  onPetSuspend: (listener:()=>void)=>{const handler=()=>listener();ipcRenderer.on('pet-suspend',handler);return ()=>ipcRenderer.removeListener('pet-suspend',handler);},
   refresh: () => ipcRenderer.invoke('refresh'),
   login: (id: string) => ipcRenderer.invoke('login', id),
   cancelLogin: (id: string) => ipcRenderer.invoke('cancel-login', id),

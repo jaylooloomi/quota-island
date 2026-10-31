@@ -28,6 +28,7 @@
       </div>
       <button id="compact-refresh" class="icon" aria-label="重新整理配額"><svg><use href="#i-refresh"/></svg></button><button id="toggle" class="icon" aria-label="展開配額面板" aria-expanded="false"><svg><use href="#i-chevron"/></svg></button>
     </header>
+    <section id="pet-stage" hidden aria-live="polite"><div class="pet-sky"></div><div class="pet-ground"></div><p id="pet-caption" data-localized-text></p><p id="pet-message" data-localized-text></p><button id="pet-close" class="icon" aria-label="關閉小劇場">×</button><span class="pet-sprite" data-pet="claude" aria-hidden="true"></span><span class="pet-sprite" data-pet="codex" aria-hidden="true"></span><span class="pet-sprite" data-pet="gemini" aria-hidden="true"></span><span class="pet-beacon" aria-hidden="true">✦</span></section>
     <section id="panel" class="panel" hidden>
       <header class="panel-header">
         <div class="app-title"><h1>Quota Pebble</h1><span id="header-version"></span><span class="live-dot" id="live-dot"></span></div>
@@ -40,6 +41,11 @@
           <label>語言<select id="language" aria-label="語言"><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option></select></label>
           <label>保持最上層<input type="checkbox" id="alwaysOnTop" role="switch"></label>
           <label>用量達 90% 時提醒<input type="checkbox" id="notifications" role="switch"></label>
+          <div class="settings-title sources-title">太空救援隊</div>
+          <label>待機小寵物<input type="checkbox" id="petIdle" role="switch"></label>
+          <label>配額告警小劇場<input type="checkbox" id="petAlerts" role="switch"></label>
+          <button id="pet-preview" type="button">預覽救援隊</button>
+          <p>剩餘 20%、5% 與用盡時提醒；同一帳號與配額週期不重複。遵循系統減少動態設定。</p>
           <div class="settings-title sources-title">自動 Hello</div>
           <label>閒置時啟動 Claude 5 小時視窗<input type="checkbox" id="morningHelloEnabled" role="switch"></label>
           <p>不限時間：偵測到 5 小時用量為 0%，且沒有進行中的視窗時送出 Hello。所有已連接的 Claude 帳號獨立檢查，會消耗少量額度；每次嘗試至少間隔 5 小時。App 需保持執行。</p>
@@ -88,6 +94,6 @@
     </article>
   </template>
   <template id="window-template"><div class="quota-row"><div class="quota-label"><span class="window-label"></span><span class="quota-number"></span></div><div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="fill"></div></div><div class="reset"></div></div></template>
-  <script src="presentation.js"></script><script src="i18n.js"></script><script src="app.js"></script>
+  <script src="presentation.js"></script><script src="i18n.js"></script><script src="pet-policy.js"></script><script src="pet-theater.js"></script><script src="app.js"></script>
 </body>
 </html>

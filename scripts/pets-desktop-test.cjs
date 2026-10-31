@@ -1,0 +1,25 @@
+const {_electron:electron}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os');
+(async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'pebble-pets-')),env={...process.env,QUOTA_TEST_DATA:dir};delete env.ELECTRON_RUN_AS_NODE;
+ const executablePath=process.env.QUOTA_PACKAGED_EXE;const app=await electron.launch({...(executablePath?{executablePath}:{}),args:[...(executablePath?[]:['.']),'--demo','--test-mode'],env});
+ try{
+  const page=await app.firstWindow(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.locator('#mini-codex').filter({hasText:'12%'}).waitFor();await page.emulateMedia({reducedMotion:'no-preference'});
+  await app.evaluate(({BrowserWindow,ipcMain})=>{const wc=BrowserWindow.getAllWindows()[0].webContents;global.petSend=wc.send.bind(wc);wc.send=(channel,...args)=>channel==='state'?undefined:global.petSend(channel,...args);const refresh=ipcMain._invokeHandlers.get('refresh');global.petRefreshes=0;ipcMain.removeHandler('refresh');ipcMain.handle('refresh',(...args)=>{global.petRefreshes++;return refresh(...args);});});
+  const fixture=await page.evaluate(()=>window.quota.getState());fixture.expanded=false;fixture.settings.petIdle=true;fixture.settings.petAlerts=false;for(const s of Object.values(fixture.providers)){s.status='ready';s.enabled=true;s.refreshing=false;s.updatedAt=new Date().toISOString();for(const w of s.reading?.windows??[]){w.usedPercent=10;w.resetsAt=new Date(Date.now()+86400000).toISOString();}}
+  const send=s=>app.evaluate((_e,state)=>global.petSend('state',state),s);
+  await send(fixture);
+  const rects=()=>page.locator('.compact-provider,#toggle,#compact-refresh').evaluateAll(nodes=>nodes.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};}));const baseline=await rects();
+  await page.clock.setFixedTime(new Date(Date.now()+6*60000));await page.locator('.compact-brand.pet-idle').waitFor({timeout:4000});assert.equal(await page.locator('.compact-name').evaluate(el=>getComputedStyle(el).visibility),'hidden');assert.deepEqual(await rects(),baseline);assert.equal(await page.evaluate(()=>innerHeight),76);
+  await page.clock.setFixedTime(new Date());fixture.settings.petIdle=false;await send(fixture);assert.equal(await page.locator('.compact-name').evaluate(el=>getComputedStyle(el).visibility),'visible');
+  fixture.settings.petAlerts=true;fixture.providers.claude.reading.windows[0].usedPercent=85;await send(fixture);await page.locator('#pet-stage').waitFor();await page.waitForFunction(()=>innerHeight===188);assert.deepEqual(await rects(),baseline);assert.equal(await page.evaluate(()=>innerWidth),464);
+  assert.match(await page.locator('#pet-caption').textContent(),/Claude/);assert.match(await page.locator('#pet-caption').textContent(),/15%/);
+  await page.waitForFunction(()=>document.getElementById('pet-stage').dataset.phase==='rescue');await fs.mkdir('test-results',{recursive:true});await page.screenshot({path:'test-results/pet-rescue.png'});
+  assert.equal(await page.locator('#pet-stage .pet-sprite').evaluateAll(nodes=>nodes.every(el=>getComputedStyle(el).backgroundImage.includes('space-rescue.png'))),true);
+  await page.locator('#pet-stage').waitFor({state:'hidden'});await page.waitForFunction(()=>innerHeight===76);await send(fixture);assert.equal(await page.locator('#pet-stage').isVisible(),false,'Same quota does not replay');
+  assert.equal(await app.evaluate(()=>global.petRefreshes),0,'Pets never request quota refreshes');
+  await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>window.QuotaPets.preview());await page.locator('#pet-stage').waitFor();assert.equal(await page.locator('#pet-stage .pet-sprite').evaluateAll(nodes=>nodes.every(el=>getComputedStyle(el).animationName==='none'&&getComputedStyle(el).transitionDuration==='0s')),true);await page.locator('#pet-close').click();await page.waitForFunction(()=>innerHeight===76);
+  for(const locale of ['zh-TW','en','ja','ko']){fixture.settings.locale=locale;await send(fixture);await page.evaluate(()=>window.QuotaPets.preview());await page.locator('#pet-stage').waitFor();assert.equal(await page.locator('#pet-stage').evaluate(el=>el.scrollWidth<=el.clientWidth),true);await page.locator('#pet-close').click();}
+  await page.reload();await page.locator('#mini-codex').filter({hasText:'12%'}).waitFor();await send(fixture);assert.equal(await page.locator('#pet-stage').isVisible(),false,'Alert claim survives renderer restart');
+  assert.deepEqual(errors,[]);console.log(JSON.stringify({passed:true,packaged:!!executablePath,checks:['idle replaces brand without moving quotas','fixed 464px width and 76px idle height','alert height grows to188 then restores','three-pose rescue sequence','same window deduplication persists','four-language preview','reduced-motion static scene','close control','no refresh IPC']},null,2));
+ }finally{await app.close();await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
+})().catch(e=>{console.error(e);process.exitCode=1;});
