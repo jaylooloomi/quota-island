@@ -418,9 +418,6 @@ function render(next){
   for(const key of ['alwaysOnTop','notifications','petIdle','petAlerts','petRoam'])$(key).checked=state.settings[key];
   $('pet-style').value=state.settings.petStyle??'smooth';
   $('morningHelloEnabled').checked=state.settings.morningHelloEnabled===true;
-  const helloStatus=$('morning-hello-status');helloStatus.replaceChildren();
-  const helloLabels={sending:'正在送出 Hello',sent:'Hello 已送出，等待配額同步',confirmed:'已確認 5 小時視窗',active:'已有視窗，持續監控',error:'Hello 失敗，5 小時後再檢查',uncertain:'上次結果未確認，至少等待 5 小時'};
-  for(const [id,result] of Object.entries(state.morningHello??{})){if(!names[id])continue;const line=document.createElement('p');line.setAttribute('data-localized-text','');line.textContent=`${names[id]} · ${result.day} · ${paceText(helloLabels[result.status]??'等待配額資料')}`;helloStatus.append(line);}
   $('google-source').value=state.settings.googleSource;$('google-source').disabled=!!state.auth.gemini?.pending;
   for(const input of document.querySelectorAll('[data-enable]'))input.checked=state.settings.enabled[input.dataset.enable];
   ids.forEach(renderCard);
