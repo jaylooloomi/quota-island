@@ -198,11 +198,11 @@ Choose **Remaining / Used / Pace** without changing the provider row layout. Pac
 
 Pacing details expand inline beneath the selected provider row. Only one provider is expanded at a time; the other provider cards remain visible and the fixed-width window grows to fit. Collapse the same row to restore the original height.
 
-### Morning Hello
+### Automatic Hello
 
-Settings provides a daily Morning Hello switch and time picker (Taiwan time, default 08:00). It sends a short Hello using the official Claude CLI and Haiku for every connected, enabled Claude profile. This consumes some quota and can start an idle five-hour session; it cannot reset an active session early or increase weekly allowance. Keep the app running. The app does not wake a sleeping or powered-off computer; it can catch up within four hours after the scheduled time.
+Settings provides an automatic Hello switch. At any time of day, each connected, enabled Claude profile is checked independently: the five-hour usage must explicitly be 0%, and its reset must be absent or expired. An active reset timestamp, even with 0% usage, prevents sending. Missing session data is never treated as unused quota. It uses the official CLI and Haiku to send one short Hello, which consumes quota and can establish a new five-hour window; it cannot reset an active window early.
 
-Each profile is claimed durably before sending, with at most one attempt per day. Failures, timeouts and uncertain interrupted attempts are not automatically resent. Active sessions are skipped; unavailable, rate-limited, signed-out, stale or exhausted profiles do not send. Settings shows outcomes and quota sync follows success. The isolated CLI run has no tools, MCP, project context or persisted conversation, and no API-key fallback. Automated tests use a fixture CLI, without spending live account quota.
+Attempts are at least five hours apart per profile, with a durable claim to prevent duplicates across restart or uncertain outcomes. The app must remain running; no wake or fixed morning schedule is used. Unavailable, signed-out, stale or exhausted profiles do not send. Settings shows outcomes; quota is refreshed after success, and a fresh server reset is required before claiming the window is confirmed. Tests use a fixture CLI without spending live quota.
 
 References: [Claude usage limits](https://support.claude.com/en/articles/11647753-how-do-usage-and-length-limits-work), [CLI reference](https://code.claude.com/docs/en/cli-reference).
 

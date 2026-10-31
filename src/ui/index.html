@@ -40,10 +40,9 @@
           <label>語言<select id="language" aria-label="語言"><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option></select></label>
           <label>保持最上層<input type="checkbox" id="alwaysOnTop" role="switch"></label>
           <label>用量達 90% 時提醒<input type="checkbox" id="notifications" role="switch"></label>
-          <div class="settings-title sources-title">早安 Hello</div>
-          <label>每天啟動 Claude 5 小時視窗<input type="checkbox" id="morningHelloEnabled" role="switch"></label>
-          <label>執行時間（台灣）<input type="time" id="morningHelloTime" aria-label="執行時間（台灣）"></label>
-          <p>所有已連接的 Claude 帳號，每天最多一次。會消耗少量額度；已有視窗則略過，不能提前重置。App 需保持執行，錯過後 4 小時內可補送。</p>
+          <div class="settings-title sources-title">自動 Hello</div>
+          <label>閒置時啟動 Claude 5 小時視窗<input type="checkbox" id="morningHelloEnabled" role="switch"></label>
+          <p>不限時間：偵測到 5 小時用量為 0%，且沒有進行中的視窗時送出 Hello。所有已連接的 Claude 帳號獨立檢查，會消耗少量額度；每次嘗試至少間隔 5 小時。App 需保持執行。</p>
           <div id="morning-hello-status" aria-live="polite"></div>
           <div class="settings-title sources-title">顯示服務</div>
           <label>Claude<input type="checkbox" data-visible="claude" role="switch"></label>
