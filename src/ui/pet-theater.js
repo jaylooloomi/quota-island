@@ -5,7 +5,7 @@
   const text=value=>window.QuotaI18n.translate(value,state?.settings.locale??'zh-TW');
   const brand=document.querySelector('.compact-brand');
   const brandPet=document.createElement('span');brandPet.className='pet-sprite brand-pet';brandPet.setAttribute('aria-hidden','true');brand.append(brandPet);
-  let nativeSuspended=false,roaming=false,roamWanted=false,roamRequest=0,roamTicket=0,lastRole=null;
+  let dragSuspended=false,nativeSuspended=false,roaming=false,roamWanted=false,roamRequest=0,roamTicket=0,lastRole=null;
   const roamPet=document.createElement('span');roamPet.id='roam-pet';roamPet.hidden=true;roamPet.setAttribute('aria-hidden','true');const roamCanvas=document.createElement('canvas');roamCanvas.width=144;roamCanvas.height=144;roamCanvas.className='pet-canvas';roamPet.append(roamCanvas);$('pet-stage').append(roamPet);
   let roamControls=null;
   const food=document.createElement('span');food.id='pet-food';food.hidden=true;food.setAttribute('aria-hidden','true');$('pet-stage').append(food);
@@ -25,7 +25,7 @@
       roamControls={act(action){if(behavior.act(action)){path.cancelGoal();food.hidden=true;roamPet.dataset.action=action;}},feed(x,y){const target=window.QuotaPetWander.feedingTarget(stage.clientWidth,x);food.hidden=false;food.style.left=target.foodX+'px';food.style.setProperty('--fall',Math.min(0,y-stage.clientHeight+18)+'px');food.style.animation='none';void food.offsetWidth;food.style.animation='pet-food-fall .45s ease-in both';path.go(target.petX);behavior.feed();if(reduced.matches){for(let i=0;i<100;i++)if(path.step(.1).arrived)break;behavior.arrive();step(performance.now());}}};
       if(initialAction)roamControls.act(initialAction);
       const step=time=>{
-        roamRequest=0;if(!roaming||document.hidden)return;
+        roamRequest=0;if(!roaming||document.hidden)return;if(dragSuspended){last=time;roamRequest=requestAnimationFrame(step);return;}
         const dt=Math.max(0,(time-last)/1000);last=time;let action=behavior.step(reduced.matches?0:dt),position=path.step(action.mode==='walk'||action.mode==='seek'?(reduced.matches?0:dt):0);
         if(action.mode==='seek'&&position.arrived){behavior.arrive();action=behavior.step(0);}
         if(previousMode==='eat'&&action.mode!=='eat'){food.hidden=true;path.cancelGoal();}previousMode=action.mode;if(roamOverride&&action.mode==='walk')roamOverride=false;
@@ -104,7 +104,7 @@
     if(ticket!==assetVersion||!idleResident)return;
     const behavior=QuotaPetBehavior.create(Math.random,{title:true}),canvas=brandPet.querySelector('canvas'),ctx=canvas.getContext('2d');let last=performance.now(),x=13,face=1,travel=0;
     if(initialAction)behavior.act(initialAction);
-    const tick=time=>{frameRequest=0;if(!idleResident||document.hidden)return;const dt=Math.min(.1,Math.max(0,(time-last)/1000));last=time;const action=behavior.step(reduced.matches?0:dt),moving=action.mode==='walk';
+    const tick=time=>{frameRequest=0;if(!idleResident||document.hidden)return;if(dragSuspended){last=time;frameRequest=requestAnimationFrame(tick);return;}const dt=Math.min(.1,Math.max(0,(time-last)/1000));last=time;const action=behavior.step(reduced.matches?0:dt),moving=action.mode==='walk';
       if(moving&&!reduced.matches){x+=face*12*dt;if(x>=25){x=50-x;face=-1;}if(x<=1){x=2-x;face=1;}travel+=12*dt;}
       let frames=walk[role],sample=QuotaPetAnimation.sample('walk',role,travel/14*1100,reduced.matches),age=action.elapsed*1000;
       if(action.mode==='hello'){frames=greetings[role];sample=QuotaPetAnimation.sample(role==='octopus'?'hello':'smooth',role,age,reduced.matches);}
@@ -120,6 +120,7 @@
     stop();idle=true;idlePreview=preview;idleResident=resident;brand.classList.toggle('pet-resident',resident);brandPet.style.animationDuration=preview?'15s':'4.5s';sprite(brandPet,['claude','codex','gemini','octopus'].includes(requested)?requested:['claude','codex','gemini','octopus'][idleIndex++%4]);brand.classList.add('pet-idle');if(resident){lastRole=brandPet.dataset.actor;void startTitleResident(lastRole,initialAction).catch(stop);}else startAnimation();if(!resident)finishTimer=setTimeout(stop,preview?15000:4500);
   }
   function check(){
+    if(dragSuspended)return;
     if(!state||state.expanded||nativeSuspended||document.hidden||state.paused){if(playing||idle||roaming)stop();return;}
     if(playing){if(!previewPlaying&&state.settings.petAlerts===false)stop();return;}
     if(window.quotaPetDragging||document.querySelector('.reordering')){if(idle||roaming)stop();return;}
@@ -137,7 +138,7 @@
     }
   }
   $('pet-close').addEventListener('click',()=>{if(roaming){roamWanted=false;if(state?.settings.petRoam)void window.quota.settings({petRoam:false});}stop();});
-  window.quota.onPetSuspend(reason=>{if(reason==='resume'){nativeSuspended=false;check();}else{nativeSuspended=reason==='drag'||reason==='hide';stop();}});
+  window.quota.onPetSuspend(reason=>{if(reason==='drag'){dragSuspended=true;return;}dragSuspended=false;if(reason==='resume'){nativeSuspended=false;check();}else{nativeSuspended=reason==='hide';stop();}});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else nextIdle=Date.now()+120000+Math.random()*180000;});
   document.addEventListener('dragstart',()=>{window.quotaPetDragging=true;stop();});document.addEventListener('dragend',()=>{window.quotaPetDragging=false;});document.addEventListener('drop',()=>{window.quotaPetDragging=false;});
   reduced.addEventListener('change',()=>{if(idle||roaming)stop();else startAnimation();});
