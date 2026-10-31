@@ -14,7 +14,7 @@
     ['開機自動啟動','Launch at login','ログイン時に起動','로그인 시 자동 시작'],
     ['叫出常駐寵物','Summon resident pet','常駐ペットを呼ぶ','상주 펫 부르기'],
     ['寵物常駐在名稱區，關閉常駐後恢復名稱與版本號','Pet stays in the title area; disable residency to restore the name and version.','名前エリアに常駐します。常駐をオフにすると名前とバージョンが戻ります。','이름 영역에 상주하며 끄면 이름과 버전이 복원됩니다.'],
-    ['常駐位置','Companion position','常駐する場所','상주 위치'],['下方舞台','Lower stage','下のステージ','하단 무대'],['名稱區域','Title area','名前エリア','이름 영역'],
+    ['常駐位置','Companion position','常駐する場所','상주 위치'],['下方舞台','Lower stage','下のステージ','하단 무대'],['上方區域','Upper area','上部エリア','상단 영역'],
     ['補充電力','Recharge','充電する','충전하기'],['走路','Walk','歩く','걷기'],['預覽動作','Preview action','動作プレビュー','동작 미리보기'],['打招呼','Greeting','あいさつ','인사'],['垂頭喪氣','Feeling low','しょんぼり','시무룩'],['睡覺','Sleep','おやすみ','잠자기'],['喝水提醒','Water break','水分補給','물 마시기'],['預覽寵物動作','Preview pet action','ペットの動作をプレビュー','펫 동작 미리보기'],['開飯了！','Food is here!','ごはんだ！','밥 먹자!'],['好好吃！','Yummy!','おいしい！','맛있어!'],['跟你打招呼','Hello there!','こんにちは！','안녕!'],['偶爾也會有點累','A little tired today','ちょっとお疲れ','조금 피곤해요'],['充電小睡中','Recharging with a nap','お昼寝で充電中','낮잠으로 충전 중'],['記得喝水喔','Remember to drink water','お水を飲もう','물 마시는 것 잊지 마세요'],
     ['叫出角色','Summon character','呼び出すキャラクター','불러올 캐릭터'],['隨機角色','Random character','ランダム','무작위'],['小章魚','Little Octopus','小さなタコ','아기 문어'],
     ['預覽救援隊','Preview rescue crew','レスキュー隊をプレビュー','구조대 미리보기'],['預覽・展示資料','Preview · demo data','プレビュー・デモデータ','미리보기 · 데모 데이터'],
