@@ -156,7 +156,6 @@ function makeCards(){
     grip.addEventListener('keydown',event=>{if(!event.altKey||!['ArrowUp','ArrowDown'].includes(event.key))return;const order=state.settings.order,index=order.indexOf(id),target=order[index+(event.key==='ArrowUp'?-1:1)];if(target){event.preventDefault();moveProvider(id,target);grip.focus();}});
     card.querySelector('.connection-status').addEventListener('click',()=>{activeDetail=activeDetail===id?null:id;render(state);});
     card.querySelector('.close-connection').addEventListener('click',()=>{activeDetail=null;render(state);});
-      card.querySelector('.open-claude-terminal').addEventListener('click',async event=>{const button=event.currentTarget;button.disabled=true;try{const result=await api.openClaudeTerminal(id);card.querySelector('.auth-message').textContent=result.ok?'已送出 Claude Code 啟動指令，請查看終端機視窗。':result.message;}catch{card.querySelector('.auth-message').textContent='無法開啟 Claude Code，請稍後重試';}finally{button.disabled=false;}});
       card.querySelector('.connect-primary').addEventListener('click',()=>{const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
     card.querySelector('.login').addEventListener('click',()=>startLogin(id));
     card.querySelector('.quota-details-link').addEventListener('click',()=>{quotaDetailsProvider=id;quotaDetailsOpen=true;activeDetail=null;settingsOpen=false;footerPopover=null;render(state);});
@@ -199,7 +198,6 @@ function renderConnection(id,s,auth){
     const index=Number(node.dataset.step);node.classList.toggle('done',index<step);node.classList.toggle('active',index===step&&!!auth?.pending);
     node.querySelector('span').textContent=index<step?'✓':String(index+1);
   }
-  const launcher=card.querySelector('.open-claude-terminal');launcher.hidden=baseId(id)!=='claude'||!!auth?.pending;
   const message=card.querySelector('.auth-message');
   message.textContent=auth?.pending||['error','cooldown','waiting'].includes(auth?.phase)?auth.message:connected?'已連接，配額已自動同步':s.error||'完成授權後會自動同步配額。';
   message.classList.toggle('success',!!connected);message.classList.toggle('error',phase==='error'||(!auth?.pending&&!['cooldown','waiting'].includes(phase)&&['stale','unavailable'].includes(s.status)));

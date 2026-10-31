@@ -2,6 +2,8 @@ import { ProviderError, ProviderId, ProviderState, Reading, providerIds } from '
 type Fetcher = (id: ProviderId) => Promise<Reading>;
 export class Poller {
   states: Record<ProviderId, ProviderState>;
+  private minimum=new Map<ProviderId,number>();
+  setMinimumInterval(id:ProviderId,ms:number){this.minimum.set(id,ms);}
   private inFlight = new Map<ProviderId, Promise<void>>();
   private failures = new Map<ProviderId, number>();
   private lastRequest = new Map<ProviderId, number>();
@@ -28,6 +30,7 @@ export class Poller {
     const s = this.states[id];
     const now = this.now();
     if (!s.enabled || now < (this.rateLimitUntil.get(id) ?? 0)) return Promise.resolve();
+    if(now-(this.lastRequest.get(id)??-Infinity)<(this.minimum.get(id)??0))return Promise.resolve();
     if (manual ? now - (this.lastRequest.get(id) ?? -Infinity) < 5000 : now < s.nextPollAt) return Promise.resolve();
     this.lastRequest.set(id, now);
     const job = this.run(id).finally(() => this.inFlight.delete(id));
@@ -44,7 +47,7 @@ export class Poller {
       if (!s.enabled) return;
       s.reading = reading; s.status = 'ready'; s.updatedAt = new Date(this.now()).toISOString(); s.error = null;
       delete s.errorCode;
-      this.failures.delete(id); s.nextPollAt = this.now() + 120_000;
+      this.failures.delete(id); s.nextPollAt = this.now() + Math.max(120_000,this.minimum.get(id)??0);
       this.rateLimitUntil.delete(id);
     } catch (e) {
       const err = e instanceof ProviderError ? e : new ProviderError('network', '連線失敗，將自動重試');
@@ -54,7 +57,7 @@ export class Poller {
       else s.status = s.reading ? 'stale' : 'unavailable';
       s.error = err.message;
       s.errorCode=err.code;
-      s.nextPollAt = this.now() + Math.max(err.retryAfterMs, Math.min(30 * 60_000, 60_000 * 2 ** Math.min(n - 1, 5)));
+      s.nextPollAt = this.now() + Math.max(err.retryAfterMs,this.minimum.get(id)??0, Math.min(30 * 60_000, 60_000 * 2 ** Math.min(n - 1, 5)));
       if (err.code === 'rate_limit') this.rateLimitUntil.set(id, s.nextPollAt);
     } finally { s.refreshing = false; this.changed(); }
   }

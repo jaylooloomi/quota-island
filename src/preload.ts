@@ -16,7 +16,6 @@ contextBridge.exposeInMainWorld('quota', {
   openAntigravity: () => ipcRenderer.invoke('open-antigravity'),
   reopenLogin: (id: string) => ipcRenderer.invoke('reopen-login', id),
   submitCode: (id: string, code: string) => ipcRenderer.invoke('submit-code', id, code),
-  openClaudeTerminal: (id:string)=>ipcRenderer.invoke('open-claude-terminal',id),
   openProvider: (id: string) => ipcRenderer.invoke('open-provider', id),
   settings: (patch: unknown) => ipcRenderer.invoke('settings', patch),
   hide: () => ipcRenderer.invoke('hide'),

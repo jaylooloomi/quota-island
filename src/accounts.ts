@@ -26,6 +26,7 @@ export class Accounts {
     const dir=this.directory(profile.id);mkdirSync(dir,{recursive:true,mode:0o700});
     const service=this.factory(dir);
     const poller=new Poller(id=>service.read(id),()=>{if(this.entries.has(profile.id)){this.save();this.changed();}});
+    if(service instanceof Providers)poller.setMinimumInterval('claude',600000);
     poller.states.codex.enabled=false;poller.states.gemini.enabled=false;poller.states.claude.enabled=profile.enabled;
     poller.restoreRateLimits(profile.limits);
     const connections=new Connections(service,poller,this.open,()=>{if(this.entries.has(profile.id))this.changed();},this.focus);
