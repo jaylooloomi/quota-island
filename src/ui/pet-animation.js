@@ -49,7 +49,7 @@
     }catch(error){reject(error);}};image.onerror=reject;image.src='pets/'+file;});sheetCache.set(key,job);return job;
   }
   const combined=new Map();
-  function load(style){if(!combined.has(style))combined.set(style,Promise.all([loadBase(style),sheet('space-octopus-orange.png',4,style==='walk'?0:2),style==='walk'?sheet('space-robot-walk.png',2):Promise.resolve(null)]).then(([base,octopus,robot])=>({...base,octopus,...(robot?{codex:robot}:{})})));return combined.get(style);}
+  function load(style){if(!combined.has(style))combined.set(style,Promise.all([loadBase(style),style==='walk'?sheet('space-octopus-orange.png',4,0):sheet('space-octopus-flag.png',2,0,6,3).then(f=>[...f,...f.slice().reverse()]),style==='walk'?sheet('space-robot-walk.png',2):Promise.resolve(null)]).then(([base,octopus,robot])=>({...base,octopus,...(robot?{codex:robot}:{})})));return combined.get(style);}
   let care,rest;
   function loadCare(){return care??=Promise.all(['claude','codex','gemini','octopus'].map((role,i)=>sheet('space-care.png',8,i*2).then(async frames=>[role,[...frames.slice(0,6),...await sheet('space-'+({claude:'cat',codex:'robot',gemini:'rabbit',octopus:'octopus'}[role])+'-eat.png',2,0,6,3)]]))).then(Object.fromEntries);}
   function loadRest(){return rest??=Promise.all(['claude','codex','gemini','octopus'].map((role,i)=>(role==='octopus'?sheet('space-octopus-rest.png',2):sheet('space-rescue.png',3,i,3,3)).then(frames=>[role,frames]))).then(Object.fromEntries);}

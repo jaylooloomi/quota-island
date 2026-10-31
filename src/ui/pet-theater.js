@@ -43,7 +43,7 @@
         }
         roamPet.dataset.emotionPhase=action.mode==='sad'?sample.emotion??'lower':'';roamPet.style.setProperty('--pet-sigh',JSON.stringify(text('呼…')));
         if(isPixel)sample.mix=0;
-        const ctx=roamCanvas.getContext('2d');ctx.imageSmoothingEnabled=!isPixel;ctx.clearRect(0,0,144,144);ctx.save();if(!walking&&!reduced.matches&&!isPixel){const breath=Math.sin(action.elapsed*2)*.012;ctx.translate(0,134);ctx.scale(1,1+breath);ctx.translate(0,-134);}ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1-sample.mix;ctx.drawImage(list[sample.frame],0,0);if(sample.mix){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=sample.mix;ctx.drawImage(list[sample.next],0,0);}ctx.restore();roamPet.dataset.frame=String(sample.frame);
+        const ctx=roamCanvas.getContext('2d');ctx.imageSmoothingEnabled=!isPixel;ctx.clearRect(0,0,144,144);ctx.save();if(!walking&&!reduced.matches&&!isPixel&&!(role==='octopus'&&action.mode==='hello')){const breath=Math.sin(action.elapsed*2)*.012;ctx.translate(0,134);ctx.scale(1,1+breath);ctx.translate(0,-134);}ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1-sample.mix;ctx.drawImage(list[sample.frame],0,0);if(sample.mix){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=sample.mix;ctx.drawImage(list[sample.next],0,0);}ctx.restore();roamPet.dataset.frame=String(sample.frame);
         if(!reduced.matches)roamRequest=requestAnimationFrame(step);
       };
       step(last);
