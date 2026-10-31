@@ -417,8 +417,6 @@ function render(next){
   document.querySelector('.footer-dot').classList.toggle('off',!healthy);$('footer-status').textContent=state.paused?'已暫停同步':'自動同步';
   for(const key of ['autoStart','alwaysOnTop','notifications','petIdle','petAlerts','petRoam'])$(key).checked=state.settings[key];
   $('autoStart').disabled=!['win32','darwin'].includes(state.platform);
-  $('pet-roam').textContent=paceText(state.settings.petPlacement==='title'?'叫出常駐寵物':'叫出散步寵物');
-  $('pet-roam').title=paceText(state.settings.petPlacement==='title'?'寵物常駐在名稱區，關閉常駐後恢復名稱與版本號':'常駐向左、向右散步；關閉後才離開，救援短劇結束後恢復散步');
   $('pet-placement').value=state.settings.petPlacement??'stage';
   $('pet-background').value=state.settings.petBackground??'meteor';
   $('island').dataset.petBackground=state.settings.petBackground??'meteor';
@@ -513,10 +511,7 @@ for(const key of ['autoStart','alwaysOnTop','notifications'])$(key).addEventList
 for(const key of ['petIdle','petAlerts','petRoam'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 $('pet-placement').addEventListener('change',event=>api.settings({petPlacement:event.target.value}));
 $('pet-background').addEventListener('change',event=>api.settings({petBackground:event.target.value}));
-$('pet-idle-preview').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.previewIdle($('pet-character').value),300);});
-$('pet-preview').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.preview(),300);});
 $('pet-action-preview').addEventListener('click',async()=>{const action=$('pet-action').value,role=$('pet-character').value;await api.settings({petRoam:true});await api.expand(false);setTimeout(()=>action==='walk'?window.QuotaPets.roam(role):window.QuotaPets.action(action,role),300);});
-$('pet-roam').addEventListener('click',async()=>{await api.settings({petRoam:true});await api.expand(false);setTimeout(()=>window.QuotaPets.roam($('pet-character').value),300);});
 $('morningHelloEnabled').addEventListener('change',event=>api.settings({morningHelloEnabled:event.target.checked}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
 for(const input of document.querySelectorAll('[data-visible]'))input.addEventListener('change',()=>api.settings({visible:{[input.dataset.visible]:input.checked}}));
