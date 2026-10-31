@@ -222,11 +222,11 @@ Pacing details expand inline beneath the selected provider row. Only one provide
 
 ### Space rescue companions
 
-Use **Invite a roaming pet** for a separate 24-second visit: one random smooth 3D character walks, turns and rests in the lower stage. Optional automatic visits occur every 2–5 minutes (off by default). Existing rescue scenes remain unchanged; alerts take priority. See [roaming mode](docs/pet-roaming.md).
+Use **Invite a roaming pet** for a resident companion: one random smooth 3D character walks left and right, turns and rests until dismissed. The resident setting persists. Six-second rescue scenes take priority, then roaming resumes. See [roaming mode](docs/pet-roaming.md).
 
 Choose **Smooth 3D**, **Pixel animation** or **Classic 3D** in Settings, then preview the crew. The new cat/robot animations use twelve drawings each; the rabbit uses six complete poses in a forward/reverse cycle. Smooth 3D blends frames; pixel mode preserves crisp edges. Choices persist across restarts. See [playable options and comparison video](docs/pet-motion-options.md).
 
-Claude is an orange space cat, Codex an ivory maintenance robot, and Antigravity a lavender star rabbit. Optional idle pets briefly replace the compact brand; quota alerts open a 4.4-second miniature stage at 20%, 5% remaining and exhaustion, without moving quota controls. Settings offers separate switches and **Preview rescue crew**. Account/window/reset-based deduplication survives renderer restarts; animations never refresh quotas. Reduced motion uses a static alert scene and disables idle motion. See [implementation and validation](docs/pet-theater-implementation.md).
+Claude is an orange space cat, Codex an ivory maintenance robot, and Antigravity a lavender star rabbit. Optional idle pets briefly replace the compact brand; quota alerts open a six-second miniature stage at 20%, 5% remaining and exhaustion, without moving quota controls. Settings offers separate switches and **Preview rescue crew**. Account/window/reset-based deduplication survives renderer restarts; animations never refresh quotas. Reduced motion uses a static alert scene and disables idle motion. See [implementation and validation](docs/pet-theater-implementation.md).
 
 ### Automatic Hello
 

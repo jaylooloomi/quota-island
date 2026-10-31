@@ -278,14 +278,15 @@ else {
     win.webContents.on('will-navigate', event => event.preventDefault());
     win.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
     win.on('close', event => { if (!quitting) { event.preventDefault(); win.hide(); } });
-    win.on('will-move',()=>{win.webContents.send('pet-suspend');expectedBounds=undefined;settings.dock=undefined;userDragging=true;});
-    win.on('hide',()=>win.webContents.send('pet-suspend'));
+    win.on('will-move',()=>{win.webContents.send('pet-suspend','drag');expectedBounds=undefined;settings.dock=undefined;userDragging=true;});
+    win.on('hide',()=>win.webContents.send('pet-suspend','hide'));
+    win.on('show',()=>win.webContents.send('pet-suspend','resume'));
     win.on('move',()=>{
       const b=win.getBounds();if(expectedBounds&&b.x===expectedBounds.x&&b.y===expectedBounds.y)return;
       if(process.platform==='win32'&&userDragging)return;
-      clearTimeout(dragTimer);dragTimer=setTimeout(()=>{userDragging=false;settlePosition();reposition();},180);
+      clearTimeout(dragTimer);dragTimer=setTimeout(()=>{userDragging=false;settlePosition();reposition();win.webContents.send('pet-suspend','resume');},180);
     });
-    win.on('moved',()=>{if(process.platform==='win32'){clearTimeout(dragTimer);userDragging=false;settlePosition();reposition();}});
+    win.on('moved',()=>{if(process.platform==='win32'){clearTimeout(dragTimer);userDragging=false;settlePosition();reposition();}win.webContents.send('pet-suspend','resume');});
     screen.on('display-metrics-changed', reposition);
     screen.on('display-removed', reposition);
     installHandlers(); makeTray();

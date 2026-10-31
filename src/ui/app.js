@@ -511,7 +511,7 @@ for(const key of ['alwaysOnTop','notifications'])$(key).addEventListener('change
 for(const key of ['petIdle','petAlerts','petRoam'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 $('pet-style').addEventListener('change',event=>api.settings({petStyle:event.target.value}));
 $('pet-preview').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.preview(),300);});
-$('pet-roam').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.roam(),300);});
+$('pet-roam').addEventListener('click',async()=>{await api.settings({petRoam:true});await api.expand(false);setTimeout(()=>window.QuotaPets.roam(),300);});
 $('morningHelloEnabled').addEventListener('change',event=>api.settings({morningHelloEnabled:event.target.checked}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
 for(const input of document.querySelectorAll('[data-visible]'))input.addEventListener('change',()=>api.settings({visible:{[input.dataset.visible]:input.checked}}));
