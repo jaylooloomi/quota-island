@@ -12,6 +12,7 @@
       for(let i=0;i<queue.length;i++){const n=queue[i],x=n%width,y=Math.floor(n/width);if(x===0||x===width-1||y===0||y===height-1)edge=true;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,yy=y+dy,j=yy*width+xx;if(xx>=0&&xx<width&&yy>=0&&yy<height&&!seen[j]&&data[j*4+3]>=16){seen[j]=1;queue.push(j);}}}parts.push({pixels:queue,edge});}
     const main=parts.reduce((a,b)=>!a||b.pixels.length>a.pixels.length?b:a,null);let removed=0;for(const part of parts)if(part!==main&&part.edge)for(const n of part.pixels){data[n*4+3]=0;removed++;}return removed;
   }
+  function alignTile(tile){const pixels=tile.getContext('2d').getImageData(0,0,144,144).data;let left=144,right=0,bottom=0;for(let y=0;y<144;y++)for(let x=0;x<144;x++)if(pixels[(y*144+x)*4+3]>120){left=Math.min(left,x);right=Math.max(right,x);bottom=Math.max(bottom,y);}const aligned=document.createElement('canvas');aligned.width=144;aligned.height=144;aligned.getContext('2d').drawImage(tile,Math.round(72-(left+right)/2),133-bottom);return aligned;}
   const cache=new Map();
   function loadBase(style){
     if(cache.has(style))return cache.get(style);
@@ -29,7 +30,7 @@
             boxes.push({x:x1,y:y1,w:x2-x1+1,h:y2-y1+1,center:left+cell/2});
           }
           const scale=Math.min(62/Math.max(...boxes.map(b=>b.w)),62/Math.max(...boxes.map(b=>b.h)));
-          groups[provider]=boxes.map(b=>{const tile=document.createElement('canvas');tile.width=144;tile.height=144;const ctx=tile.getContext('2d');ctx.imageSmoothingEnabled=style!=='pixel';ctx.drawImage(source,b.x,b.y,b.w,b.h,(36-b.w*scale/2)*2,(67-b.h*scale)*2,b.w*scale*2,b.h*scale*2);return tile;});
+          groups[provider]=boxes.map(b=>{const tile=document.createElement('canvas');tile.width=144;tile.height=144;const ctx=tile.getContext('2d');ctx.imageSmoothingEnabled=style!=='pixel';ctx.drawImage(source,b.x,b.y,b.w,b.h,(36-b.w*scale/2)*2,(67-b.h*scale)*2,b.w*scale*2,b.h*scale*2);return style==='walk'?alignTile(tile):tile;});
         }
         resolve(groups);
       }catch(e){reject(e);}
@@ -46,6 +47,6 @@
     }catch(error){reject(error);}};image.onerror=reject;image.src='pets/'+file;});sheetCache.set(key,job);return job;
   }
   const combined=new Map();
-  function load(style){if(!combined.has(style))combined.set(style,Promise.all([style==='classic'?Promise.resolve({}):loadBase(style),sheet('space-octopus-orange.png',4,style==='walk'?0:2),style==='walk'?sheet('space-rabbit-walk.png',2):Promise.resolve(null)]).then(([base,octopus,rabbit])=>({...base,octopus,...(rabbit?{gemini:rabbit}:{})})));return combined.get(style);}
+  function load(style){if(!combined.has(style))combined.set(style,Promise.all([style==='classic'?Promise.resolve({}):loadBase(style),sheet('space-octopus-orange.png',4,style==='walk'?0:2)]).then(([base,octopus])=>({...base,octopus})));return combined.get(style);}
   const api={sample,load,cleanEdges};if(typeof module==='object'&&module.exports)module.exports=api;else root.QuotaPetAnimation=api;
 })(globalThis);
