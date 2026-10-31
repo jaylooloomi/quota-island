@@ -1,3 +1,4 @@
+import {openClaudeTerminal} from './claude-terminal';
 import {AutoReconnect} from './auto-reconnect';
 import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray, globalShortcut, powerMonitor, Notification, safeStorage } from 'electron';
 import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'node:fs';
@@ -154,6 +155,7 @@ function installHandlers() {
     'account-rename': (_event:any,id:unknown,label:unknown)=>{try{accounts.rename(id,label);return {ok:true};}catch(e){return {ok:false,message:e instanceof ProviderError?e.message:'無法重新命名'};}},
     'hide': () => win.hide(),
     'quit': () => { quitting = true; app.quit(); },
+    'open-claude-terminal': async (_event:any,id:unknown)=>{if(id!=='claude'&&!accounts.has(id))throw new Error('帳號不存在');if(demo||testing)return {ok:true};try{const dir=id==='claude'?(process.env.CLAUDE_CONFIG_DIR||path.join(homedir(),'.claude')):path.join(app.getPath('userData'),'claude-accounts',id as string);await openClaudeTerminal(dir);return {ok:true};}catch{return {ok:false,message:'無法開啟 Claude Code，請確認已安裝官方 CLI'};}},
     'open-provider': async (_event: any, id: unknown) => { if (typeof id === 'string' && external[id]) await shell.openExternal(external[id]!); },
     'settings': (_event: any, patch: any) => {
       if (!patch || typeof patch !== 'object') return;

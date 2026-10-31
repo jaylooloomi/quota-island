@@ -481,3 +481,5 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 .compact-brand.pet-resident{height:48px;min-height:48px;flex-shrink:0}.compact-brand.pet-resident .brand-pet{width:44px;height:44px;margin-top:-22px}
 
 .compact-brand.pet-resident{height:52px;min-height:52px;overflow:visible}.compact-brand.pet-resident .brand-pet{width:40px;height:40px;margin-top:-20px}
+
+.open-claude-terminal{padding:8px 14px;border:1px solid #8894bd;border-radius:8px;background:#48577f;color:#fff;font-weight:600;margin:6px 0}.open-claude-terminal:hover{background:#5b6b96}
