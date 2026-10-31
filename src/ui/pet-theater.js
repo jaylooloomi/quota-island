@@ -102,7 +102,7 @@
     cancelAnimationFrame(frameRequest);const ticket=++assetVersion;
     const [walk,greetings,sad,rest,care,recharge]=await Promise.all([QuotaPetAnimation.load('walk'),QuotaPetAnimation.load('smooth'),QuotaPetAnimation.loadSad(),QuotaPetAnimation.loadRest(),QuotaPetAnimation.loadCare(),QuotaPetAnimation.loadRecharge()]);
     if(ticket!==assetVersion||!idleResident)return;
-    const behavior=QuotaPetBehavior.create(),canvas=brandPet.querySelector('canvas'),ctx=canvas.getContext('2d');let last=performance.now(),x=13,face=1,travel=0;
+    const behavior=QuotaPetBehavior.create(Math.random,{title:true}),canvas=brandPet.querySelector('canvas'),ctx=canvas.getContext('2d');let last=performance.now(),x=13,face=1,travel=0;
     if(initialAction)behavior.act(initialAction);
     const tick=time=>{frameRequest=0;if(!idleResident||document.hidden)return;const dt=Math.min(.1,Math.max(0,(time-last)/1000));last=time;const action=behavior.step(reduced.matches?0:dt),moving=action.mode==='walk';
       if(moving&&!reduced.matches){x+=face*12*dt;if(x>=25){x=50-x;face=-1;}if(x<=1){x=2-x;face=1;}travel+=12*dt;}
