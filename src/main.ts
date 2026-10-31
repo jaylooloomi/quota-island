@@ -1,3 +1,4 @@
+import {AutoReconnect} from './auto-reconnect';
 import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray, globalShortcut, powerMonitor, Notification, safeStorage } from 'electron';
 import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'node:fs';
 import path from 'node:path';
@@ -74,6 +75,7 @@ function readSettings() {
   } catch { /* First run or invalid preferences: use defaults. */ }
 }
 let accounts:Accounts;
+let autoReconnect:AutoReconnect|undefined;
 let diagnostics:Diagnostics|undefined;
 let morningHello:MorningHello|undefined;
 function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, morningHello:morningHello?.snapshot()??{}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
@@ -306,7 +308,8 @@ else {
     if (!demo) await credentialWatch.scan();
     void poller.tick();
     void accounts.tick();
-    interval = setInterval(() => { if (!paused) { if (!demo) void credentialWatch.scan(); if(!demo&&settings.enabled.gemini&&settings.googleSource==='antigravity'&&providers.waitingForAntigravityAccount)void poller.authenticated('gemini'); void poller.tick();void accounts.tick(); }
+    if(!demo&&!testing)autoReconnect=new AutoReconnect(path.join(app.getPath('userData'),'auto-reconnect.json'),id=>id==='claude'?connections.login('claude'):accounts.login(id));
+    interval = setInterval(() => { if(!paused&&autoReconnect){const current=snapshot();void autoReconnect.check(current.providers as any,Object.values(current.auth).some((a:any)=>a?.pending)).catch(()=>{});} if (!paused) { if (!demo) void credentialWatch.scan(); if(!demo&&settings.enabled.gemini&&settings.googleSource==='antigravity'&&providers.waitingForAntigravityAccount)void poller.authenticated('gemini'); void poller.tick();void accounts.tick(); }
       if(!demo&&morningHello){const current:any=snapshot();void morningHello.tick(settings.morningHelloEnabled,settings.morningHelloTime,['claude',...current.accounts.map((a:any)=>a.id)].map((id:string)=>({id,state:current.providers[id],pending:current.auth[id]?.pending})),paused);}
     }, 5000);
   });
