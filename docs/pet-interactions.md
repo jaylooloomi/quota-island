@@ -23,3 +23,7 @@ Not implemented in this release. Future module should accept RSS/Atom polling or
 Settings → Stage background offers Meteor forest (default), Vivid nebula, and Classic night. Validated choices persist across restart. All backgrounds use the same112px stage and do not change quota or actor positions.
 
 Built-in imagegen generated src/ui/pets/meteor-forest.png from the user's landscape as visual reference. Final prompt: original panoramic3:1 deep teal/midnight sky with dense tiny stars, cyan/gold shooting stars, small blue crescent moon in the upper right third, layered turquoise mountains and dark pine forest, thin warm horizon glow, clear dark ground for pets, polished painterly style; no text, watermark, logos or characters.
+
+## Robot tail repair (1.8.2)
+
+Codex walking now uses dedicated src/ui/pets/space-robot-walk.png. Built-in imagegen used the original walking atlas as an identity reference: extract the same ivory robot into twelve right-facing walking poses, preserve head/face/antenna/gold accents/wrench emblem/mechanical backpack/hands/feet, remove all furry fox/cat tails, transparent6-column2-row atlas with full antenna and feet. Visual review of all12 frames confirms no furry tail. A measured row boundary preserves the second-row antenna. Other characters and action assets are unchanged. This repair does not claim to resolve the separate foot-sliding issue.
