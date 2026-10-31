@@ -1,6 +1,6 @@
 (function(){
   const $=id=>document.getElementById(id),reduced=matchMedia('(prefers-reduced-motion: reduce)');
-  let state,playing=false,previewPlaying=false,idle=false,lastAlert=0,nextIdle=Date.now()+120000+Math.random()*180000,idleIndex=0,finishTimer,phaseTimer,restTimer;
+  let state,playing=false,previewPlaying=false,idle=false,lastAlert=0,nextIdle=Date.now()+120000+Math.random()*180000,idleIndex=0,finishTimer,phaseTimer,restTimer,previewLoopTimer;
   let seen={};try{seen=JSON.parse(localStorage.getItem('quota-pet-alerts')||'{}');if(!seen||Array.isArray(seen)||typeof seen!=='object')seen={};}catch{}
   const text=value=>window.QuotaI18n.translate(value,state?.settings.locale??'zh-TW');
   const brand=document.querySelector('.compact-brand');
@@ -54,7 +54,7 @@
     }
     $('pet-message').style.width=`${Math.max(56,brand.getBoundingClientRect().right-bounds.left-15)}px`;
   }
-  function stop(){cancelAnimationFrame(roamRequest);roamRequest=0;roaming=false;roamTicket++;roamPet.hidden=true;cancelAnimationFrame(frameRequest);frameRequest=0;clearTimeout(finishTimer);clearTimeout(phaseTimer);clearTimeout(restTimer);playing=false;previewPlaying=false;idle=false;$('pet-stage').hidden=true;$('island').classList.remove('pet-playing');brand.classList.remove('pet-idle');void window.quota.petHeight(0);nextIdle=Date.now()+120000+Math.random()*180000;}
+  function stop(){cancelAnimationFrame(roamRequest);roamRequest=0;roaming=false;roamTicket++;roamPet.hidden=true;cancelAnimationFrame(frameRequest);frameRequest=0;clearTimeout(finishTimer);clearTimeout(phaseTimer);clearTimeout(restTimer);clearInterval(previewLoopTimer);playing=false;previewPlaying=false;idle=false;$('pet-stage').hidden=true;$('island').classList.remove('pet-playing');brand.classList.remove('pet-idle');void window.quota.petHeight(0);nextIdle=Date.now()+120000+Math.random()*180000;}
   function alert(event,preview=false){
     stop();playing=true;previewPlaying=preview;if(!preview){lastAlert=Date.now();seen=window.QuotaPetPolicy.claim(seen,event);try{localStorage.setItem('quota-pet-alerts',JSON.stringify(seen));}catch{}}
     const account=preview?text('預覽・展示資料'):state.accounts?.find(a=>a.id===event.id)?.label??(event.provider==='gemini'?'Antigravity':event.provider==='codex'?'Codex':'Claude');
@@ -67,9 +67,13 @@
     startAnimation();
     $('pet-close').setAttribute('aria-label',text('關閉小劇場'));
     void window.quota.petHeight(112);
+    const phases=()=>{
+      if(!playing)return;clearTimeout(phaseTimer);clearTimeout(restTimer);$('pet-stage').dataset.phase='warning';$('pet-message').textContent=text(event.level===3?'額度用盡，先休息一下':event.level===2?'能源即將用盡，放慢腳步':'能源偏低，救援隊出動');for(const el of $('pet-stage').querySelectorAll('.pet-sprite'))sprite(el,el.dataset.pet,el.dataset.pet===event.provider?1:0);
     if(!reduced.matches)phaseTimer=setTimeout(()=>{if(!playing)return;$('pet-stage').dataset.phase='rescue';for(const el of $('pet-stage').querySelectorAll('.pet-sprite'))sprite(el,el.dataset.pet,el.dataset.pet===event.provider?2:el.dataset.pet==='codex'?1:0);$('pet-message').textContent=text(event.level===3?'等待重置，一起充電':'補給一下，保持配速');},2000);
     restTimer=setTimeout(()=>{if(!playing)return;$('pet-stage').dataset.phase='rest';$('pet-message').textContent=text(event.level===3?'等待重置，一起充電':'補給一下，保持配速');for(const el of $('pet-stage').querySelectorAll('.pet-sprite'))sprite(el,el.dataset.pet,2);},4000);
-    finishTimer=setTimeout(stop,6000);
+    };
+    phases();if(preview&&!reduced.matches)previewLoopTimer=setInterval(phases,6000);
+    finishTimer=setTimeout(stop,preview?180000:6000);
   }
   function check(){
     if(!state||state.expanded||nativeSuspended||document.hidden||state.paused){if(playing||idle||roaming)stop();return;}
