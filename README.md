@@ -1,242 +1,111 @@
-<h1 align="center">Quota Pebble 🏝️</h1>
+<h1 align="center">Quota Pebble</h1>
+<p align="center"><b>Three AI subscriptions. One tiny island.</b><br>See your quota. Pace your day. Keep a little companion nearby.</p>
+<p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">Download for Windows</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="LICENSE">MIT</a></p>
 
-<p align="center"><b>Three AI subscriptions. One tiny island.</b><br>Keep Claude, Gemini, and Codex quotas in sight. Expand for details. Get back to building.</p>
+![Quota Pebble illustrated feature overview](docs/readme-v1.16.5/overview-en.png)
 
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/version-1.1.0-informational" alt="Version 1.1.0">
-  <img src="https://img.shields.io/badge/Windows-tested-brightgreen" alt="Windows tested">
-  <img src="https://img.shields.io/badge/Electron-TypeScript-47848F" alt="Electron and TypeScript">
-  <a href="docs/test-coverage.md"><img src="https://img.shields.io/badge/core%20tests-69%20passing-brightgreen" alt="69 core tests passed locally"></a>
-  <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/lang-繁體中文-green" alt="Traditional Chinese"></a>
-</p>
-
-<p align="center"><img src="docs/design/compact-double-layer/compact.png" alt="Compact dark island: Claude 36%, Gemini 62%, Codex 12%, with a draggable grip" width="464"><br><sub>Actual app screenshot with demo data. Percentages are illustrative, not live account readings.</sub></p>
-
-## Product tour (v1.4.0)
-
-**Actual app UI with built-in demo / test fixtures. These are illustrative quotas, not live account readings.** The Google row is labeled Gemini in the app; personal-account quota data comes from Antigravity.
-
-### A small island, then the details
-
-![Collapsed Quota Pebble showing three provider quotas](docs/product-tour/compact.png)
-
-Keep Claude, Codex and Gemini quotas in a compact capsule. Click the chevron to expand; use the left grip to move the island.
-
-<img src="docs/product-tour/expanded.png" alt="Actual v1.4.0 expanded demo dashboard with Claude, Codex and Gemini quota windows and reset countdowns" width="464">
-
-The expanded dashboard shows remaining quota, separate usage windows and reset countdowns. Switch Remaining / Used at the top; Quota / Accounts separates readings from account controls. Language, settings and sync controls sit in the footer.
-
-### Space Rescue Team
-
-<img src="docs/product-tour/pet-rescue.png" alt="Actual demo quota alert scene: Claude has 15 percent remaining, with three space companions" width="464">
-
-The v1.4.0 companions appear in the idle brand area and quota alert scenes. This fixture demonstrates a Claude low-quota alert; its deliberately different percentages and missing Gemini reading are test data. These companions do not implement a pet growth or feeding system.
-
-[View the character sheet and product overview](docs/product-tour/space-rescue-product-preview.png) · [Image provenance](docs/product-tour/README.md)
+*Illustrated overview generated from actual v1.16.5 screenshots. All pictured percentages are demo data.*
 
 ## Use cases
 
-| Situation | What you do | What the island shows |
+| Situation | What you do | What Pebble shows |
 |---|---|---|
-| 🧑‍💻 **Deep in a coding session** | Leave the capsule above your windows | Remaining quota at a glance |
-| 🔄 **Switching between AI tools** | Expand the island | Each provider's windows and reset times |
-| 🔐 **Connecting an account** | Finish authorization | Connection progress, then automatic quota sync |
-| 🧩 **Your tools, your order** | Drag an icon or card heading | Shared ordering, saved across restarts |
-| ⏳ **A provider is rate-limiting** | Let the countdown run | An explicit error and scheduled retry |
-| 🖥️ **A busy desktop** | Collapse it or hide it to the tray | A small capsule, ready when needed |
+| Coding with several AI subscriptions | Keep the compact island nearby | Separate Claude, Codex and Gemini / Antigravity quotas |
+| Planning work before the reset | Switch to Pacing | Suggested daily usage and an adjustable reserve |
+| Using several Claude accounts | Add an account in the panel | Independent account cards; accounts are not added together |
+| Needing a quiet desktop | Collapse, drag, or hide to the tray | A small, movable quota display |
+| Taking a short break | Preview a companion action | Walking, greetings, feeling low, sleeping, water breaks or recharging |
+| A quota service returns 429 | Wait for the next permitted attempt | Cooldown information rather than repeated requests |
+
+## The product, in pictures
+
+These are screenshots of the actual Windows app in isolated demo mode, not live customer accounts. Demo Gemini rows do not demonstrate every Antigravity quota group.
+
+### A glance, then the details
+
+<img src="docs/readme-v1.16.5/compact-en.png" alt="Actual compact app with separate provider percentages" width="464">
+
+<img src="docs/readme-v1.16.5/quota-en.png" alt="Expanded quota panel, remaining/used/pacing selector, quota/accounts tabs and reset countdowns" width="464">
+
+Switch Remaining / Used / Pacing without changing the provider order. Drag cards to reorder, choose which services are visible, and inspect additional model windows when the source supplies them. Compact multi-account displays cycle individual accounts; their quotas are never summed.
+
+### Pace your usage
+
+<img src="docs/readme-v1.16.5/pacing-en.png" alt="Actual pacing view with suggested daily usage and a ten percent reserve" width="464">
+
+The default reserve is **10% of total quota**. Guidance divides the remaining usable quota by the actual time until reset; it is a planning suggestion, not a provider-enforced daily allowance. Open pacing details to adjust the reserve and quota window.
+
+### Keep account controls separate
+
+<img src="docs/readme-v1.16.5/accounts-en.png" alt="Actual accounts tab with provider connection controls" width="464">
+
+Claude supports additional independent account profiles. Claude and Codex expose account switching and sign-out controls. Antigravity uses its local account and supports switching/disconnection; disconnecting Pebble does not necessarily sign out of Antigravity itself.
+
+### Small companions, your choice of position
+
+<img src="docs/readme-v1.16.5/pet-en.png" alt="Actual orange octopus companion in the upper area of the compact island" width="464">
+
+Four soft 3D companions: an astronaut cat, a mechanical robot, a star rabbit and an octopus. Choose the upper area or lower stage, then preview an action in that position. Upper-area companions walk for 8–14 seconds and perform an action for 8–14 seconds before walking again. Actions rotate; water breaks have a 20-minute interval. The lower stage also supports click-to-feed interaction. Dragging the title pauses and resumes the current action.
+
+Pet growth and token-based XP are not implemented.
 
 ## Get started
 
-**Requires:** Node.js 24 LTS recommended, npm, and the official provider tools for the accounts you want to monitor. Windows is locally tested. macOS and Linux have build targets but still need real-device validation.
+1. **Download** the Windows x64 portable executable from [Releases](https://github.com/jaylooloomi/quota-island/releases/latest). Extracting an installer is unnecessary; run the executable. Verify it with the release's `SHA256SUMS.txt` if desired. Windows builds are currently unsigned.
+2. **Connect** the provider accounts you want to monitor, using the table below.
+3. **Choose your view**: quotas or accounts, Remaining / Used / Pacing, visible services, language and pet position.
 
-### 1. Start the app
+| Provider | Requirements and connection |
+|---|---|
+| Claude | Install the official [Claude Code CLI](https://code.claude.com/docs/en/setup). Click Login: Pebble first opens `https://claude.ai/new`. Sign in to the correct account, return and click **Signed in to the correct account — continue**. Complete browser authorization and paste a code into Pebble only if prompted. No interactive Claude terminal or Hello is required for quota polling. |
+| Codex | Install the official [Codex CLI](https://developers.openai.com/codex/cli) and sign in with the ChatGPT subscription you want to monitor. |
+| Gemini / Antigravity | Keep Antigravity running and signed in for its local quota service. These are Antigravity allocations, not the Gemini website's usage meter. Enterprise Code Assist is an alternative source in settings. |
+
+**Browser sign-in, OAuth authorization and quota synchronization are separate steps.** Signing in successfully does not guarantee the quota endpoint will accept a request immediately. Opening `/new` prepares the browser login; it does not reset rate limits.
+
+## Refresh behavior and limits
+
+- Claude's normal per-account quota interval is **at least 10 minutes**. Manual refresh shares that interval. Completed authentication may trigger one synchronization, while an active 429 cooldown still takes priority.
+- Codex and Gemini normally refresh about every two minutes. Disabled sources stop polling.
+- Claude uses local official-CLI credentials to query the OAuth usage endpoint. It does **not** currently use statusline snapshots. The endpoint can change or return 429 even when normal Claude conversations work.
+- Cooldowns survive restart. Do not repeatedly sign in to resolve a 429. A retry time means the app may try again, not that the server guarantees recovery.
+- Model-specific limits and reset times are displayed only when supplied. Unknown values are not invented. Antigravity Claude/GPT pools remain separate from independent subscription cards.
+- The numbers are **subscription quotas**, not network traffic, token counts, API spend or context-window percentages.
+
+## Desktop controls
+
+| Control | Behavior |
+|---|---|
+| Title drag / screen edges | Move the island; nearby work-area edges can snap into alignment |
+| Quota / Accounts | Separate readings from account management |
+| Settings | Visible services, sources, always-on-top, launch at login, pets and more |
+| Language | Traditional Chinese, English, Japanese and Korean |
+| Refresh | Recheck when the account's schedule/cooldown permits |
+| `Ctrl / Command + Alt + Q` | Show or hide the app |
+| Tray menu | Show, hide or quit |
+
+Always-on-top applies to ordinary desktop windows; Windows secure desktop and exclusive fullscreen can take precedence.
+
+## Run from source
 
 ```sh
-git clone https://github.com/jaylooloomi/quota-island.git
-cd quota-island
-git switch design/original-dark-00
 npm ci
+npm run build
 npm start
 ```
 
-The branch above contains the compact Original Dark layout shown here. Prefer an executable? Run `npm run dist:win`; the portable Windows executable is written to `release/`. There is currently no published installer download.
-
-### 2. Connect your tools
-
-| Provider | What to install / open | How it connects |
-|---|---|---|
-| **Claude** | [Claude Code](https://code.claude.com/docs/en/setup) | Use the app's login; paste the browser authorization code back into the app if prompted. Existing CLI authorization can also be used. |
-| **Gemini — personal** | Antigravity, running and signed in | Reads Gemini model quotas from its local service. Keep Antigravity open. |
-| **Gemini — enterprise** | A Code Assist account | Choose **Code Assist** in Google source settings, then complete Google OAuth. |
-| **Codex** | [Codex CLI](https://developers.openai.com/codex/cli) | Use the app's login or an existing local ChatGPT subscription login. |
-
-After authorization, the app comes forward and syncs automatically. Signing into a provider's website alone does not connect the app.
-
-### 3. Keep building
-
-Click a quota or chevron to expand. Drag the left grip to move the island. Drag provider icons or card headings to reorder them.
-
-<p align="center"><img src="docs/design/compact-double-layer/expanded.png" alt="Expanded dark panel with remaining/used switch, three provider cards, quota bars, reset times and connection status" width="480"><br><sub>Original Dark · compact window 464 × 76 · expanded window 616 × 520, including transparent margins. Demo data.</sub></p>
-
-## Everyday controls
-
-The footer now has distinct roles: **Language** opens an in-place four-language
-menu; **Sync status** opens provider timestamps, failures and retry countdowns
-with a refresh action; **Settings** opens preferences and returns to the same
-Quota/Accounts tab when closed. Popovers are mutually exclusive and close on
-outside click or Escape. Account management stays in the top Accounts tab.
-
-Version 1.1.0 uses the Compact Double-layer layout: a capsule with mini progress
-bars, flat provider rows, visible version labels, and **Quota / Accounts** tabs.
-Open Accounts to switch or sign out of Claude/Codex. Signing out requires
-confirmation and also affects the official CLI account on this computer.
-Gemini personal accounts are managed in Antigravity through its dedicated button.
-
-<p align="center"><img src="docs/design/compact-double-layer/accounts.png" alt="Accounts tab with independent Claude and Codex switch/sign-out controls and Antigravity account management" width="616"><br><sub>Demo account state. No email addresses are inferred or fabricated.</sub></p>
-
-**Languages:** Settings → Language → 繁體中文 / English / 日本語 / 한국어.
-Switches immediately and remembers your choice after restart. The tray menu,
-quota countdowns, account controls and accessibility labels are localized too.
-
-| Control | Action |
-|---|---|
-| Remaining / Used | Switch the percentage view; your choice is saved |
-| Refresh | Request fresh data after a 5-second debounce; service cooldowns still apply |
-| Connection status | Manage authorization and inspect the data source |
-| `Alt + ← / →` on a compact provider | Reorder with the keyboard |
-| Card's left grip / `Alt + ↑ / ↓` on that grip | Drag or use the keyboard to reorder cards; source-provided plan badges stay visible |
-| `Esc` | Close connection details, close settings, then collapse |
-| `Ctrl / ⌘ + Alt + Q` | Show or hide the app |
-| Settings / system tray | Always-on-top, sources, usage alerts, hide, or quit |
-
-Background polling runs every two minutes. Disabling a source stops its polling. `Retry-After` survives restarts; refresh cannot bypass it. Unknown quotas remain unknown, and stale readings are labeled.
-
-Every quota window shows how many days/hours remain until reset in your selected
-language. Hover for the exact date/time and your computer's timezone. If the
-provider supplies no reset time, the app says so. Pacing guidance is currently
-in the [concept selection stage](docs/design/pacing-proposals/README.md).
-
-## What the numbers mean
-
-Claude's main row shows the current session and weekly all-model limit. Open
-**View model limits** for Fable and other scoped limits, including their reset
-times. They keep updating in the background; scoped and all-model limits cannot
-be added together.
-
-Antigravity now prefers its grouped `RetrieveUserQuotaSummary` source, covering
-Gemini weekly/session pools, Claude/GPT weekly/session pools and separate model
-limits such as Argon. The compact provider row shows the two most constrained
-limits with a **View all limits** count; open it to see every returned group.
-These Claude/GPT pools belong to Antigravity, not the independent subscription
-cards. Older local services fall back to their measured Gemini model rows.
-
-These are **subscription quotas and reset windows**, not network traffic, API billing, or local token counts.
-
-| Card | Source | Important distinction |
-|---|---|---|
-| Claude | Local Claude Code authorization → OAuth usage endpoint | The usage endpoint is not a stable public API |
-| Gemini | Antigravity local service by default; enterprise Code Assist is optional | Not Gemini website quota; Antigravity's Claude/GPT quotas are not mixed into the other cards |
-| Codex | Official `codex app-server` → `account/rateLimits/read` | Uses server-provided windows instead of assuming every plan has the same limits |
-
-## Tested, with boundaries
-
-| Check | Latest local result |
-|---|---|
-| Core tests | **69 passed** |
-| Measured Node modules | **91.91% lines · 88.63% branches · 91.26% functions** |
-| Windows packaged app | Desktop controls, ordering and design checks passed |
-| Authorization integration | Fixture upstream responses; real local IPC, callbacks and child-process paths |
-| Real accounts | Gemini and Codex reads previously verified; Claude's last real check returned HTTP 429 |
-| macOS / Linux | Build targets and CI matrix exist; no local real-device validation |
-
-Coverage describes modules loaded by Node tests, **not the entire app**. Electron entrypoints, provider integration and renderer behavior are checked separately. Antigravity native discovery still has a unit-test gap. See [coverage scope](docs/test-coverage.md) and [Actions](https://github.com/jaylooloomi/quota-island/actions) for remote run status.
-
-<details>
-<summary><b>Run tests and build packages</b></summary>
+Node.js 24 is recommended. Electron + TypeScript; the UI is HTML/CSS/JavaScript. Windows is the locally tested platform. macOS/Linux package targets and CI configuration exist, but the current release provides only a Windows binary.
 
 ```sh
-npm run test:coverage  # rebuild, core tests, enforced coverage thresholds
-npm run test:desktop   # dimensions, controls, sandbox, encryption
-npm run test:auth      # authorization and automatic UI sync
-npm run test:order     # drag, keyboard, restart persistence
-npm run test:design    # overlap, clipping, bars, states, no-scroll layout
-npm run dist:win       # Windows portable executable
-npm run dist:mac       # macOS ZIP
-npm run dist:linux     # Linux AppImage
+npm test
+npm run test:coverage
+npm run dist:win
 ```
 
-CI gates: 85% lines, 80% branches and 85% functions in measured modules. Reports are uploaded as workflow artifacts. Windows packages are unsigned; macOS packages are unsigned and not notarized.
+v1.16.5: **117 unit tests passed** during release preparation. The portable application was observed running with the expected version; Playwright's attachment to the self-extracting launcher timed out and is not reported as a pass. Tests and demo screenshots do not prove that every provider account or service is available.
 
-Build first, then use `npx electron . --demo` for a demo without provider requests. `npm run check:live`, `npm run check:accounts` and `npm run test:live` query real local account data; they are separate from fixture tests.
-
-</details>
-
-<details>
-<summary><b>Credentials and local storage</b></summary>
-
-Claude and Codex credentials remain managed by their official CLIs; the app does not rotate their refresh tokens. Enterprise Google OAuth credentials use native Electron `safeStorage` encryption; plaintext fallback is refused. Tokens are not sent to the renderer or stored in preferences or test reports.
-
-| Platform | App data directory |
-|---|---|
-| Windows | `%APPDATA%/quota-island` |
-| macOS | `~/Library/Application Support/quota-island` |
-| Linux | `~/.config/quota-island` or the configured XDG path |
-
-Linux requires a working Secret Service. To remove the app's enterprise Google credential copy, quit and delete `gemini-session.bin` from its data directory. Disabling monitoring does not log out of an official CLI.
-
-</details>
-
-## FAQ
-
-**Why does Gemini use Antigravity?**  
-The personal source reads Antigravity's Gemini model quotas. Enterprise Code Assist is a separate setting. See [source research](docs/research.md).
-
-**Why does Claude show a countdown instead of a percentage?**  
-The last real request was rate-limited. The app shows that response and retries after the cooldown; it does not invent a quota or treat rate-limiting as a logout.
-
-**Can I switch to the five alternative themes?**  
-Those are [design explorations](docs/design/style-explorations/00-six-styles-comparison.png). Original Dark is implemented; there is no theme switcher yet.
-
-**Is this an official provider app?**  
-No. This is an independent desktop utility. Provider names belong to their respective owners. Unpublished quota interfaces can change upstream.
-
-## Contributing
-
-For additional credential removal and troubleshooting notes, see the [detailed usage notes in Traditional Chinese](docs/usage-guide.zh-TW.md).
-
-Issues and PRs are welcome. Run the coverage gate and desktop checks relevant to your changes. Include your OS and distinguish demo data from real provider responses in bug reports.
-
-README presentation inspired by [i-want-to-sleep](https://github.com/jaylooloomi/i-want-to-sleep): a compact introduction, screenshots, use-case tables and expandable technical details.
+Diagnostic logs record sanitized state transitions, error categories and retry times. They should not contain tokens, cookies or authorization codes. See [visual provenance](docs/readme-v1.16.5/PROVENANCE.md) for the screenshots and generated artwork.
 
 ## License
 
-[MIT](LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md) for fonts and bundled material.
-
-Antigravity account controls: **Switch account** opens the official app, clears old quota, and automatically refreshes after a different account is detected. **Disconnect** only stops monitoring in Quota Pebble and persists across restarts; it does not sign out of Antigravity. Direct native logout is not enabled because no supported external logout entry point was verified for the installed 2.27.0 app.
-
-### Pacing mode
-Choose **Remaining / Used / Pace** without changing the provider row layout. Pacing uses an independent selected quota window, reserves 5% of total quota by default, and divides the available balance by the actual time until reset. Windows under one day use hourly advice. Details let you choose the window and reserve percentage; both persist locally. Missing or expired reset times, stale data and paused monitoring suppress guidance. These are average budgeting suggestions, not additional provider allowances.
-
-Pacing details expand inline beneath the selected provider row. Only one provider is expanded at a time; the other provider cards remain visible and the fixed-width window grows to fit. Collapse the same row to restore the original height.
-
-### Space rescue companions
-
-Use **Invite a roaming pet** for a resident companion: one random smooth 3D character walks left and right, turns and rests until dismissed. The resident setting persists. Six-second rescue scenes take priority, then roaming resumes. See [roaming mode](docs/pet-roaming.md).
-
-Choose **Smooth 3D**, **Pixel animation** or **Classic 3D** in Settings, then preview the crew. The new cat/robot animations use twelve drawings each; the rabbit uses six complete poses in a forward/reverse cycle. Smooth 3D blends frames; pixel mode preserves crisp edges. Choices persist across restarts. See [playable options and comparison video](docs/pet-motion-options.md).
-
-Claude is an orange space cat, Codex an ivory maintenance robot, and Antigravity a lavender star rabbit. Optional idle pets briefly replace the compact brand; quota alerts open a six-second miniature stage at 20%, 5% remaining and exhaustion, without moving quota controls. Settings offers separate switches and **Preview rescue crew**. Account/window/reset-based deduplication survives renderer restarts; animations never refresh quotas. Reduced motion uses a static alert scene and disables idle motion. See [implementation and validation](docs/pet-theater-implementation.md).
-
-### Automatic Hello
-
-Settings provides an automatic Hello switch. At any time of day, each connected, enabled Claude profile is checked independently: the five-hour usage must explicitly be 0%, and its reset must be absent or expired. An active reset timestamp, even with 0% usage, prevents sending. Missing session data is never treated as unused quota. It uses the official CLI and Haiku to send one short Hello, which consumes quota and can establish a new five-hour window; it cannot reset an active window early.
-
-Attempts are at least five hours apart per profile, with a durable claim to prevent duplicates across restart or uncertain outcomes. The app must remain running; no wake or fixed morning schedule is used. Unavailable, signed-out, stale or exhausted profiles do not send. Settings shows outcomes; quota is refreshed after success, and a fresh server reset is required before claiming the window is confirmed. Tests use a fixture CLI without spending live quota.
-
-References: [Claude usage limits](https://support.claude.com/en/articles/11647753-how-do-usage-and-length-limits-work), [CLI reference](https://code.claude.com/docs/en/cli-reference).
-
-### Multiple Claude accounts
-Use **＋ Add account** below the cards to name and sign into an additional Claude account. Each account uses a separate official Claude Code config directory under the local app data folder. Quotas, cooldowns, pacing preferences, visibility, ordering and logout are isolated. Removing an added account deletes only its managed local profile. Credentials stay in the official CLI profile and never enter renderer state or account metadata. Select the intended account in the browser. The fixed-size compact Claude slot rotates visible accounts every five seconds and shows 1/2, 2/2, etc. Hover pauses rotation and shows the account name, weekly quota, reset time and errors; click switches accounts, while drag still reorders providers. Rotation uses cached readings and makes no quota requests. The expanded panel lists every account. This release adds multiple Claude accounts; additional Codex and Antigravity profiles are not offered.
-
-Drag near a screen edge or corner to snap the visible island to the display work area. Expand, collapse and settings changes keep the selected edge anchored. Drag away to release the anchor; docking is saved across restarts.
+[MIT](LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md).
