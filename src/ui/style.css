@@ -370,7 +370,6 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
 #pet-stage .pet-sprite{position:absolute;bottom:9px;transition:transform 1s ease-in-out}
 #pet-stage[data-phase=rescue] [data-pet=codex]{transform:translateY(-2px)}
 #pet-stage[data-phase=rescue] [data-pet=gemini]{animation:pet-hop 1.1s ease-in-out 2}
-.pet-beacon{position:absolute;right:10px;bottom:14px;font-size:18px;color:#e3b96a;text-shadow:0 0 12px #ffb34a;pointer-events:none}
 @keyframes pet-wander{0%{transform:translateX(-17px) scale(.85);opacity:0}15%{opacity:1}40%{transform:translateX(8px) translateY(-2px)}65%{transform:translateX(-4px)}85%{opacity:1}100%{transform:translateX(15px) scale(.9);opacity:0}}
 @keyframes pet-hop{50%{transform:translateY(-5px) rotate(4deg)}}
 @media(prefers-reduced-motion:reduce){.pet-sprite{animation:none!important;transition:none!important}.brand-pet{display:none!important}}
