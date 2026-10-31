@@ -422,7 +422,6 @@ function render(next){
   $('pet-placement').value=state.settings.petPlacement??'stage';
   $('pet-background').value=state.settings.petBackground??'meteor';
   $('island').dataset.petBackground=state.settings.petBackground??'meteor';
-  $('pet-style').value=state.settings.petStyle??'smooth';
   $('morningHelloEnabled').checked=state.settings.morningHelloEnabled===true;
   $('google-source').value=state.settings.googleSource;$('google-source').disabled=!!state.auth.gemini?.pending;
   for(const input of document.querySelectorAll('[data-enable]'))input.checked=state.settings.enabled[input.dataset.enable];
@@ -514,7 +513,6 @@ for(const key of ['autoStart','alwaysOnTop','notifications'])$(key).addEventList
 for(const key of ['petIdle','petAlerts','petRoam'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 $('pet-placement').addEventListener('change',event=>api.settings({petPlacement:event.target.value}));
 $('pet-background').addEventListener('change',event=>api.settings({petBackground:event.target.value}));
-$('pet-style').addEventListener('change',event=>api.settings({petStyle:event.target.value}));
 $('pet-idle-preview').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.previewIdle($('pet-character').value),300);});
 $('pet-preview').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.preview(),300);});
 $('pet-action-preview').addEventListener('click',async()=>{await api.settings({petRoam:true});await api.expand(false);setTimeout(()=>window.QuotaPets.action($('pet-action').value,$('pet-character').value),300);});

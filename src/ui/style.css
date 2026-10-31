@@ -345,11 +345,9 @@ footer{display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);colu
 #roam-pet .pet-canvas{display:block;transform-origin:center}
 #pet-stage[data-phase=roam]>.pet-sprite{visibility:hidden}
 .pet-canvas{display:none;width:100%;height:100%;pointer-events:none}
-.island[data-pet-style=smooth] .pet-sprite,.island[data-pet-style=pixel] .pet-sprite{background-image:none}
-.island[data-pet-style=smooth] .pet-canvas,.island[data-pet-style=pixel] .pet-canvas{display:block}
-.island[data-pet-style=pixel] .pet-canvas{image-rendering:pixelated}
+.island[data-pet-style=smooth] .pet-sprite{background-image:none}
+.island[data-pet-style=smooth] .pet-canvas{display:block}
 .island[data-pet-style=smooth] #pet-stage .pet-sprite{animation:pet-breathe 2.6s ease-in-out infinite;transform-origin:bottom center;transition:none;transform:none}
-.island[data-pet-style=pixel] #pet-stage .pet-sprite{animation:none;transition:none;transform:none}
 @keyframes pet-breathe{50%{transform:translateY(-1px) scaleY(1.015)}}
 @media(prefers-reduced-motion:reduce){.island[data-pet-style=smooth] #pet-stage .pet-sprite{animation:none;transform:none}}
 .settings{padding:12px 15px}.settings label{padding:5px 0}.settings p{font-size:10px;line-height:1.5;margin:6px 0}.settings .sources-title{margin-top:10px}
@@ -450,24 +448,17 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 .island[data-pet-background=classic] .pet-sky::before,.island[data-pet-background=classic] .pet-sky::after{display:none}
 .island[data-pet-background=classic] .pet-ground{background:linear-gradient(#494039,#29272a);box-shadow:0 -1px 0 #b3875430}
 
-.island[data-pet-style=pixel] #pet-food{background-image:url('pets/pixel-props.png');image-rendering:pixelated;filter:none}
-.island[data-pet-style=pixel][data-pet-background=meteor] #pet-stage{background-image:linear-gradient(#04102026,#04102012),url('pets/pixel-meteor.png');image-rendering:pixelated}
-.island[data-pet-style=pixel] #roam-pet .pet-canvas{image-rendering:pixelated}
 
 /* A flat foreground path anchors feet independently from the distant landscape. */
 .island #pet-stage .pet-ground{height:25px;border-radius:0;background:repeating-linear-gradient(172deg,transparent 0 17px,#b6bddd09 18px 19px,transparent 20px 33px),linear-gradient(#263449,#172436 42%,#101a2a);border-top:2px solid #7998b8;box-shadow:0 -2px 0 #101c2cc9,0 -6px 12px #08122288}
 .island[data-pet-background=classic] #pet-stage .pet-ground{background:linear-gradient(#49413b,#29272a);border-top-color:#9d8c78}
 #roam-pet::before,#pet-stage>.pet-sprite::before{content:'';position:absolute;left:22%;bottom:2px;width:56%;height:5px;border-radius:50%;background:#02081299;filter:blur(2px);pointer-events:none}
-.island[data-pet-style=pixel] #pet-stage .pet-ground{background:repeating-linear-gradient(0deg,#16263a 0 3px,#1c2d42 3px 6px);border-top:2px solid #7797af;box-shadow:0 -2px 0 #101c2c}
-.island[data-pet-style=pixel] #roam-pet::before,.island[data-pet-style=pixel] #pet-stage>.pet-sprite::before{filter:none;border-radius:0;height:3px}
 
 #roam-pet[data-action=sad][data-emotion-phase=sigh]::after{content:var(--pet-sigh);position:absolute;left:58px;top:25px;padding:2px 5px;border:1px solid #a1b9d855;border-radius:7px;background:#101d32df;color:#d2e6f7;font-size:10px;white-space:nowrap;animation:pet-sigh .9s ease-out both}
 @keyframes pet-sigh{from{opacity:.3;transform:translate(0,2px)}to{opacity:1;transform:translate(4px,-2px)}}
-.island[data-pet-style=pixel] #roam-pet[data-action=sad]::after{border-radius:1px;animation-timing-function:steps(3)}
 
 .compact-brand.pet-resident .brand-pet{left:50%;margin-left:-24px;animation:pet-title-breathe 3s ease-in-out infinite;opacity:1}
 @keyframes pet-title-breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}
-.island[data-pet-style=pixel] .compact-brand.pet-resident .brand-pet{animation:none;transform:none}
 @media(prefers-reduced-motion:reduce){.compact-brand.pet-resident .brand-pet{display:block!important;animation:none;transform:none;opacity:1}}
 
 .settings-pet-selectors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 10px;margin-bottom:5px}.settings .settings-pet-selectors label{flex-direction:column;align-items:stretch;gap:3px;min-width:0;font-size:11px}.settings-pet-selectors select{width:100%;max-width:100%}
