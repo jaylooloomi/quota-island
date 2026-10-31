@@ -269,7 +269,6 @@ else {
       const timer=setTimeout(()=>{if(!quitting){if(id==='claude')void poller.refresh('claude',true);else void accounts.refreshAccount(id);}},5500);timer.unref();
     },publish);
     credentialWatch = new CredentialWatch({
-      claude: [path.join(process.env.CLAUDE_CONFIG_DIR || path.join(homedir(), '.claude'), '.credentials.json'),path.join(process.env.CLAUDE_CONFIG_DIR || path.join(homedir(), '.claude'),'quota-pebble-usage.json')],
       gemini: [path.join(app.getPath('userData'), 'gemini-session.bin'), path.join(homedir(), '.gemini', 'oauth_creds.json')],
     }, async (id, modifiedAt) => {
       if (!poller.states[id].enabled || connections.states[id]?.pending) return;

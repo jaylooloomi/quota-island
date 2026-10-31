@@ -1,4 +1,3 @@
-import {stat} from 'node:fs/promises';
 import {mkdirSync,readFileSync,writeFileSync,renameSync,rmSync} from 'node:fs';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
@@ -8,7 +7,7 @@ import {Providers} from './providers';
 import {ProviderError} from './model';
 type Profile={id:string;label:string;enabled:boolean;visible:boolean;reserve:number;window:string;limits?:unknown};
 type Service=Pick<Providers,'read'|'login'|'submitCode'|'cancelLogin'|'logout'|'close'>&Partial<Pick<Providers,'hello'>>;
-type Entry={profile:Profile;service:Service;poller:Poller;connections:Connections;removed:boolean;snapshotStamp?:number};
+type Entry={profile:Profile;service:Service;poller:Poller;connections:Connections;removed:boolean};
 const validId=(id:unknown):id is string=>typeof id==='string'&&/^claude-account-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id);
 export class Accounts {
   private entries=new Map<string,Entry>();
@@ -59,7 +58,7 @@ export class Accounts {
     }
     return {accounts,providers,auth,enabled,visible,reservePercent,paceWindows};
   }
-  async tick(manual=false){await Promise.all([...this.entries.values()].map(async e=>{let stamp=0;try{stamp=(await stat(path.join(this.directory(e.profile.id),'quota-pebble-usage.json'))).mtimeMs;}catch{}const changed=stamp>0&&stamp!==e.snapshotStamp;e.snapshotStamp=stamp;await e.poller.refresh('claude',manual||changed);}));}
+  async tick(manual=false){await Promise.all([...this.entries.values()].map(e=>e.poller.refresh('claude',manual)));}
   async hello(id:string,cwd:string){const e=this.entry(id);if(!e.profile.enabled||e.connections.states.claude?.pending||!e.service.hello)throw new ProviderError('auth','此帳號暫時無法執行 Hello');await e.service.hello(cwd);}
   refreshAccount(id:string){if(this.has(id))return this.entry(id).poller.refresh('claude',true);}
   login(id:unknown){const e=this.entry(id);e.profile.enabled=true;e.poller.setEnabled('claude',true);this.save();return e.connections.login('claude');}
