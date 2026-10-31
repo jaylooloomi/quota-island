@@ -515,7 +515,7 @@ $('pet-placement').addEventListener('change',event=>api.settings({petPlacement:e
 $('pet-background').addEventListener('change',event=>api.settings({petBackground:event.target.value}));
 $('pet-idle-preview').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.previewIdle($('pet-character').value),300);});
 $('pet-preview').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.preview(),300);});
-$('pet-action-preview').addEventListener('click',async()=>{await api.settings({petRoam:true});await api.expand(false);setTimeout(()=>window.QuotaPets.action($('pet-action').value,$('pet-character').value),300);});
+$('pet-action-preview').addEventListener('click',async()=>{const action=$('pet-action').value,role=$('pet-character').value;if(action!=='rescue')await api.settings({petRoam:true});await api.expand(false);setTimeout(()=>action==='rescue'?window.QuotaPets.preview():window.QuotaPets.action(action,role),300);});
 $('pet-roam').addEventListener('click',async()=>{await api.settings({petRoam:true});await api.expand(false);setTimeout(()=>window.QuotaPets.roam($('pet-character').value),300);});
 $('morningHelloEnabled').addEventListener('change',event=>api.settings({morningHelloEnabled:event.target.checked}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
