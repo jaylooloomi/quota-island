@@ -2,6 +2,8 @@
 <p align="center"><b>三家 AI 訂閱，一顆桌面小島。</b><br>額度一眼掌握，工作有配速，桌上有陪伴。</p>
 <p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">下載 Windows 版</a> · <a href="README.md">English</a> · <a href="LICENSE">MIT</a></p>
 
+<p align="center"><img src="docs/readme-v1.16.5/stage-zh-TW.png" alt="上面掌握額度，下面有個小夥伴。" width="464"><br><b>上面掌握額度，下面有個小夥伴。</b><br><sub>App 實際截圖 · 展示資料</sub></p>
+
 ![Quota Pebble 核心功能介紹圖](docs/readme-v1.16.5/overview-zh-TW.png)
 
 *以 v1.16.5 實際截圖為參考繪製的功能介紹圖；圖片中的百分比均為展示資料。*

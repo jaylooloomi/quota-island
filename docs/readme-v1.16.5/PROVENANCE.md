@@ -8,3 +8,5 @@
 - Editorial structure reference: [i-want-to-sleep README](https://github.com/jaylooloomi/i-want-to-sleep): short product introduction, use-case table, three-step setup and practical limits. Its installation commands and permissions were not adopted.
 
 The screenshots document UI behavior, not provider availability or successful authorization of every account. Model-generated overviews may simplify fine UI details; refer to the unedited screenshots for the actual interface.
+
+- `stage-en.png`, `stage-zh-TW.png`: actual packaged-app screenshots from `scripts/readme-stage-screenshots.cjs`, with a Claude cat resident on the meteor-forest lower stage. The capture waits for the stage and native window height before taking the screenshot.

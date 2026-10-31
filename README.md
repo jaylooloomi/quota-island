@@ -2,6 +2,8 @@
 <p align="center"><b>Three AI subscriptions. One tiny island.</b><br>See your quota. Pace your day. Keep a little companion nearby.</p>
 <p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">Download for Windows</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="LICENSE">MIT</a></p>
 
+<p align="center"><img src="docs/readme-v1.16.5/stage-en.png" alt="Your quotas above. A little companion below." width="464"><br><b>Your quotas above. A little companion below.</b><br><sub>Actual app screenshot · demo data</sub></p>
+
 ![Quota Pebble illustrated feature overview](docs/readme-v1.16.5/overview-en.png)
 
 *Illustrated overview generated from actual v1.16.5 screenshots. All pictured percentages are demo data.*
