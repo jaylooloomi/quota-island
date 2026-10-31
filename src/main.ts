@@ -32,6 +32,8 @@ function validOrder(raw: unknown): raw is string[] {
 }
 let win: BrowserWindow;
 let tray: Tray;
+let topTimer:NodeJS.Timeout|undefined;
+function maintainTop(){if(!win||win.isDestroyed()||!win.isVisible()||!settings.alwaysOnTop)return;if(!win.isAlwaysOnTop())win.setAlwaysOnTop(true);win.moveTop();}
 let expanded = false;
 let quitting = false;
 let paused = false;
@@ -177,7 +179,7 @@ function installHandlers() {
         if(settings.enabled[id]!==patch.enabled[id])diagnostics?.sourceToggle(id,patch.enabled[id]);
         settings.enabled[id] = patch.enabled[id]; poller.setEnabled(id, patch.enabled[id]);
       }
-      win.setAlwaysOnTop(settings.alwaysOnTop, 'floating'); saveSettings(); publish();
+      win.setAlwaysOnTop(settings.alwaysOnTop);maintainTop(); saveSettings(); publish();
       if (sourceChanged) void poller.authenticated('gemini');
       if (!paused) void poller.tick();
     },
@@ -292,7 +294,10 @@ else {
     win.on('close', event => { if (!quitting) { event.preventDefault(); win.hide(); } });
     win.on('will-move',()=>{win.webContents.send('pet-suspend','drag');expectedBounds=undefined;settings.dock=undefined;userDragging=true;});
     win.on('hide',()=>win.webContents.send('pet-suspend','hide'));
-    win.on('show',()=>win.webContents.send('pet-suspend','resume'));
+    win.on('show',()=>{maintainTop();win.webContents.send('pet-suspend','resume');});
+    win.on('blur',()=>{setTimeout(maintainTop,100);});
+    win.on('restore',maintainTop);
+    topTimer=setInterval(maintainTop,2000);
     win.on('move',()=>{
       const b=win.getBounds();if(expectedBounds&&b.x===expectedBounds.x&&b.y===expectedBounds.y)return;
       if(process.platform==='win32'&&userDragging)return;
@@ -315,6 +320,6 @@ else {
       if(!demo&&morningHello){const current:any=snapshot();void morningHello.tick(settings.morningHelloEnabled,settings.morningHelloTime,['claude',...current.accounts.map((a:any)=>a.id)].map((id:string)=>({id,state:current.providers[id],pending:current.auth[id]?.pending})),paused);}
     }, 5000);
   });
-  app.on('before-quit', () => { quitting = true; clearInterval(interval); clearTimeout(dragTimer); accounts?.close();providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
+  app.on('before-quit', () => { quitting = true; clearInterval(interval);clearInterval(topTimer); clearTimeout(dragTimer); accounts?.close();providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
   app.on('window-all-closed', () => { if (quitting) app.quit(); });
 }
