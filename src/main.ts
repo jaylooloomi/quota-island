@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray, globalShortcut, powerMonitor, Notification, safeStorage } from 'electron';
 import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'node:fs';
 import path from 'node:path';
+import {syncLoginStartup} from './login-startup';
 import { Poller } from './poller';
 import { Providers } from './providers';
 import { Gemini, GeminiVault } from './gemini';
@@ -22,8 +23,8 @@ if (testing) {
   if (!testData) throw new Error('QUOTA_TEST_DATA required');
   app.setPath('userData', testData);
 }
-type Settings = { petBackground:'meteor'|'nebula'|'classic'; petRoam:boolean; petStyle:'classic'|'smooth'|'pixel'; petIdle:boolean;petAlerts:boolean; morningHelloEnabled:boolean; morningHelloTime:string; locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; pacing: boolean; reserveDefaultsVersion:3; reservePercent: Record<ProviderId, number>; paceWindows: Partial<Record<ProviderId, string>>; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: string[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; dock?:Dock; x?: number; y?: number };
-let settings: Settings = { petBackground:'meteor', petRoam:false, petStyle:demo?'classic':'smooth', petIdle:!demo,petAlerts:!demo, morningHelloEnabled:true, morningHelloTime:'08:00', locale:'zh-TW', remaining: true, pacing:false, reserveDefaultsVersion:3, reservePercent:{claude:10,codex:10,gemini:10}, paceWindows:{}, alwaysOnTop: true, notifications: false, visible: { claude:true, codex:true, gemini:true }, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
+type Settings = { autoStart:boolean; petBackground:'meteor'|'nebula'|'classic'; petRoam:boolean; petStyle:'classic'|'smooth'|'pixel'; petIdle:boolean;petAlerts:boolean; morningHelloEnabled:boolean; morningHelloTime:string; locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; pacing: boolean; reserveDefaultsVersion:3; reservePercent: Record<ProviderId, number>; paceWindows: Partial<Record<ProviderId, string>>; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: string[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; dock?:Dock; x?: number; y?: number };
+let settings: Settings = { autoStart:false, petBackground:'meteor', petRoam:false, petStyle:demo?'classic':'smooth', petIdle:!demo,petAlerts:!demo, morningHelloEnabled:true, morningHelloTime:'08:00', locale:'zh-TW', remaining: true, pacing:false, reserveDefaultsVersion:3, reservePercent:{claude:10,codex:10,gemini:10}, paceWindows:{}, alwaysOnTop: true, notifications: false, visible: { claude:true, codex:true, gemini:true }, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
 function validOrder(raw: unknown): raw is string[] {
   return Array.isArray(raw) && raw.length >= 3 && raw.length <= 23 && new Set(raw).size === raw.length && providerIds.every(id=>raw.includes(id)) && raw.every(id => providerIds.includes(id) || (typeof id === 'string' && /^claude-account-[0-9a-f-]{36}$/.test(id)));
 }
@@ -66,7 +67,7 @@ function readSettings() {
     for(const id of providerIds){if(typeof s.reservePercent?.[id]==='number'&&Number.isFinite(s.reservePercent[id])&&s.reservePercent[id]>=0&&s.reservePercent[id]<=100)settings.reservePercent[id]=s.reserveDefaultsVersion===2&&s.reservePercent[id]===5?10:s.reservePercent[id];if(typeof s.paceWindows?.[id]==='string'&&s.paceWindows[id].length<=160)settings.paceWindows[id]=s.paceWindows[id];}
     for (const id of providerIds) if (typeof s.visible?.[id] === 'boolean') settings.visible[id] = s.visible[id];
     if (s.googleSource === 'antigravity' || s.googleSource === 'code_assist') settings.googleSource=s.googleSource;
-    for (const key of ['remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof s[key] === 'boolean' && (key!=='remaining'||s.presentationVersion===2)) settings[key] = s[key];
+    for (const key of ['autoStart','remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof s[key] === 'boolean' && (key!=='remaining'||s.presentationVersion===2)) settings[key] = s[key];
     for (const id of providerIds) if (typeof s.enabled?.[id] === 'boolean') settings.enabled[id] = s.enabled[id];
     if (Number.isFinite(s.x) && Number.isFinite(s.y)) { settings.x = s.x; settings.y = s.y; }
   } catch { /* First run or invalid preferences: use defaults. */ }
@@ -153,6 +154,7 @@ function installHandlers() {
     'open-provider': async (_event: any, id: unknown) => { if (typeof id === 'string' && external[id]) await shell.openExternal(external[id]!); },
     'settings': (_event: any, patch: any) => {
       if (!patch || typeof patch !== 'object') return;
+      if(typeof patch.autoStart==='boolean')patch={...patch,autoStart:syncLoginStartup(app,patch.autoStart,{platform:process.platform,packaged:app.isPackaged,demo,testing,executable:process.execPath})};
       if(typeof patch.morningHelloEnabled==='boolean')settings.morningHelloEnabled=patch.morningHelloEnabled;
       if(typeof patch.morningHelloTime==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(patch.morningHelloTime))settings.morningHelloTime=patch.morningHelloTime;
       if(['meteor','nebula','classic'].includes(patch.petBackground))settings.petBackground=patch.petBackground;
@@ -164,7 +166,7 @@ function installHandlers() {
       if (validOrder(patch.order)&&patch.order.every((id:string)=>providerIds.includes(id as ProviderId)||accounts.has(id))) settings.order = [...patch.order];
       const sourceChanged = !connections.states.gemini?.pending && (patch.googleSource === 'antigravity' || patch.googleSource === 'code_assist') && patch.googleSource !== settings.googleSource;
       if (sourceChanged) { settings.googleSource=patch.googleSource; delete connections.states.gemini; }
-      for (const key of ['remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof patch[key] === 'boolean') settings[key] = patch[key];
+      for (const key of ['autoStart','remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof patch[key] === 'boolean') settings[key] = patch[key];
       if (patch.enabled && typeof patch.enabled === 'object') for (const id of providerIds) if (typeof patch.enabled[id] === 'boolean') {
         if(settings.enabled[id]!==patch.enabled[id])diagnostics?.sourceToggle(id,patch.enabled[id]);
         settings.enabled[id] = patch.enabled[id]; poller.setEnabled(id, patch.enabled[id]);
@@ -239,7 +241,9 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { if (win) { win.show(); win.focus(); } });
   app.whenReady().then(async () => {
-    readSettings();diagnostics=new Diagnostics(path.join(app.getPath('userData'),demo?'demo-logs':'logs'));diagnostics.startup(app.getVersion(),settings.enabled);
+    readSettings();
+    if(!demo&&!testing){if(process.argv.includes('--enable-autostart'))settings.autoStart=true;try{settings.autoStart=syncLoginStartup(app,settings.autoStart,{platform:process.platform,packaged:app.isPackaged,demo,testing,executable:process.execPath});saveSettings();}catch{settings.autoStart=false;}}
+    diagnostics=new Diagnostics(path.join(app.getPath('userData'),demo?'demo-logs':'logs'));diagnostics.startup(app.getVersion(),settings.enabled);
     providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource);
     poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish);
     if(!demo){try{poller.restoreRateLimits(JSON.parse(readFileSync(path.join(app.getPath('userData'),'provider-cooldowns.json'),'utf8')));}catch{/* No prior cooldowns. */}}

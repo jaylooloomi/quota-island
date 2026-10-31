@@ -415,7 +415,8 @@ function render(next){
   $('cards').setAttribute('role','tabpanel');$('cards').setAttribute('aria-labelledby',`tab-${currentView}`);
   const healthy=!state.paused&&ids.some(id=>ready(state.providers[id]));$('live-dot').classList.toggle('off',!healthy);
   document.querySelector('.footer-dot').classList.toggle('off',!healthy);$('footer-status').textContent=state.paused?'已暫停同步':'自動同步';
-  for(const key of ['alwaysOnTop','notifications','petIdle','petAlerts','petRoam'])$(key).checked=state.settings[key];
+  for(const key of ['autoStart','alwaysOnTop','notifications','petIdle','petAlerts','petRoam'])$(key).checked=state.settings[key];
+  $('autoStart').disabled=!['win32','darwin'].includes(state.platform);
   $('pet-background').value=state.settings.petBackground??'meteor';
   $('island').dataset.petBackground=state.settings.petBackground??'meteor';
   $('pet-style').value=state.settings.petStyle??'smooth';
@@ -506,7 +507,7 @@ document.addEventListener('pointerdown',event=>{if(footerPopover&&!event.target.
 $('compact-refresh').addEventListener('click',()=>api.refresh());
 $('close-quota-details').addEventListener('click',()=>{quotaDetailsOpen=false;render(state);});
 $('language').addEventListener('change',event=>api.settings({locale:event.target.value}));
-for(const key of ['alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
+for(const key of ['autoStart','alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 for(const key of ['petIdle','petAlerts','petRoam'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 $('pet-background').addEventListener('change',event=>api.settings({petBackground:event.target.value}));
 $('pet-style').addEventListener('change',event=>api.settings({petStyle:event.target.value}));
