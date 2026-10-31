@@ -1,6 +1,6 @@
 import {openClaudeTerminal} from './claude-terminal';
 import {readStatusline} from './claude-statusline';
-import { readFile } from 'node:fs/promises';
+import { readFile,stat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { homedir } from 'node:os';
 import path from 'node:path';
@@ -81,12 +81,14 @@ export class Providers {
       });
       return;
     }
-    await this.claudeLogin.start(info => {
+    const configDir=this.claudeConfigDir||process.env.CLAUDE_CONFIG_DIR||path.join(homedir(),'.claude'),credentialFile=path.join(configDir,'.credentials.json');
+    const before=await stat(credentialFile).then(s=>s.mtimeMs).catch(()=>0);
+    try{await this.claudeLogin.start(info => {
       progress(info);
       // A piped CLI can print a manual authorization URL without launching it.
       if (info.browserUrl) void openUrl(info.browserUrl).catch(() => {});
-    });
-    await openClaudeTerminal(this.claudeConfigDir||process.env.CLAUDE_CONFIG_DIR||path.join(homedir(),'.claude'));
+    });}catch(error){const after=await stat(credentialFile).then(s=>s.mtimeMs).catch(()=>0);let verified=false;if(after>before){try{const cmd=this.claudeCommand();const result=await exec(cmd.file,[...cmd.args,'auth','status','--json'],{env:cmd.env,windowsHide:true,timeout:15000,maxBuffer:65536});verified=JSON.parse(result.stdout).loggedIn===true;}catch{}}if(!verified)throw error;}
+    await openClaudeTerminal(configDir).catch(()=>progress({message:'帳號已登入，請按「開啟 Claude Code」啟動本機配額同步'}));
   }
   submitCode(id: ProviderId, code: unknown) { if (id !== 'claude') throw new ProviderError('auth', '此來源不接受授權碼'); this.claudeLogin.submitCode(code); }
   cancelLogin(id: ProviderId) { if (id === 'claude') this.claudeLogin.close(); }
