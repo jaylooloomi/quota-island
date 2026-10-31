@@ -15,8 +15,8 @@
     if(manual)stop();else if(playing||roaming)return;
     stop();roaming=true;roamOverride=!!initialAction;if(manual)roamWanted=true;const ticket=++roamTicket,roles=['claude','codex','gemini','octopus'].filter(id=>id!==lastRole),role=['claude','codex','gemini','octopus'].includes(requested)?requested:roles[Math.floor(Math.random()*roles.length)];lastRole=role;
     const isPixel=false;roamPet.dataset.renderStyle='smooth';
-    const resources=Promise.all([window.QuotaPetAnimation.load('walk'),window.QuotaPetAnimation.load('smooth'),window.QuotaPetAnimation.loadRest(),window.QuotaPetAnimation.loadCare(),window.QuotaPetAnimation.loadSad()]);
-    resources.then(([frames,greetings,rest,care,sad])=>{
+    const resources=Promise.all([window.QuotaPetAnimation.load('walk'),window.QuotaPetAnimation.load('smooth'),window.QuotaPetAnimation.loadRest(),window.QuotaPetAnimation.loadCare(),window.QuotaPetAnimation.loadSad(),window.QuotaPetAnimation.loadRecharge()]);
+    resources.then(([frames,greetings,rest,care,sad,recharge])=>{
       if(ticket!==roamTicket||!roaming)return;
       const stage=$('pet-stage');stage.dataset.phase='roam';stage.title=text('點擊舞台投食');stage.hidden=false;roamPet.hidden=false;roamPet.dataset.role=role;$('island').classList.add('pet-playing');
       $('pet-caption').textContent=`${text('太空散步')} · ${role==='claude'?'Claude':role==='codex'?'Codex':role==='octopus'?text('小章魚'):'Antigravity'}`;$('pet-caption').title=text('隨機角色陪伴，不代表帳號配額');$('pet-message').style.width='68px';$('pet-close').setAttribute('aria-label',text('關閉散步'));void window.quota.petHeight(112);
@@ -35,7 +35,8 @@
         let list=frames[role],sample=window.QuotaPetAnimation.sample(isPixel?'pixel-walk':'walk',role,elapsed,reduced.matches);
         if(!walking){
           const age=reduced.matches?0:action.elapsed*1000;
-          if(action.mode==='hello'||action.mode==='recharge'){list=greetings[role];sample=window.QuotaPetAnimation.sample(isPixel?'pixel':role==='octopus'?'hello':'smooth',role,age,reduced.matches);}
+          if(action.mode==='recharge'){list=recharge[role];const phase=age%3600/3600*5,i=Math.floor(phase);sample={frame:i,next:Math.min(5,i+1),mix:reduced.matches?0:phase-i};}
+          else if(action.mode==='hello'){list=greetings[role];sample=window.QuotaPetAnimation.sample(isPixel?'pixel':role==='octopus'?'hello':'smooth',role,age,reduced.matches);}
           else if(action.mode==='sad'){list=sad[role];sample=window.QuotaPetAnimation.sadPose(age,reduced.matches,isPixel);}
           else if(action.mode==='drink'||action.mode==='eat'){list=care[role];const phase=age%2400/2400*6,i=Math.floor(phase),offset=action.mode==='eat'?6:0;sample={frame:offset+i,next:offset+(i+1)%6,mix:reduced.matches?0:phase-i};}
           else if(role==='octopus'||isPixel){list=rest[role];const phase=age%3000/3000*6,i=Math.floor(phase),offset=action.mode==='sleep'?6:0;sample={frame:offset+i,next:offset+(i+1)%6,mix:reduced.matches?0:phase-i};}
