@@ -57,3 +57,5 @@ test('canceling verification settles login and unrelated output does not reuse a
 });
 
 test('new verified credentials complete login even when CLI stays waiting for manual code',async()=>{const login=new ClaudeLogin(command("console.log('Paste code here');setInterval(()=>{},1000)"));let checked=0;await login.start(()=>{},5000,async()=>++checked>=1);assert.equal(checked,1);assert.throws(()=>login.submitCode('OLD-CODE'),/沒有等待授權碼/);});
+
+test('manual auth submits terminal Return rather than a literal line feed',async()=>{const login=new ClaudeLogin(command("console.log('Paste code here');process.stdin.on('data',v=>process.exit(v[v.length-1]===13&&!v.includes(10)?0:1))"));let ready;const waiting=new Promise(r=>ready=r);const job=login.start(p=>{if(p.codeRequired)ready()},5000);await waiting;login.submitCode('TEST-CODE');await job;});

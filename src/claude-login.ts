@@ -60,7 +60,7 @@ export class ClaudeLogin {
   submitCode(raw: unknown) {
     if (!this.child || !this.codeRequired) throw new ProviderError('auth', '目前沒有等待授權碼的 Claude 登入');
     if (typeof raw !== 'string' || raw.length > 4096 || !/^[A-Za-z0-9_.~#\-]+$/.test(raw.trim())) throw new ProviderError('auth', '請貼上授權頁提供的完整授權碼');
-    this.child.stdin.write(raw.trim() + '\n');
+    this.child.stdin.write(raw.trim() + '\r');
     this.codeRequired = false; this.clearOutput?.();
     if (this.verificationTimer) clearTimeout(this.verificationTimer);
     this.verificationTimer = setTimeout(() => {
