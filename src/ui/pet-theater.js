@@ -7,13 +7,14 @@
   const brandPet=document.createElement('span');brandPet.className='pet-sprite brand-pet';brandPet.setAttribute('aria-hidden','true');brand.append(brandPet);
   let nativeSuspended=false,roaming=false,roamWanted=false,roamRequest=0,roamTicket=0,lastRole=null;
   const roamPet=document.createElement('span');roamPet.id='roam-pet';roamPet.hidden=true;roamPet.setAttribute('aria-hidden','true');const roamCanvas=document.createElement('canvas');roamCanvas.width=144;roamCanvas.height=144;roamCanvas.className='pet-canvas';roamPet.append(roamCanvas);$('pet-stage').append(roamPet);
-  function roam(manual=false){
-    if(!state||state.expanded||document.hidden||state.paused||playing||roaming)return;
-    stop();roaming=true;if(manual)roamWanted=true;const ticket=++roamTicket,roles=['claude','codex','gemini'].filter(id=>id!==lastRole),role=roles[Math.floor(Math.random()*roles.length)];lastRole=role;
+  function roam(manual=false,requested){
+    if(!state||state.expanded||document.hidden||state.paused)return;
+    if(manual)stop();else if(playing||roaming)return;
+    stop();roaming=true;if(manual)roamWanted=true;const ticket=++roamTicket,roles=['claude','codex','gemini','octopus'].filter(id=>id!==lastRole),role=['claude','codex','gemini','octopus'].includes(requested)?requested:roles[Math.floor(Math.random()*roles.length)];lastRole=role;
     window.QuotaPetAnimation.load('walk').then(frames=>{
       if(ticket!==roamTicket||!roaming)return;
       const stage=$('pet-stage');stage.dataset.phase='roam';stage.hidden=false;roamPet.hidden=false;roamPet.dataset.role=role;$('island').classList.add('pet-playing');
-      $('pet-caption').textContent=`${text('太空散步')} · ${role==='claude'?'Claude':role==='codex'?'Codex':'Antigravity'}`;$('pet-caption').title=text('隨機角色陪伴，不代表帳號配額');$('pet-message').style.width='68px';$('pet-close').setAttribute('aria-label',text('關閉散步'));void window.quota.petHeight(112);
+      $('pet-caption').textContent=`${text('太空散步')} · ${role==='claude'?'Claude':role==='codex'?'Codex':role==='octopus'?text('小章魚'):'Antigravity'}`;$('pet-caption').title=text('隨機角色陪伴，不代表帳號配額');$('pet-message').style.width='68px';$('pet-close').setAttribute('aria-label',text('關閉散步'));void window.quota.petHeight(112);
       const path=window.QuotaPetWander.create(stage.clientWidth);let last=performance.now(),elapsed=0,previous='';
       const step=time=>{
         roamRequest=0;if(!roaming||document.hidden)return;
@@ -26,21 +27,20 @@
       step(last);
     }).catch(()=>{if(ticket===roamTicket)stop();});
   }
-  let frameRequest=0,animationStart=0,atlas=null,style='classic',assetVersion=0;
+  let frameRequest=0,animationStart=0,atlas=null,style=null,assetVersion=0;
   const actors=[brandPet,...$('pet-stage').querySelectorAll('.pet-sprite')];
   for(const el of actors){const canvas=document.createElement('canvas');canvas.width=144;canvas.height=144;canvas.className='pet-canvas';canvas.setAttribute('aria-hidden','true');el.append(canvas);}
   function draw(time){
-    frameRequest=0;if((!playing&&!idle)||document.hidden||style==='classic'||!atlas)return;
+    frameRequest=0;if((!playing&&!idle)||document.hidden||!atlas)return;
     const elapsed=time-animationStart;
-    for(const el of actors){if(el===brandPet?!idle:!playing||el.hidden)continue;const provider=el.dataset.actor??el.dataset.pet,frames=atlas[provider];if(!frames)continue;const sample=window.QuotaPetAnimation.sample(style,provider,elapsed,reduced.matches),canvas=el.querySelector('canvas'),ctx=canvas.getContext('2d');ctx.clearRect(0,0,144,144);ctx.imageSmoothingEnabled=style!=='pixel';ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1-sample.mix;ctx.drawImage(frames[sample.frame],0,0);if(sample.mix){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=sample.mix;ctx.drawImage(frames[sample.next],0,0);}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';el.dataset.frame=String(sample.frame);}
+    for(const el of actors){if(el===brandPet?!idle:!playing||el.hidden)continue;const provider=el.dataset.actor??el.dataset.pet,frames=atlas[provider];if(style==='classic'&&provider!=='octopus')continue;if(!frames)continue;const sample=window.QuotaPetAnimation.sample(provider==='octopus'?'hello':style,provider,elapsed,reduced.matches),canvas=el.querySelector('canvas'),ctx=canvas.getContext('2d');ctx.clearRect(0,0,144,144);ctx.imageSmoothingEnabled=style!=='pixel';ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1-sample.mix;ctx.drawImage(frames[sample.frame],0,0);if(sample.mix){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=sample.mix;ctx.drawImage(frames[sample.next],0,0);}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';el.dataset.frame=String(sample.frame);}
     if(!reduced.matches)frameRequest=requestAnimationFrame(draw);
   }
-  function startAnimation(){cancelAnimationFrame(frameRequest);animationStart=performance.now();if(style!=='classic'&&atlas)draw(animationStart);}
+  function startAnimation(){cancelAnimationFrame(frameRequest);animationStart=performance.now();if(atlas)draw(animationStart);}
   function chooseStyle(next){
     const selected=['classic','smooth','pixel'].includes(next)?next:'smooth';if(selected===style)return;
     style=selected;atlas=null;const version=++assetVersion;cancelAnimationFrame(frameRequest);
     $('island').dataset.petStyle=style;
-    if(style==='classic')return;
     window.QuotaPetAnimation.load(style).then(result=>{if(version!==assetVersion)return;atlas=result;startAnimation();}).catch(()=>{if(version!==assetVersion)return;style='classic';$('island').dataset.petStyle='classic';});
   }
   function sprite(el,provider,pose=0){el.dataset.actor=provider;el.style.setProperty('--pet-row',provider==='codex'?50:provider==='gemini'?100:0);el.style.setProperty('--pet-pose',pose*50);}
@@ -75,8 +75,8 @@
     phases();if(preview&&!reduced.matches)previewLoopTimer=setInterval(phases,6000);
     finishTimer=setTimeout(stop,preview?180000:6000);
   }
-  function showIdle(preview=false){
-    stop();idle=true;idlePreview=preview;sprite(brandPet,['claude','codex','gemini'][idleIndex++%3]);brand.classList.add('pet-idle');startAnimation();finishTimer=setTimeout(stop,preview?15000:4500);
+  function showIdle(preview=false,requested){
+    stop();idle=true;idlePreview=preview;brandPet.style.animationDuration=preview?'15s':'4.5s';sprite(brandPet,['claude','codex','gemini','octopus'].includes(requested)?requested:['claude','codex','gemini','octopus'][idleIndex++%4]);brand.classList.add('pet-idle');startAnimation();finishTimer=setTimeout(stop,preview?15000:4500);
   }
   function check(){
     if(!state||state.expanded||nativeSuspended||document.hidden||state.paused){if(playing||idle||roaming)stop();return;}
@@ -99,5 +99,5 @@
   reduced.addEventListener('change',()=>{if(idle||roaming)stop();else startAnimation();});
   setInterval(check,1000);
   new ResizeObserver(align).observe($('provider-strip'));
-  window.QuotaPets={previewIdle(){if(state&&!state.expanded&&!nativeSuspended&&!document.hidden&&!state.paused)showIdle(true);},roam:()=>roam(true),update(next){if(state?.settings.petRoam===true&&next.settings.petRoam===false)roamWanted=false;state=next;chooseStyle(next.settings.petStyle);check();align();},preview(){if(state&&!state.expanded)alert({provider:'claude',id:'claude',label:'每週',remaining:15,reset:new Date(Date.now()+86400000).toISOString(),level:1},true);}};
+  window.QuotaPets={previewIdle(role){if(state&&!state.expanded&&!nativeSuspended&&!document.hidden&&!state.paused)showIdle(true,role);},roam:role=>roam(true,role),update(next){if(state?.settings.petRoam===true&&next.settings.petRoam===false)roamWanted=false;state=next;chooseStyle(next.settings.petStyle);check();align();},preview(){if(state&&!state.expanded)alert({provider:'claude',id:'claude',label:'每週',remaining:15,reset:new Date(Date.now()+86400000).toISOString(),level:1},true);}};
 })();

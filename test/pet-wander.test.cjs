@@ -5,4 +5,4 @@ test('roaming path stays within the stage and walks continuously and turns at st
  assert.ok(max-min>100);assert.ok(moving&&left&&right);assert.equal(resting,0,'No resting frames during normal walking');assert.ok(min<94&&max>362,'Walks to both edges instead of stopping in the middle');
 });
 test('large time jumps cannot teleport a roaming pet outside boundaries',()=>{const p=create(446,()=>0);let previous=p.step(0);for(let i=0;i<200;i++){const next=p.step(5000);assert.ok(Math.abs(next.x-previous.x)<=3.81);previous=next;}});
-test('all three walking roles use twelve steps and freeze under reduced motion',()=>{for(const id of ['claude','codex','gemini']){const frames=new Set();for(let i=0;i<12;i++)frames.add(sample('walk',id,i*1100/12+1).frame);assert.equal(frames.size,12);assert.equal(sample('walk',id,700,true).frame,0);}});
+test('all four walking roles use twelve steps and freeze under reduced motion',()=>{for(const id of ['claude','codex','gemini','octopus']){const frames=new Set();for(let i=0;i<12;i++)frames.add(sample('walk',id,i*1100/12+1).frame);assert.equal(frames.size,12);assert.equal(sample('walk',id,700,true).frame,0);}});

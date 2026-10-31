@@ -421,3 +421,5 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 .segmented button:focus-visible,.view-tabs button:focus-visible{outline:2px solid #a6b4f5;outline-offset:1px}
 @media(prefers-reduced-motion:reduce){.segmented button,.view-tabs button{transition:none}}
 .card[data-provider^="claude-account-"] .provider-identity h2{font-size:14px;line-height:20px;overflow-wrap:anywhere}
+
+.pet-sprite[data-actor=octopus]{background-image:none}.pet-sprite[data-actor=octopus] .pet-canvas{display:block}
