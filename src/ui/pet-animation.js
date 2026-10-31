@@ -37,16 +37,20 @@
     };image.onerror=reject;image.src=`pets/space-${style}.png`;});cache.set(style,job);return job;
   }
   const sheetCache=new Map();
-  function sheet(file,rowCount,firstRow=0){
-    const key=file+':'+firstRow;if(sheetCache.has(key))return sheetCache.get(key);
+  function sheet(file,rowCount,firstRow=0,count=12,columns=6){
+    const key=file+':'+firstRow+':'+count+':'+columns;if(sheetCache.has(key))return sheetCache.get(key);
     const job=new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{try{
       const source=document.createElement('canvas');source.width=image.width;source.height=image.height;const ctx=source.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,0,0);const data=ctx.getImageData(0,0,image.width,image.height).data,boxes=[];
-      for(let i=0;i<12;i++){const left=Math.round(i%6*image.width/6),right=Math.round((i%6+1)*image.width/6),top=Math.round((firstRow+Math.floor(i/6))*image.height/rowCount),bottom=Math.round((firstRow+Math.floor(i/6)+1)*image.height/rowCount);let x1=right,y1=bottom,x2=left,y2=top;
+      for(let i=0;i<count;i++){const left=Math.round(i%columns*image.width/columns),right=Math.round((i%columns+1)*image.width/columns),row=firstRow+Math.floor(i/columns),careRows=[0,213,385,594,785,994,1144,1300,1448],top=file==='space-care.png'?Math.round(careRows[row]*image.height/1448):Math.round(row*image.height/rowCount),bottom=file==='space-care.png'?Math.round(careRows[row+1]*image.height/1448):Math.round((row+1)*image.height/rowCount);
+        if(file==='space-care.png'){const clean=ctx.getImageData(left,top,right-left,bottom-top);cleanEdges(clean.data,right-left,bottom-top);ctx.putImageData(clean,left,top);for(let y=top;y<bottom;y++)for(let x=left;x<right;x++)data[(y*image.width+x)*4+3]=clean.data[((y-top)*(right-left)+x-left)*4+3];}let x1=right,y1=bottom,x2=left,y2=top;
         for(let y=top;y<bottom;y++)for(let x=left;x<right;x++)if(data[(y*image.width+x)*4+3]>120){x1=Math.min(x1,x);x2=Math.max(x2,x);y1=Math.min(y1,y);y2=Math.max(y2,y);}if(x2<x1)throw new Error('Empty pet frame');boxes.push({x:x1,y:y1,w:x2-x1+1,h:y2-y1+1});}
       const scale=Math.min(62/Math.max(...boxes.map(b=>b.w)),62/Math.max(...boxes.map(b=>b.h)));resolve(boxes.map(b=>{const tile=document.createElement('canvas');tile.width=144;tile.height=144;tile.getContext('2d').drawImage(source,b.x,b.y,b.w,b.h,72-b.w*scale,134-b.h*scale*2,b.w*scale*2,b.h*scale*2);const pixels=tile.getContext('2d').getImageData(0,0,144,144).data;let left=144,right=0,bottom=0;for(let y=0;y<144;y++)for(let x=0;x<144;x++)if(pixels[(y*144+x)*4+3]>120){left=Math.min(left,x);right=Math.max(right,x);bottom=Math.max(bottom,y);}const aligned=document.createElement('canvas');aligned.width=144;aligned.height=144;aligned.getContext('2d').drawImage(tile,Math.round(72-(left+right)/2),133-bottom);return aligned;}));
     }catch(error){reject(error);}};image.onerror=reject;image.src='pets/'+file;});sheetCache.set(key,job);return job;
   }
   const combined=new Map();
   function load(style){if(!combined.has(style))combined.set(style,Promise.all([style==='classic'?Promise.resolve({}):loadBase(style),sheet('space-octopus-orange.png',4,style==='walk'?0:2)]).then(([base,octopus])=>({...base,octopus})));return combined.get(style);}
-  const api={sample,load,cleanEdges};if(typeof module==='object'&&module.exports)module.exports=api;else root.QuotaPetAnimation=api;
+  let care,rest;
+  function loadCare(){return care??=Promise.all(['claude','codex','gemini','octopus'].map((role,i)=>sheet('space-care.png',8,i*2).then(frames=>[role,frames]))).then(Object.fromEntries);}
+  function loadRest(){return rest??=Promise.all(['claude','codex','gemini','octopus'].map((role,i)=>(role==='octopus'?sheet('space-octopus-rest.png',2):sheet('space-rescue.png',3,i,3,3)).then(frames=>[role,frames]))).then(Object.fromEntries);}
+  const api={sample,load,cleanEdges,loadCare,loadRest};if(typeof module==='object'&&module.exports)module.exports=api;else root.QuotaPetAnimation=api;
 })(globalThis);

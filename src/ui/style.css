@@ -433,3 +433,11 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 #pet-caption,#pet-message{text-shadow:0 1px 3px #060915}
 @keyframes pet-starlight{from{opacity:.65}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.pet-sky{animation:none;opacity:.85}}
+
+#pet-stage[data-phase=roam]{cursor:crosshair}
+#pet-food{position:absolute;bottom:13px;width:26px;height:26px;margin-left:-13px;background:url('pets/space-care-props.png') left center/200% 100% no-repeat;pointer-events:none;filter:drop-shadow(0 1px 3px #f6ba4b88)}
+@keyframes pet-food-fall{from{transform:translateY(var(--fall,-45px)) scale(.8)}70%{transform:translateY(0) scale(1)}85%{transform:translateY(-4px)}to{transform:translateY(0)}}
+#roam-pet[data-action=sleep]::after{content:'z Z';position:absolute;right:1px;top:2px;color:#c9c6ff;font-size:12px;letter-spacing:4px;animation:pet-sleep-dream 2.5s ease-in-out infinite}
+#roam-pet[data-action=hello]::after{content:'✦';position:absolute;right:0;top:6px;color:#ffd791;animation:pet-sleep-dream 1.4s ease-in-out infinite}
+@keyframes pet-sleep-dream{0%,100%{transform:translateY(2px);opacity:.4}50%{transform:translateY(-4px);opacity:1}}
+@media(prefers-reduced-motion:reduce){#pet-food,#roam-pet::after{animation:none!important}}

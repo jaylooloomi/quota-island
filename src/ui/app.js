@@ -509,6 +509,7 @@ for(const key of ['petIdle','petAlerts','petRoam'])$(key).addEventListener('chan
 $('pet-style').addEventListener('change',event=>api.settings({petStyle:event.target.value}));
 $('pet-idle-preview').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.previewIdle($('pet-character').value),300);});
 $('pet-preview').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.preview(),300);});
+$('pet-action-preview').addEventListener('click',async()=>{await api.settings({petRoam:true});await api.expand(false);setTimeout(()=>window.QuotaPets.action($('pet-action').value,$('pet-character').value),300);});
 $('pet-roam').addEventListener('click',async()=>{await api.settings({petRoam:true});await api.expand(false);setTimeout(()=>window.QuotaPets.roam($('pet-character').value),300);});
 $('morningHelloEnabled').addEventListener('change',event=>api.settings({morningHelloEnabled:event.target.checked}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
