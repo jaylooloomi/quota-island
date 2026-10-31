@@ -5,7 +5,24 @@
   const text=value=>window.QuotaI18n.translate(value,state?.settings.locale??'zh-TW');
   const brand=document.querySelector('.compact-brand');
   const brandPet=document.createElement('span');brandPet.className='pet-sprite brand-pet';brandPet.setAttribute('aria-hidden','true');brand.append(brandPet);
-  function sprite(el,provider,pose=0){el.style.setProperty('--pet-row',provider==='codex'?50:provider==='gemini'?100:0);el.style.setProperty('--pet-pose',pose*50);}
+  let frameRequest=0,animationStart=0,atlas=null,style='classic',assetVersion=0;
+  const actors=[brandPet,...$('pet-stage').querySelectorAll('.pet-sprite')];
+  for(const el of actors){const canvas=document.createElement('canvas');canvas.width=144;canvas.height=144;canvas.className='pet-canvas';canvas.setAttribute('aria-hidden','true');el.append(canvas);}
+  function draw(time){
+    frameRequest=0;if((!playing&&!idle)||document.hidden||style==='classic'||!atlas)return;
+    const elapsed=time-animationStart;
+    for(const el of actors){if(el===brandPet?!idle:!playing||el.hidden)continue;const provider=el.dataset.actor??el.dataset.pet,frames=atlas[provider];if(!frames)continue;const sample=window.QuotaPetAnimation.sample(style,provider,elapsed,reduced.matches),canvas=el.querySelector('canvas'),ctx=canvas.getContext('2d');ctx.clearRect(0,0,144,144);ctx.imageSmoothingEnabled=style!=='pixel';ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1-sample.mix;ctx.drawImage(frames[sample.frame],0,0);if(sample.mix){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=sample.mix;ctx.drawImage(frames[sample.next],0,0);}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';el.dataset.frame=String(sample.frame);}
+    if(!reduced.matches)frameRequest=requestAnimationFrame(draw);
+  }
+  function startAnimation(){cancelAnimationFrame(frameRequest);animationStart=performance.now();if(style!=='classic'&&atlas)draw(animationStart);}
+  function chooseStyle(next){
+    const selected=['classic','smooth','pixel'].includes(next)?next:'smooth';if(selected===style)return;
+    style=selected;atlas=null;const version=++assetVersion;cancelAnimationFrame(frameRequest);
+    $('island').dataset.petStyle=style;
+    if(style==='classic')return;
+    window.QuotaPetAnimation.load(style).then(result=>{if(version!==assetVersion)return;atlas=result;startAnimation();}).catch(()=>{if(version!==assetVersion)return;style='classic';$('island').dataset.petStyle='classic';});
+  }
+  function sprite(el,provider,pose=0){el.dataset.actor=provider;el.style.setProperty('--pet-row',provider==='codex'?50:provider==='gemini'?100:0);el.style.setProperty('--pet-pose',pose*50);}
   function align(){
     if(!playing)return;
     const stage=$('pet-stage'),bounds=stage.getBoundingClientRect();
@@ -16,7 +33,7 @@
     }
     $('pet-message').style.width=`${Math.max(56,brand.getBoundingClientRect().right-bounds.left-15)}px`;
   }
-  function stop(){clearTimeout(finishTimer);clearTimeout(phaseTimer);playing=false;previewPlaying=false;idle=false;$('pet-stage').hidden=true;$('island').classList.remove('pet-playing');brand.classList.remove('pet-idle');void window.quota.petHeight(0);nextIdle=Date.now()+120000+Math.random()*180000;}
+  function stop(){cancelAnimationFrame(frameRequest);frameRequest=0;clearTimeout(finishTimer);clearTimeout(phaseTimer);playing=false;previewPlaying=false;idle=false;$('pet-stage').hidden=true;$('island').classList.remove('pet-playing');brand.classList.remove('pet-idle');void window.quota.petHeight(0);nextIdle=Date.now()+120000+Math.random()*180000;}
   function alert(event,preview=false){
     stop();playing=true;previewPlaying=preview;if(!preview){lastAlert=Date.now();seen=window.QuotaPetPolicy.claim(seen,event);try{localStorage.setItem('quota-pet-alerts',JSON.stringify(seen));}catch{}}
     const account=preview?text('預覽・展示資料'):state.accounts?.find(a=>a.id===event.id)?.label??(event.provider==='gemini'?'Antigravity':event.provider==='codex'?'Codex':'Claude');
@@ -26,6 +43,7 @@
     for(const el of $('pet-stage').querySelectorAll('.pet-sprite'))sprite(el,el.dataset.pet,el.dataset.pet===event.provider?1:0);
     $('pet-stage').dataset.affected=event.provider;$('pet-stage').dataset.phase='warning';$('pet-stage').hidden=false;$('island').classList.add('pet-playing');
     align();requestAnimationFrame(align);
+    startAnimation();
     $('pet-close').setAttribute('aria-label',text('關閉小劇場'));
     void window.quota.petHeight(112);
     if(!reduced.matches)phaseTimer=setTimeout(()=>{if(!playing)return;$('pet-stage').dataset.phase='rescue';for(const el of $('pet-stage').querySelectorAll('.pet-sprite'))sprite(el,el.dataset.pet,el.dataset.pet===event.provider?2:el.dataset.pet==='codex'?1:0);$('pet-message').textContent=text(event.level===3?'等待重置，一起充電':'補給一下，保持配速');},1800);
@@ -39,15 +57,15 @@
     if(event&&Date.now()-lastAlert>=30000){alert(event);return;}
     if(state.settings.petIdle===false||reduced.matches){if(idle)stop();return;}
     if(!idle&&Date.now()>=nextIdle&&!brand.matches(':hover')){
-      idle=true;sprite(brandPet,['claude','codex','gemini'][idleIndex++%3]);brand.classList.add('pet-idle');finishTimer=setTimeout(stop,4500);
+      idle=true;sprite(brandPet,['claude','codex','gemini'][idleIndex++%3]);brand.classList.add('pet-idle');startAnimation();finishTimer=setTimeout(stop,4500);
     }
   }
   $('pet-close').addEventListener('click',stop);
   window.quota.onPetSuspend(stop);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else nextIdle=Date.now()+120000+Math.random()*180000;});
   document.addEventListener('dragstart',()=>{window.quotaPetDragging=true;stop();});document.addEventListener('dragend',()=>{window.quotaPetDragging=false;});document.addEventListener('drop',()=>{window.quotaPetDragging=false;});
-  reduced.addEventListener('change',()=>{if(idle)stop();});
+  reduced.addEventListener('change',()=>{if(idle)stop();else startAnimation();});
   setInterval(check,1000);
   new ResizeObserver(align).observe($('provider-strip'));
-  window.QuotaPets={update(next){state=next;check();align();},preview(){if(state&&!state.expanded)alert({provider:'claude',id:'claude',label:'每週',remaining:15,reset:new Date(Date.now()+86400000).toISOString(),level:1},true);}};
+  window.QuotaPets={update(next){state=next;chooseStyle(next.settings.petStyle);check();align();},preview(){if(state&&!state.expanded)alert({provider:'claude',id:'claude',label:'每週',remaining:15,reset:new Date(Date.now()+86400000).toISOString(),level:1},true);}};
 })();

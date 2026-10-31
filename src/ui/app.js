@@ -416,6 +416,7 @@ function render(next){
   const healthy=!state.paused&&ids.some(id=>ready(state.providers[id]));$('live-dot').classList.toggle('off',!healthy);
   document.querySelector('.footer-dot').classList.toggle('off',!healthy);$('footer-status').textContent=state.paused?'已暫停同步':'自動同步';
   for(const key of ['alwaysOnTop','notifications','petIdle','petAlerts'])$(key).checked=state.settings[key];
+  $('pet-style').value=state.settings.petStyle??'smooth';
   $('morningHelloEnabled').checked=state.settings.morningHelloEnabled===true;
   const helloStatus=$('morning-hello-status');helloStatus.replaceChildren();
   const helloLabels={sending:'正在送出 Hello',sent:'Hello 已送出，等待配額同步',confirmed:'已確認 5 小時視窗',active:'已有視窗，持續監控',error:'Hello 失敗，5 小時後再檢查',uncertain:'上次結果未確認，至少等待 5 小時'};
@@ -508,6 +509,7 @@ $('close-quota-details').addEventListener('click',()=>{quotaDetailsOpen=false;re
 $('language').addEventListener('change',event=>api.settings({locale:event.target.value}));
 for(const key of ['alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 for(const key of ['petIdle','petAlerts'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
+$('pet-style').addEventListener('change',event=>api.settings({petStyle:event.target.value}));
 $('pet-preview').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.preview(),300);});
 $('morningHelloEnabled').addEventListener('change',event=>api.settings({morningHelloEnabled:event.target.checked}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));

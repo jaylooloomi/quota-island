@@ -13,6 +13,30 @@
 
 <p align="center"><img src="docs/design/compact-double-layer/compact.png" alt="深色精簡動態島：Claude 剩餘 36%、Gemini 62%、Codex 12%，左側為拖曳把手" width="464"><br><sub>實際 App 截圖，使用展示資料；圖中百分比不代表即時帳號配額。</sub></p>
 
+## 產品導覽（v1.4.0）
+
+**以下是實際 App 介面，使用內建示範／測試資料，並非即時帳號額度。** Google 欄位在畫面中顯示 Gemini；個人帳號的資料來源是 Antigravity。
+
+### 收合看重點，展開看細節
+
+![收合的 Quota Pebble，顯示三家服務額度](docs/product-tour/compact.png)
+
+收合成小膠囊時，可快速查看 Claude、Codex 與 Gemini 的額度。點右側箭頭展開；拖曳左側把手移動小島。
+
+<img src="docs/product-tour/expanded.png" alt="v1.4.0 實際展開介面：Claude、Codex、Gemini 示範額度、不同用量視窗及重置倒數" width="464">
+
+展開後可查看剩餘額度、不同用量視窗及重置倒數。頂端切換「剩餘／已用」，「配額／帳號」分頁則切換額度看板與帳號操作；底部提供語言、設定與同步控制。
+
+### 太空救援隊
+
+設定可選「柔順 3D／像素逐格／原版 3D」，再按預覽即可比較，選擇會保存。新版本的貓與機器人各 12 張動作，星兔 6 張完整姿勢正反循環；柔順版以淡化銜接，像素版保持清楚格線。詳見[動作方案與比較影片](docs/pet-motion-options.md)。
+
+<img src="docs/product-tour/pet-rescue.png" alt="示範額度告警：Claude 剩餘 15%，下方出現三位太空救援隊夥伴" width="464">
+
+v1.4.0 的夥伴會出現在閒置品牌區與額度告警小劇場。這張測試截圖示範 Claude 低額度告警；與上圖不同的百分比及 Gemini 缺少讀值，都是刻意設定的測試資料。目前沒有電子雞成長或餵養系統。
+
+[查看角色素材與產品總覽](docs/product-tour/space-rescue-product-preview.png) · [圖片來源說明](docs/product-tour/README.md)
+
 ## 使用情境
 
 | 情境 | 你怎麼用 | 小島幫你看什麼 |

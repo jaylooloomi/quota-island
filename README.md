@@ -13,6 +13,28 @@
 
 <p align="center"><img src="docs/design/compact-double-layer/compact.png" alt="Compact dark island: Claude 36%, Gemini 62%, Codex 12%, with a draggable grip" width="464"><br><sub>Actual app screenshot with demo data. Percentages are illustrative, not live account readings.</sub></p>
 
+## Product tour (v1.4.0)
+
+**Actual app UI with built-in demo / test fixtures. These are illustrative quotas, not live account readings.** The Google row is labeled Gemini in the app; personal-account quota data comes from Antigravity.
+
+### A small island, then the details
+
+![Collapsed Quota Pebble showing three provider quotas](docs/product-tour/compact.png)
+
+Keep Claude, Codex and Gemini quotas in a compact capsule. Click the chevron to expand; use the left grip to move the island.
+
+<img src="docs/product-tour/expanded.png" alt="Actual v1.4.0 expanded demo dashboard with Claude, Codex and Gemini quota windows and reset countdowns" width="464">
+
+The expanded dashboard shows remaining quota, separate usage windows and reset countdowns. Switch Remaining / Used at the top; Quota / Accounts separates readings from account controls. Language, settings and sync controls sit in the footer.
+
+### Space Rescue Team
+
+<img src="docs/product-tour/pet-rescue.png" alt="Actual demo quota alert scene: Claude has 15 percent remaining, with three space companions" width="464">
+
+The v1.4.0 companions appear in the idle brand area and quota alert scenes. This fixture demonstrates a Claude low-quota alert; its deliberately different percentages and missing Gemini reading are test data. These companions do not implement a pet growth or feeding system.
+
+[View the character sheet and product overview](docs/product-tour/space-rescue-product-preview.png) · [Image provenance](docs/product-tour/README.md)
+
 ## Use cases
 
 | Situation | What you do | What the island shows |
@@ -199,6 +221,8 @@ Choose **Remaining / Used / Pace** without changing the provider row layout. Pac
 Pacing details expand inline beneath the selected provider row. Only one provider is expanded at a time; the other provider cards remain visible and the fixed-width window grows to fit. Collapse the same row to restore the original height.
 
 ### Space rescue companions
+
+Choose **Smooth 3D**, **Pixel animation** or **Classic 3D** in Settings, then preview the crew. The new cat/robot animations use twelve drawings each; the rabbit uses six complete poses in a forward/reverse cycle. Smooth 3D blends frames; pixel mode preserves crisp edges. Choices persist across restarts. See [playable options and comparison video](docs/pet-motion-options.md).
 
 Claude is an orange space cat, Codex an ivory maintenance robot, and Antigravity a lavender star rabbit. Optional idle pets briefly replace the compact brand; quota alerts open a 4.4-second miniature stage at 20%, 5% remaining and exhaustion, without moving quota controls. Settings offers separate switches and **Preview rescue crew**. Account/window/reset-based deduplication survives renderer restarts; animations never refresh quotas. Reduced motion uses a static alert scene and disables idle motion. See [implementation and validation](docs/pet-theater-implementation.md).
 

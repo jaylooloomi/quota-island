@@ -1,0 +1,18 @@
+<!doctype html><html lang="zh-TW"><meta charset="utf-8"><title>Quota Pebble 寵物動作比較</title><style>
+*{box-sizing:border-box}body{min-width:1440px;margin:0;padding:24px;background:#111317;color:#eceef3;font-family:'Segoe UI',sans-serif}h1{font-size:22px;margin:0 0 10px}p{font-size:13px;color:#aeb5c0;line-height:1.7}canvas{display:block;width:1392px;max-width:none;height:auto;border-radius:16px}button{padding:8px 16px;color:#e8ebf0;background:#303640;border:1px solid #525b69;border-radius:8px;cursor:pointer}footer{display:flex;gap:16px;align-items:center;margin-top:16px}
+</style><h1>三種寵物動作成品比較</h1><p>展示資料。左：原版三姿勢；中：柔順 3D，格間交疊；右：像素逐格。貓／機器人各 12 張新動作，星兔 6 張正反循環。可在 App 設定選擇並儲存。</p><canvas id="comparison" width="1392" height="300"></canvas><footer><button id="pause">暫停／繼續</button><span id="state">載入素材…</span></footer>
+<script src="pet-animation.js"></script><script>
+(async()=>{
+const canvas=document.getElementById('comparison'),ctx=canvas.getContext('2d'),loadImage=src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=reject;image.src=src;});
+const [smooth,pixel,classic,...icons]=await Promise.all([QuotaPetAnimation.load('smooth'),QuotaPetAnimation.load('pixel'),loadImage('pets/space-rescue.png'),...['claude','codex','gemini'].map(id=>loadImage(`icons/${id}.svg`))]);
+let paused=false,elapsed=0,last=performance.now();document.getElementById('pause').onclick=()=>{paused=!paused;};
+function box(x,y,w,h,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
+function draw(time){if(!paused)elapsed+=time-last;last=time;ctx.clearRect(0,0,1392,300);['classic','smooth','pixel'].forEach((style,index)=>{
+const x=index*464;box(x+5,5,454,290,16,'#1c2026');ctx.fillStyle='#e9edf5';ctx.font='600 19px Segoe UI';ctx.fillText(['A 原版 3D','B 柔順 3D','C 像素逐格'][index],x+24,37);ctx.font='12px Segoe UI';ctx.fillStyle='#aeb6c3';ctx.fillText(['三姿勢切換，保留作比較','多姿勢＋交疊淡化＋緩動','清楚分格，保持像素邊緣'][index],x+24,62);
+box(x+14,84,436,187,26,'#111419');ctx.fillStyle='#e5e9f0';ctx.font='600 13px Segoe UI';ctx.fillText('Quota Pebble',x+27,115);ctx.font='10px Segoe UI';ctx.fillStyle='#858f9e';ctx.fillText('DEMO',x+27,130);
+const providers=['claude','codex','gemini'];providers.forEach((provider,j)=>{const center=x+165+j*100;ctx.drawImage(icons[j],center-36,101,22,22);ctx.font='600 18px Segoe UI';ctx.fillStyle='#eeeef4';ctx.fillText(['15%','69%','25%'][j],center-9,119);box(center-10,129,45,4,2,'#3b4049');box(center-10,129,[7,31,11][j],4,2,['#ffaf89','#f1f1f5','#b3a1f7'][j]);
+const targetY=173;if(style==='classic'){const pose=Math.floor(elapsed/1500)%3,size=classic.width/3;ctx.drawImage(classic,pose*size,j*size,size,size,center-42,targetY,84,84);}else{const frames=(style==='smooth'?smooth:pixel)[provider],s=QuotaPetAnimation.sample(style,provider,elapsed);ctx.imageSmoothingEnabled=style!=='pixel';ctx.globalAlpha=1-s.mix;ctx.globalCompositeOperation='source-over';ctx.drawImage(frames[s.frame],center-42,targetY,84,84);if(s.mix){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=s.mix;ctx.drawImage(frames[s.next],center-42,targetY,84,84);}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.imageSmoothingEnabled=true;}});
+ctx.fillStyle='#7a6651';ctx.fillRect(x+26,258,412,2);ctx.font='10px Segoe UI';ctx.fillStyle='#c6b39d';ctx.fillText('救援動作展示 · 不消耗配額',x+28,158);
+});requestAnimationFrame(draw);}requestAnimationFrame(draw);document.getElementById('state').textContent='三個成品同時播放中';window.comparisonReady=true;
+})().catch(()=>{document.getElementById('state').textContent='素材載入失敗，請從專案內開啟此頁。';});
+</script></html>
