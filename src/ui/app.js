@@ -419,7 +419,7 @@ function render(next){
   document.querySelector('.footer-dot').classList.toggle('off',!healthy);$('footer-status').textContent=state.paused?'已暫停同步':'自動同步';
   for(const key of ['autoStart','alwaysOnTop','notifications','petIdle','petAlerts','petRoam'])$(key).checked=state.settings[key];
   $('autoStart').disabled=!['win32','darwin'].includes(state.platform);
-  $('pet-placement').value=state.settings.petPlacement??'stage';
+  $('pet-placement').value=state.settings.petPlacement??'title';
   $('pet-background').value=state.settings.petBackground??'meteor';
   $('island').dataset.petBackground=state.settings.petBackground??'meteor';
   $('morningHelloEnabled').checked=state.settings.morningHelloEnabled===true;
