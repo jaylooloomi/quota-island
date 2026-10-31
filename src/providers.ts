@@ -1,3 +1,4 @@
+import {openClaudeTerminal} from './claude-terminal';
 import {readStatusline} from './claude-statusline';
 import { readFile } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
@@ -85,6 +86,7 @@ export class Providers {
       // A piped CLI can print a manual authorization URL without launching it.
       if (info.browserUrl) void openUrl(info.browserUrl).catch(() => {});
     });
+    await openClaudeTerminal(this.claudeConfigDir||process.env.CLAUDE_CONFIG_DIR||path.join(homedir(),'.claude'));
   }
   submitCode(id: ProviderId, code: unknown) { if (id !== 'claude') throw new ProviderError('auth', '此來源不接受授權碼'); this.claudeLogin.submitCode(code); }
   cancelLogin(id: ProviderId) { if (id === 'claude') this.claudeLogin.close(); }

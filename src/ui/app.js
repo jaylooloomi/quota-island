@@ -193,7 +193,7 @@ function renderConnection(id,s,auth){
   card.querySelector('.connection-description').textContent=id==='codex'?'登入要監控的 ChatGPT 訂閱帳號，可與 Claude、Gemini 使用不同帳號。':antigravity?'沿用 Antigravity 的 Google 帳號，讀取 Gemini 配額資訊。':`連接你的 ${id==='gemini'?'Google':names[id]} 帳號以讀取配額資訊。`;
   card.querySelector('.connection-account h4').textContent=baseId(id)==='claude'?'Claude Code':id==='codex'?'Codex':antigravity?'Antigravity · Gemini':'Google Code Assist';
   const phase=auth?.phase;
-  const step=connected?4:phase==='syncing'||phase==='cooldown'?2:phase==='connecting'||phase==='verifying'?1:0;
+  const step=connected?4:phase==='syncing'||phase==='cooldown'||phase==='waiting'?2:phase==='connecting'||phase==='verifying'?1:0;
   card.querySelector('.connection-steps').style.setProperty('--progress',`${Math.min(100,step/3*100)}%`);
   for(const node of card.querySelectorAll('.connection-steps li')){
     const index=Number(node.dataset.step);node.classList.toggle('done',index<step);node.classList.toggle('active',index===step&&!!auth?.pending);
@@ -201,8 +201,8 @@ function renderConnection(id,s,auth){
   }
   const launcher=card.querySelector('.open-claude-terminal');launcher.hidden=baseId(id)!=='claude'||!!auth?.pending;
   const message=card.querySelector('.auth-message');
-  message.textContent=auth?.pending||['error','cooldown'].includes(auth?.phase)?auth.message:connected?'已連接，配額已自動同步':s.error||'完成授權後會自動同步配額。';
-  message.classList.toggle('success',!!connected);message.classList.toggle('error',phase==='error'||(!auth?.pending&&phase!=='cooldown'&&['stale','unavailable'].includes(s.status)));
+  message.textContent=auth?.pending||['error','cooldown','waiting'].includes(auth?.phase)?auth.message:connected?'已連接，配額已自動同步':s.error||'完成授權後會自動同步配額。';
+  message.classList.toggle('success',!!connected);message.classList.toggle('error',phase==='error'||(!auth?.pending&&!['cooldown','waiting'].includes(phase)&&['stale','unavailable'].includes(s.status)));
   const text=phase==='syncing'?'自動同步中…':phase==='connecting'?'連接中…':auth?.pending?'等待授權…':id==='codex'?(connected?'切換 Codex 帳號 →':'登入 Codex（ChatGPT） →'):connected?'重新連接':antigravity?'連接 Antigravity 並同步 →':`登入 ${id==='gemini'?'Google':names[id]} 並同步 →`;
   for(const button of [card.querySelector('.login'),card.querySelector('.connect-primary')]){button.textContent=text;button.disabled=!!auth?.pending||(!s.enabled&&!isExtra(id));}
   if(phase==='verifying')card.querySelector('.login').textContent='驗證授權碼中…';

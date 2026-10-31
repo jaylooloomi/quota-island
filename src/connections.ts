@@ -2,7 +2,7 @@ import { ProviderError, ProviderId } from './model';
 import { Poller } from './poller';
 import { LoginProgress } from './claude-login';
 export interface ConnectionState {
-  pending: boolean; phase: 'authorizing' | 'connecting' | 'code' | 'verifying' | 'syncing' | 'cooldown' | 'ready' | 'error'; message: string;
+  pending: boolean; phase: 'authorizing' | 'connecting' | 'code' | 'verifying' | 'syncing' | 'cooldown' | 'waiting' | 'ready' | 'error'; message: string;
   codeRequired?: boolean; canReopen?: boolean;
 }
 export class Connections {
@@ -30,6 +30,8 @@ export class Connections {
       const s = this.poller.states[id];
       this.states[id] = s.status === 'ready'
         ? { pending: false, phase: 'ready', message: '已連接，配額已自動同步' }
+        : id==='claude'&&s.errorCode==='schema'
+        ? {pending:false,phase:'waiting',message:'Claude 已登入；等待本機配額資料。可按「開啟 Claude Code」啟動互動式 Hello，同步結果會自動更新。'}
         : this.poller.rateLimits()[id]
         ? { pending: false, phase: 'cooldown', message: '帳號授權已完成；配額查詢仍在冷卻，期滿後會自動同步。' }
         : { pending: false, phase: 'error', message: `授權流程已完成，但配額同步失敗：${s.error ?? '服務尚未提供配額'}。App 會自動重試。` };
