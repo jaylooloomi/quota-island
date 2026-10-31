@@ -5,6 +5,13 @@
     const logical=Math.floor(p),map=i=>provider==='gemini'&&style!=='walk'?[0,1,2,3,4,5,5,4,3,2,1,0][i%12]:i%12;
     return {frame:map(logical),next:map(logical+1),mix:style!=='pixel'&&!reduced?p-logical:0};
   }
+  // Remove disconnected neighbouring sprites that cross a cell boundary; retain interior details.
+  function cleanEdges(data,width,height){
+    const seen=new Uint8Array(width*height),parts=[];
+    for(let start=0;start<seen.length;start++){if(seen[start]||data[start*4+3]<16)continue;const queue=[start];seen[start]=1;let edge=false;
+      for(let i=0;i<queue.length;i++){const n=queue[i],x=n%width,y=Math.floor(n/width);if(x===0||x===width-1||y===0||y===height-1)edge=true;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,yy=y+dy,j=yy*width+xx;if(xx>=0&&xx<width&&yy>=0&&yy<height&&!seen[j]&&data[j*4+3]>=16){seen[j]=1;queue.push(j);}}}parts.push({pixels:queue,edge});}
+    const main=parts.reduce((a,b)=>!a||b.pixels.length>a.pixels.length?b:a,null);let removed=0;for(const part of parts)if(part!==main&&part.edge)for(const n of part.pixels){data[n*4+3]=0;removed++;}return removed;
+  }
   const cache=new Map();
   function loadBase(style){
     if(cache.has(style))return cache.get(style);
@@ -16,6 +23,7 @@
           const count=provider==='gemini'&&style!=='walk'?6:12,boxes=[];
           for(let frame=0;frame<count;frame++){
             const row=index*2+Math.floor(frame/6),[top,bottom]=rows[style][row],left=Math.round(frame%6*cell),right=Math.round((frame%6+1)*cell);
+            if(style==='pixel'){const tileData=src.getImageData(left,top,right-left,bottom-top);cleanEdges(tileData.data,right-left,bottom-top);src.putImageData(tileData,left,top);for(let y=top;y<bottom;y++)for(let x=left;x<right;x++)pixels[(y*image.width+x)*4+3]=tileData.data[((y-top)*(right-left)+x-left)*4+3];}
             let x1=right,y1=bottom,x2=left,y2=top;
             for(let y=top;y<bottom;y++)for(let x=left;x<right;x++)if(pixels[(y*image.width+x)*4+3]>120){x1=Math.min(x1,x);x2=Math.max(x2,x);y1=Math.min(y1,y);y2=Math.max(y2,y);}
             boxes.push({x:x1,y:y1,w:x2-x1+1,h:y2-y1+1,center:left+cell/2});
@@ -39,5 +47,5 @@
   }
   const combined=new Map();
   function load(style){if(!combined.has(style))combined.set(style,Promise.all([style==='classic'?Promise.resolve({}):loadBase(style),sheet('space-octopus-orange.png',4,style==='walk'?0:2),style==='walk'?sheet('space-rabbit-walk.png',2):Promise.resolve(null)]).then(([base,octopus,rabbit])=>({...base,octopus,...(rabbit?{gemini:rabbit}:{})})));return combined.get(style);}
-  const api={sample,load};if(typeof module==='object'&&module.exports)module.exports=api;else root.QuotaPetAnimation=api;
+  const api={sample,load,cleanEdges};if(typeof module==='object'&&module.exports)module.exports=api;else root.QuotaPetAnimation=api;
 })(globalThis);
