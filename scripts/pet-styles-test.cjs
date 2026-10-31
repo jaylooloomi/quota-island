@@ -3,7 +3,7 @@ const {_electron:electron}=require('playwright'),assert=require('node:assert/str
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'pebble-styles-')),env={...process.env,QUOTA_TEST_DATA:dir};delete env.ELECTRON_RUN_AS_NODE;const executablePath=process.env.QUOTA_PACKAGED_EXE;
  const launch=()=>electron.launch({...(executablePath?{executablePath}:{}),args:[...(executablePath?[]:['.']),'--demo','--test-mode'],env});let app=await launch();
  try{let page=await app.firstWindow();await page.locator('#mini-codex').filter({hasText:'12%'}).waitFor();await page.emulateMedia({reducedMotion:'no-preference'});const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  const hashes=()=>page.locator('#pet-stage canvas').evaluateAll(nodes=>nodes.map(c=>{let n=0,alpha=0;const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;for(let i=0;i<d.length;i++){n=(Math.imul(n,31)+d[i])|0;if(i%4===3)alpha+=d[i];}return {hash:n,alpha};}));
+  const hashes=()=>page.locator('#pet-stage .pet-sprite canvas').evaluateAll(nodes=>nodes.map(c=>{let n=0,alpha=0;const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;for(let i=0;i<d.length;i++){n=(Math.imul(n,31)+d[i])|0;if(i%4===3)alpha+=d[i];}return {hash:n,alpha};}));
   await fs.mkdir('test-results',{recursive:true});
   for(const style of ['classic','smooth','pixel']){
    await page.evaluate(style=>window.quota.settings({petStyle:style,petAlerts:false,petIdle:false}),style);
