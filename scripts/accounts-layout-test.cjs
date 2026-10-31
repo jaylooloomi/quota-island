@@ -37,6 +37,9 @@ const {_electron:electron}=require('playwright'),assert=require('node:assert/str
       await page.locator(`[data-provider="${first}"] .pace-link`).click();
       await page.locator('#settings-toggle').click();
       assert.equal(await page.locator('#extra-account-settings label').count(),2);
+      const cells=await page.locator('#visible-service-grid label').evaluateAll(nodes=>nodes.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,overflow:el.scrollWidth>el.clientWidth+1};}));
+      assert.equal(cells.length,5);assert.equal(cells[0].y,cells[1].y);assert.equal(cells[1].y,cells[2].y);assert.equal(cells[3].x,cells[0].x);assert.ok(cells[3].y>cells[0].y);assert.equal(cells[3].y,cells[4].y);assert.equal(cells.some(c=>c.overflow),false,`${locale}: three service switches per row must fit`);
+      assert.equal(await page.locator('#enabled-service-grid label').evaluateAll(nodes=>nodes.every(el=>el.getBoundingClientRect().y===nodes[0].getBoundingClientRect().y)),true);
       await page.locator('#extra-account-settings input').first().uncheck();
       await page.locator('#settings-toggle').click();assert.equal(await page.locator(`[data-provider="${first}"]`).isVisible(),false);
       await page.locator('#settings-toggle').click();await page.locator('#extra-account-settings input').first().check();await page.locator('#settings-toggle').click();

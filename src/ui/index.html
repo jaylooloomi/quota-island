@@ -53,13 +53,15 @@
           <label>閒置時啟動 Claude 5 小時視窗<input type="checkbox" id="morningHelloEnabled" role="switch"></label>
           <div id="morning-hello-status" aria-live="polite"></div>
           <div class="settings-title sources-title">顯示服務</div>
-          <label>Claude<input type="checkbox" data-visible="claude" role="switch"></label>
-          <label>Codex<input type="checkbox" data-visible="codex" role="switch"></label>
-          <label>Antigravity / Gemini<input type="checkbox" data-visible="gemini" role="switch"></label>
-          <div id="extra-account-settings"></div><div class="settings-title sources-title">監控來源</div>
-          <label>Claude Code<input type="checkbox" data-enable="claude" role="switch"></label>
-          <label>Gemini<input type="checkbox" data-enable="gemini" role="switch"></label>
-          <label>Codex<input type="checkbox" data-enable="codex" role="switch"></label>
+          <div class="settings-service-grid" id="visible-service-grid">
+          <label><span>Claude</span><input type="checkbox" data-visible="claude" role="switch"></label>
+          <label><span>Codex</span><input type="checkbox" data-visible="codex" role="switch"></label>
+          <label><span>Antigravity / Gemini</span><input type="checkbox" data-visible="gemini" role="switch"></label>
+          <div id="extra-account-settings"></div></div><div class="settings-title sources-title">監控來源</div>
+          <div class="settings-service-grid" id="enabled-service-grid">
+          <label><span>Claude Code</span><input type="checkbox" data-enable="claude" role="switch"></label>
+          <label><span>Gemini</span><input type="checkbox" data-enable="gemini" role="switch"></label>
+          <label><span>Codex</span><input type="checkbox" data-enable="codex" role="switch"></label></div>
           <label>Google 配額來源<select id="google-source"><option value="antigravity">Antigravity（個人版）</option><option value="code_assist">Code Assist（企業版）</option></select></label>
           <p>拖拉服務圖示或卡片標題可排序；左側把手移動整座島。Ctrl / ⌘ + Alt + Q 隱藏或顯示。</p>
           <div class="settings-actions"><button id="hide" class="text-button">隱藏到系統匣</button><button id="quit" class="text-button danger">結束 Quota Pebble</button></div>
