@@ -157,6 +157,7 @@ function makeCards(){
     card.querySelector('.connection-status').addEventListener('click',()=>{activeDetail=activeDetail===id?null:id;render(state);});
     card.querySelector('.close-connection').addEventListener('click',()=>{activeDetail=null;render(state);});
       card.querySelector('.connect-primary').addEventListener('click',()=>{const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
+    card.querySelector('.continue-claude-login').addEventListener('click',()=>api.continueClaudeLogin(id));
     card.querySelector('.login').addEventListener('click',()=>startLogin(id));
     card.querySelector('.quota-details-link').addEventListener('click',()=>{quotaDetailsProvider=id;quotaDetailsOpen=true;activeDetail=null;settingsOpen=false;footerPopover=null;render(state);});
     card.querySelector('.pace-link').addEventListener('click',()=>{paceDetailsProvider=paceDetailsProvider===id?null:id;quotaDetailsOpen=false;activeDetail=null;footerPopover=null;render(state);});
@@ -192,6 +193,7 @@ function renderConnection(id,s,auth){
   card.querySelector('.connection-description').textContent=id==='codex'?'登入要監控的 ChatGPT 訂閱帳號，可與 Claude、Gemini 使用不同帳號。':antigravity?'沿用 Antigravity 的 Google 帳號，讀取 Gemini 配額資訊。':`連接你的 ${id==='gemini'?'Google':names[id]} 帳號以讀取配額資訊。`;
   card.querySelector('.connection-account h4').textContent=baseId(id)==='claude'?'Claude Code':id==='codex'?'Codex':antigravity?'Antigravity · Gemini':'Google Code Assist';
   const phase=auth?.phase;
+  card.querySelector('.continue-claude-login').hidden=phase!=='web_login';
   const step=connected?4:phase==='syncing'||phase==='cooldown'||phase==='waiting'?2:phase==='connecting'||phase==='verifying'?1:0;
   card.querySelector('.connection-steps').style.setProperty('--progress',`${Math.min(100,step/3*100)}%`);
   for(const node of card.querySelectorAll('.connection-steps li')){

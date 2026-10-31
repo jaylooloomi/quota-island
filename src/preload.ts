@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('quota', {
   onPetSuspend: (listener:(reason?:string)=>void)=>{const handler=(_event:unknown,reason?:string)=>listener(reason);ipcRenderer.on('pet-suspend',handler);return ()=>ipcRenderer.removeListener('pet-suspend',handler);},
   refresh: () => ipcRenderer.invoke('refresh'),
   login: (id: string) => ipcRenderer.invoke('login', id),
+  continueClaudeLogin: (id:string)=>ipcRenderer.invoke('continue-claude-login',id),
   cancelLogin: (id: string) => ipcRenderer.invoke('cancel-login', id),
   logout: (id: string) => ipcRenderer.invoke('logout', id),
   openAntigravity: () => ipcRenderer.invoke('open-antigravity'),

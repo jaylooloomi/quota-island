@@ -182,13 +182,14 @@ function installHandlers() {
       if (!paused) void poller.tick();
     },
     'login': (_event: any, raw: unknown) => {
-      if(accounts.has(raw)){if(!demo)void accounts.login(raw);return;}
+      if(accounts.has(raw)){if(!demo)void accounts.prepareLogin(raw);return;}
       const id = validateId(raw);
       if (demo) { connections.states[id] = { pending: false, phase: 'error', message: '展示模式不會啟動登入；正常啟動即可連接帳號' }; publish(); return; }
-      void connections.login(id);
+      if(id==='claude')void connections.prepareClaude();else void connections.login(id);
     },
+    'continue-claude-login': (_event:any,raw:unknown)=>{if(demo)return;if(accounts.has(raw))void accounts.continueLogin(raw);else if(raw==='claude')void connections.continueClaude();},
     'reopen-login': (_event: any, raw: unknown) => accounts.has(raw)?accounts.reopen(raw):connections.reopen(validateId(raw)),
-    'cancel-login': (_event: any, raw: unknown) => accounts.has(raw)?accounts.cancel(raw):providers.cancelLogin(validateId(raw)),
+    'cancel-login': (_event: any, raw: unknown) => accounts.has(raw)?accounts.cancel(raw):(raw==='claude'&&connections.cancelPreparation()?undefined:providers.cancelLogin(validateId(raw))),
     'logout': async (_event: any, raw: unknown) => {
       if(accounts.has(raw)){if(demo)return {ok:false,message:'展示模式不會登出帳號'};try{await accounts.logout(raw);return {ok:true};}catch(e){return {ok:false,message:e instanceof ProviderError?e.message:'登出未完成，請稍後重試'};}}
       const id=validateId(raw);
@@ -312,7 +313,7 @@ else {
     if (!demo) await credentialWatch.scan();
     void poller.tick();
     void accounts.tick();
-    if(!demo&&!testing)autoReconnect=new AutoReconnect(path.join(app.getPath('userData'),'auto-reconnect.json'),id=>id==='claude'?connections.login('claude'):accounts.login(id));
+    if(!demo&&!testing)autoReconnect=new AutoReconnect(path.join(app.getPath('userData'),'auto-reconnect.json'),id=>id==='claude'?connections.prepareClaude():accounts.prepareLogin(id));
     interval = setInterval(() => { if(!paused&&autoReconnect){const current=snapshot();void autoReconnect.check(current.providers as any,Object.values(current.auth).some((a:any)=>a?.pending)).catch(()=>{});} if (!paused) { if (!demo) void credentialWatch.scan(); if(!demo&&settings.enabled.gemini&&settings.googleSource==='antigravity'&&providers.waitingForAntigravityAccount)void poller.authenticated('gemini'); void poller.tick();void accounts.tick(); }
       if(!demo&&morningHello){const current:any=snapshot();void morningHello.tick(settings.morningHelloEnabled,settings.morningHelloTime,['claude',...current.accounts.map((a:any)=>a.id)].map((id:string)=>({id,state:current.providers[id],pending:current.auth[id]?.pending})),paused);}
     }, 5000);

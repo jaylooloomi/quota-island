@@ -2,7 +2,7 @@ import { ProviderError, ProviderId } from './model';
 import { Poller } from './poller';
 import { LoginProgress } from './claude-login';
 export interface ConnectionState {
-  pending: boolean; phase: 'authorizing' | 'connecting' | 'code' | 'verifying' | 'syncing' | 'cooldown' | 'waiting' | 'ready' | 'error'; message: string;
+  pending: boolean; phase: 'web_login' | 'authorizing' | 'connecting' | 'code' | 'verifying' | 'syncing' | 'cooldown' | 'waiting' | 'ready' | 'error'; message: string;
   codeRequired?: boolean; canReopen?: boolean;
 }
 export class Connections {
@@ -10,6 +10,9 @@ export class Connections {
   private urls = new Map<ProviderId, string>();
   constructor(private service: { login(id: ProviderId, open: (url: string) => Promise<void>, progress: (value: LoginProgress) => void): Promise<void>; submitCode(id: ProviderId, code: unknown): void },
     private poller: Poller, private open: (url: string) => Promise<void>, private changed: () => void, private focus: () => void) {}
+  async prepareClaude(){if(this.states.claude?.pending)return;this.states.claude={pending:true,phase:'web_login',canReopen:true,message:'先在 Claude 網頁登入要監控的帳號，再按「已登入正確帳號，繼續授權」。'};this.urls.set('claude','https://claude.ai/new');this.changed();try{await this.open('https://claude.ai/new');}catch{this.cancelPreparation();}}
+  continueClaude(){if(this.states.claude?.phase!=='web_login')return;this.states.claude.pending=false;return this.login('claude');}
+  cancelPreparation(){if(this.states.claude?.phase!=='web_login')return false;delete this.states.claude;this.urls.delete('claude');this.changed();return true;}
   async login(id: ProviderId) {
     if (this.states[id]?.pending) return;
     this.states[id] = { pending: true, phase: 'authorizing', message: '等待瀏覽器授權，完成後會自動同步配額…' };

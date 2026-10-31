@@ -485,3 +485,5 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 .open-claude-terminal{padding:8px 14px;border:1px solid #8894bd;border-radius:8px;background:#48577f;color:#fff;font-weight:600;margin:6px 0}.open-claude-terminal:hover{background:#5b6b96}
 
 .settings .pet-action-row select,.settings .pet-action-row #pet-action-preview{height:32px;min-height:32px;box-sizing:border-box;margin:0;padding-top:0;padding-bottom:0}
+
+.continue-claude-login{padding:8px 12px;background:#4c587f;border:1px solid #929ed0;border-radius:8px;color:white;margin:6px 0}
