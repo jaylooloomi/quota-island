@@ -55,3 +55,5 @@ test('canceling verification settles login and unrelated output does not reuse a
   await waiting;login.submitCode('TEST-CODE');await new Promise(resolve=>setTimeout(resolve,60));
   assert.equal(seen,1);login.close();await rejected;
 });
+
+test('new verified credentials complete login even when CLI stays waiting for manual code',async()=>{const login=new ClaudeLogin(command("console.log('Paste code here');setInterval(()=>{},1000)"));let checked=0;await login.start(()=>{},5000,async()=>++checked>=1);assert.equal(checked,1);assert.throws(()=>login.submitCode('OLD-CODE'),/沒有等待授權碼/);});

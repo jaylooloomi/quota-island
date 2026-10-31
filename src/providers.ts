@@ -87,7 +87,7 @@ export class Providers {
       progress(info);
       // A piped CLI can print a manual authorization URL without launching it.
       if (info.browserUrl) void openUrl(info.browserUrl).catch(() => {});
-    });}catch(error){const after=await stat(credentialFile).then(s=>s.mtimeMs).catch(()=>0);let verified=false;if(after>before){try{const cmd=this.claudeCommand();const result=await exec(cmd.file,[...cmd.args,'auth','status','--json'],{env:cmd.env,windowsHide:true,timeout:15000,maxBuffer:65536});verified=JSON.parse(result.stdout).loggedIn===true;}catch{}}if(!verified)throw error;}
+    },300000,async()=>{const stamp=await stat(credentialFile).then(s=>s.mtimeMs).catch(()=>0);if(stamp<=before)return false;const cmd=this.claudeCommand();const r=await exec(cmd.file,[...cmd.args,'auth','status','--json'],{env:cmd.env,windowsHide:true,timeout:10000,maxBuffer:65536});return JSON.parse(r.stdout).loggedIn===true;});}catch(error){const after=await stat(credentialFile).then(s=>s.mtimeMs).catch(()=>0);let verified=false;if(after>before){try{const cmd=this.claudeCommand();const result=await exec(cmd.file,[...cmd.args,'auth','status','--json'],{env:cmd.env,windowsHide:true,timeout:15000,maxBuffer:65536});verified=JSON.parse(result.stdout).loggedIn===true;}catch{}}if(!verified)throw error;}
     await openClaudeTerminal(configDir).catch(()=>progress({message:'帳號已登入，請按「開啟 Claude Code」啟動本機配額同步'}));
   }
   submitCode(id: ProviderId, code: unknown) { if (id !== 'claude') throw new ProviderError('auth', '此來源不接受授權碼'); this.claudeLogin.submitCode(code); }

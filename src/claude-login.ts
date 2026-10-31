@@ -24,15 +24,16 @@ export class ClaudeLogin {
   private clearOutput: (() => void) | null = null;
   private verificationExpired: (() => void) | null = null;
   constructor(private command = () => findCli('claude'), private verificationTimeoutMs = 60_000) {}
-  async start(progress: (value: LoginProgress) => void, timeoutMs = 300_000): Promise<void> {
+  async start(progress: (value: LoginProgress) => void, timeoutMs = 300_000, completed?:()=>Promise<boolean>): Promise<void> {
     if (this.child) throw new ProviderError('auth', 'Claude 登入正在進行中');
     const cmd = this.command();
     return new Promise((resolve, reject) => {
       const child = spawn(cmd.file, [...cmd.args, 'auth', 'login', '--claudeai'], { env: cmd.env, windowsHide: true, stdio: 'pipe' });
       this.child = child; this.codeRequired = false;
-      let settled = false, output = '', lastUrl = '';
+      let settled = false, output = '', lastUrl = '',checking=false;
+      let completionTimer:NodeJS.Timeout|undefined;
       const finish = (error?: Error) => {
-        if (settled) return; settled = true; clearTimeout(timer);
+        if (settled) return; settled = true; clearTimeout(timer);clearInterval(completionTimer);
         if (this.verificationTimer) clearTimeout(this.verificationTimer);
         this.verificationTimer = null; this.clearOutput = null; this.verificationExpired = null;
         this.child = null; this.cancel = null; this.codeRequired = false;
@@ -49,6 +50,7 @@ export class ClaudeLogin {
         if (info.browserUrl && info.browserUrl !== lastUrl) { lastUrl = info.browserUrl; progress(info); }
         else if (info.codeRequired) progress({ codeRequired: true });
       };
+      if(completed)completionTimer=setInterval(async()=>{if(checking||settled)return;checking=true;try{if(await completed())finish();}catch{}finally{checking=false;}},1500);
       child.stdout.on('data', receive); child.stderr.on('data', receive);
       child.stdin.on('error', () => finish(new ProviderError('auth', 'Claude 登入程序已結束，請重新連接')));
       child.on('error', () => finish(new ProviderError('missing_cli', '無法啟動 Claude Code，請確認已安裝官方 CLI')));
