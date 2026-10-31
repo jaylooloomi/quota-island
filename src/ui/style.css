@@ -441,3 +441,12 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 #roam-pet[data-action=hello]::after{content:'✦';position:absolute;right:0;top:6px;color:#ffd791;animation:pet-sleep-dream 1.4s ease-in-out infinite}
 @keyframes pet-sleep-dream{0%,100%{transform:translateY(2px);opacity:.4}50%{transform:translateY(-4px);opacity:1}}
 @media(prefers-reduced-motion:reduce){#pet-food,#roam-pet::after{animation:none!important}}
+
+.island[data-pet-background=meteor] #pet-stage{background:linear-gradient(#04102026,#04102012),url('pets/meteor-forest.png') center 55%/cover no-repeat}
+.island[data-pet-background=meteor] .pet-sky{background:none;opacity:.5}
+.island[data-pet-background=meteor] .pet-sky::before,.island[data-pet-background=meteor] .pet-sky::after{display:none}
+.island[data-pet-background=meteor] .pet-ground{background:linear-gradient(#08152a22,#08152aa6);box-shadow:none;height:17px}
+.island[data-pet-background=classic] #pet-stage{background:radial-gradient(ellipse at 75% 100%,#49312370,transparent 65%),linear-gradient(#10131a,#1c1d24)}
+.island[data-pet-background=classic] .pet-sky{background:radial-gradient(circle at 70% 15%,#e9d5ff 0 1px,transparent 1.5px),radial-gradient(circle at 88% 35%,#ad97eb 0 1px,transparent 1.5px);animation:none}
+.island[data-pet-background=classic] .pet-sky::before,.island[data-pet-background=classic] .pet-sky::after{display:none}
+.island[data-pet-background=classic] .pet-ground{background:linear-gradient(#494039,#29272a);box-shadow:0 -1px 0 #b3875430}

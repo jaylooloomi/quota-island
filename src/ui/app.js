@@ -416,6 +416,8 @@ function render(next){
   const healthy=!state.paused&&ids.some(id=>ready(state.providers[id]));$('live-dot').classList.toggle('off',!healthy);
   document.querySelector('.footer-dot').classList.toggle('off',!healthy);$('footer-status').textContent=state.paused?'已暫停同步':'自動同步';
   for(const key of ['alwaysOnTop','notifications','petIdle','petAlerts','petRoam'])$(key).checked=state.settings[key];
+  $('pet-background').value=state.settings.petBackground??'meteor';
+  $('island').dataset.petBackground=state.settings.petBackground??'meteor';
   $('pet-style').value=state.settings.petStyle??'smooth';
   $('morningHelloEnabled').checked=state.settings.morningHelloEnabled===true;
   $('google-source').value=state.settings.googleSource;$('google-source').disabled=!!state.auth.gemini?.pending;
@@ -506,6 +508,7 @@ $('close-quota-details').addEventListener('click',()=>{quotaDetailsOpen=false;re
 $('language').addEventListener('change',event=>api.settings({locale:event.target.value}));
 for(const key of ['alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 for(const key of ['petIdle','petAlerts','petRoam'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
+$('pet-background').addEventListener('change',event=>api.settings({petBackground:event.target.value}));
 $('pet-style').addEventListener('change',event=>api.settings({petStyle:event.target.value}));
 $('pet-idle-preview').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.previewIdle($('pet-character').value),300);});
 $('pet-preview').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.preview(),300);});

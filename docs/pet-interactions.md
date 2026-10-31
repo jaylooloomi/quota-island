@@ -18,3 +18,8 @@ Unit tests cover random scheduling, action duration, feeding priority, both edge
 
 ## Deferred TODO: message receiver and bubbles
 Not implemented in this release. Future module should accept RSS/Atom polling or local messages, normalize them into a bounded queue (title/body/source/time), and display plain-text bubbles above the current companion. Feed interaction and real quota alerts should take priority. Add source management, pause/mute, preview, duplicate suppression and a reading duration limit. No execution of received text. Keep the quota strip geometry fixed and measure bubble height inside the existing stage.
+
+## Selectable stage backgrounds (1.8.1)
+Settings → Stage background offers Meteor forest (default), Vivid nebula, and Classic night. Validated choices persist across restart. All backgrounds use the same112px stage and do not change quota or actor positions.
+
+Built-in imagegen generated src/ui/pets/meteor-forest.png from the user's landscape as visual reference. Final prompt: original panoramic3:1 deep teal/midnight sky with dense tiny stars, cyan/gold shooting stars, small blue crescent moon in the upper right third, layered turquoise mountains and dark pine forest, thin warm horizon glow, clear dark ground for pets, polished painterly style; no text, watermark, logos or characters.
