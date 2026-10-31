@@ -464,3 +464,10 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 #roam-pet[data-action=sad][data-emotion-phase=sigh]::after{content:var(--pet-sigh);position:absolute;left:58px;top:25px;padding:2px 5px;border:1px solid #a1b9d855;border-radius:7px;background:#101d32df;color:#d2e6f7;font-size:10px;white-space:nowrap;animation:pet-sigh .9s ease-out both}
 @keyframes pet-sigh{from{opacity:.3;transform:translate(0,2px)}to{opacity:1;transform:translate(4px,-2px)}}
 .island[data-pet-style=pixel] #roam-pet[data-action=sad]::after{border-radius:1px;animation-timing-function:steps(3)}
+
+.compact-brand.pet-resident .brand-pet{left:50%;margin-left:-24px;animation:pet-title-breathe 3s ease-in-out infinite;opacity:1}
+@keyframes pet-title-breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}
+.island[data-pet-style=pixel] .compact-brand.pet-resident .brand-pet{animation:none;transform:none}
+@media(prefers-reduced-motion:reduce){.compact-brand.pet-resident .brand-pet{display:block!important;animation:none;transform:none;opacity:1}}
+
+.settings-pet-selectors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 10px;margin-bottom:5px}.settings .settings-pet-selectors label{flex-direction:column;align-items:stretch;gap:3px;min-width:0;font-size:11px}.settings-pet-selectors select{width:100%;max-width:100%}

@@ -23,8 +23,8 @@ if (testing) {
   if (!testData) throw new Error('QUOTA_TEST_DATA required');
   app.setPath('userData', testData);
 }
-type Settings = { autoStart:boolean; petBackground:'meteor'|'nebula'|'classic'; petRoam:boolean; petStyle:'classic'|'smooth'|'pixel'; petIdle:boolean;petAlerts:boolean; morningHelloEnabled:boolean; morningHelloTime:string; locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; pacing: boolean; reserveDefaultsVersion:3; reservePercent: Record<ProviderId, number>; paceWindows: Partial<Record<ProviderId, string>>; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: string[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; dock?:Dock; x?: number; y?: number };
-let settings: Settings = { autoStart:false, petBackground:'meteor', petRoam:false, petStyle:demo?'classic':'smooth', petIdle:!demo,petAlerts:!demo, morningHelloEnabled:true, morningHelloTime:'08:00', locale:'zh-TW', remaining: true, pacing:false, reserveDefaultsVersion:3, reservePercent:{claude:10,codex:10,gemini:10}, paceWindows:{}, alwaysOnTop: true, notifications: false, visible: { claude:true, codex:true, gemini:true }, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
+type Settings = { petPlacement:'stage'|'title'; autoStart:boolean; petBackground:'meteor'|'nebula'|'classic'; petRoam:boolean; petStyle:'classic'|'smooth'|'pixel'; petIdle:boolean;petAlerts:boolean; morningHelloEnabled:boolean; morningHelloTime:string; locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; pacing: boolean; reserveDefaultsVersion:3; reservePercent: Record<ProviderId, number>; paceWindows: Partial<Record<ProviderId, string>>; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: string[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; dock?:Dock; x?: number; y?: number };
+let settings: Settings = { petPlacement:'stage', autoStart:false, petBackground:'meteor', petRoam:false, petStyle:demo?'classic':'smooth', petIdle:!demo,petAlerts:!demo, morningHelloEnabled:true, morningHelloTime:'08:00', locale:'zh-TW', remaining: true, pacing:false, reserveDefaultsVersion:3, reservePercent:{claude:10,codex:10,gemini:10}, paceWindows:{}, alwaysOnTop: true, notifications: false, visible: { claude:true, codex:true, gemini:true }, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
 function validOrder(raw: unknown): raw is string[] {
   return Array.isArray(raw) && raw.length >= 3 && raw.length <= 23 && new Set(raw).size === raw.length && providerIds.every(id=>raw.includes(id)) && raw.every(id => providerIds.includes(id) || (typeof id === 'string' && /^claude-account-[0-9a-f-]{36}$/.test(id)));
 }
@@ -59,6 +59,7 @@ function readSettings() {
     const s = JSON.parse(readFileSync(path.join(app.getPath('userData'), 'preferences.json'), 'utf8'));
     if (validOrder(s.order)) settings.order = [...s.order];
     settings.locale=normalizeLocale(s.locale);
+    if(['stage','title'].includes(s.petPlacement))settings.petPlacement=s.petPlacement;
     if(['meteor','nebula','classic'].includes(s.petBackground))settings.petBackground=s.petBackground;
     if(['classic','smooth','pixel'].includes(s.petStyle))settings.petStyle=s.petStyle;
     if(typeof s.morningHelloEnabled==='boolean')settings.morningHelloEnabled=s.morningHelloEnabled;
@@ -157,6 +158,7 @@ function installHandlers() {
       if(typeof patch.autoStart==='boolean')patch={...patch,autoStart:syncLoginStartup(app,patch.autoStart,{platform:process.platform,packaged:app.isPackaged,demo,testing,executable:process.execPath})};
       if(typeof patch.morningHelloEnabled==='boolean')settings.morningHelloEnabled=patch.morningHelloEnabled;
       if(typeof patch.morningHelloTime==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(patch.morningHelloTime))settings.morningHelloTime=patch.morningHelloTime;
+      if(['stage','title'].includes(patch.petPlacement))settings.petPlacement=patch.petPlacement;
       if(['meteor','nebula','classic'].includes(patch.petBackground))settings.petBackground=patch.petBackground;
       if(['classic','smooth','pixel'].includes(patch.petStyle))settings.petStyle=patch.petStyle;
       accounts.patch(patch);

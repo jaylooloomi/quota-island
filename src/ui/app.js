@@ -417,6 +417,9 @@ function render(next){
   document.querySelector('.footer-dot').classList.toggle('off',!healthy);$('footer-status').textContent=state.paused?'已暫停同步':'自動同步';
   for(const key of ['autoStart','alwaysOnTop','notifications','petIdle','petAlerts','petRoam'])$(key).checked=state.settings[key];
   $('autoStart').disabled=!['win32','darwin'].includes(state.platform);
+  $('pet-roam').textContent=paceText(state.settings.petPlacement==='title'?'叫出常駐寵物':'叫出散步寵物');
+  $('pet-roam').title=paceText(state.settings.petPlacement==='title'?'寵物常駐在名稱區，關閉常駐後恢復名稱與版本號':'常駐向左、向右散步；關閉後才離開，救援短劇結束後恢復散步');
+  $('pet-placement').value=state.settings.petPlacement??'stage';
   $('pet-background').value=state.settings.petBackground??'meteor';
   $('island').dataset.petBackground=state.settings.petBackground??'meteor';
   $('pet-style').value=state.settings.petStyle??'smooth';
@@ -509,6 +512,7 @@ $('close-quota-details').addEventListener('click',()=>{quotaDetailsOpen=false;re
 $('language').addEventListener('change',event=>api.settings({locale:event.target.value}));
 for(const key of ['autoStart','alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 for(const key of ['petIdle','petAlerts','petRoam'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
+$('pet-placement').addEventListener('change',event=>api.settings({petPlacement:event.target.value}));
 $('pet-background').addEventListener('change',event=>api.settings({petBackground:event.target.value}));
 $('pet-style').addEventListener('change',event=>api.settings({petStyle:event.target.value}));
 $('pet-idle-preview').addEventListener('click',async()=>{await api.expand(false);setTimeout(()=>window.QuotaPets.previewIdle($('pet-character').value),300);});

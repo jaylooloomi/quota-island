@@ -1,6 +1,6 @@
 (function(){
   const $=id=>document.getElementById(id),reduced=matchMedia('(prefers-reduced-motion: reduce)');
-  let state,playing=false,previewPlaying=false,idle=false,idlePreview=false,lastAlert=0,nextIdle=Date.now()+120000+Math.random()*180000,idleIndex=0,finishTimer,phaseTimer,restTimer,previewLoopTimer;
+  let state,playing=false,previewPlaying=false,idle=false,idlePreview=false,idleResident=false,roamOverride=false,lastAlert=0,nextIdle=Date.now()+120000+Math.random()*180000,idleIndex=0,finishTimer,phaseTimer,restTimer,previewLoopTimer;
   let seen={};try{seen=JSON.parse(localStorage.getItem('quota-pet-alerts')||'{}');if(!seen||Array.isArray(seen)||typeof seen!=='object')seen={};}catch{}
   const text=value=>window.QuotaI18n.translate(value,state?.settings.locale??'zh-TW');
   const brand=document.querySelector('.compact-brand');
@@ -13,7 +13,7 @@
   function roam(manual=false,requested,initialAction){
     if(!state||state.expanded||document.hidden||state.paused)return;
     if(manual)stop();else if(playing||roaming)return;
-    stop();roaming=true;if(manual)roamWanted=true;const ticket=++roamTicket,roles=['claude','codex','gemini','octopus'].filter(id=>id!==lastRole),role=['claude','codex','gemini','octopus'].includes(requested)?requested:roles[Math.floor(Math.random()*roles.length)];lastRole=role;
+    stop();roaming=true;roamOverride=!!initialAction;if(manual)roamWanted=true;const ticket=++roamTicket,roles=['claude','codex','gemini','octopus'].filter(id=>id!==lastRole),role=['claude','codex','gemini','octopus'].includes(requested)?requested:roles[Math.floor(Math.random()*roles.length)];lastRole=role;
     const isPixel=state.settings.petStyle==='pixel';roamPet.dataset.renderStyle=isPixel?'pixel':'smooth';
     const resources=isPixel?window.QuotaPetAnimation.loadPixelBundle().then(b=>[b.walk,b.greetings,b.rest,b.care,Object.fromEntries(Object.entries(b.rest).map(([role,frames])=>[role,frames.slice(0,6)]))]):Promise.all([window.QuotaPetAnimation.load('walk'),window.QuotaPetAnimation.load('smooth'),window.QuotaPetAnimation.loadRest(),window.QuotaPetAnimation.loadCare(),window.QuotaPetAnimation.loadSad()]);
     resources.then(([frames,greetings,rest,care,sad])=>{
@@ -28,7 +28,7 @@
         roamRequest=0;if(!roaming||document.hidden)return;
         const dt=Math.max(0,(time-last)/1000);last=time;let action=behavior.step(reduced.matches?0:dt),position=path.step(action.mode==='walk'||action.mode==='seek'?(reduced.matches?0:dt):0);
         if(action.mode==='seek'&&position.arrived){behavior.arrive();action=behavior.step(0);}
-        if(previousMode==='eat'&&action.mode!=='eat'){food.hidden=true;path.cancelGoal();}previousMode=action.mode;
+        if(previousMode==='eat'&&action.mode!=='eat'){food.hidden=true;path.cancelGoal();}previousMode=action.mode;if(roamOverride&&action.mode==='walk')roamOverride=false;
         const walking=action.mode==='walk'||action.mode==='seek';if(walking&&position.moving&&!reduced.matches)elapsed+=dt*1000*position.speed/38;
         roamPet.style.transform=`translateX(${position.x}px)`;roamCanvas.style.transform=`scaleX(${position.face})`;roamPet.dataset.moving=String(walking&&position.moving&&!reduced.matches);roamPet.dataset.action=action.mode;
         const message=reduced.matches?'陪你休息':messages[action.mode];if(message!==previous){$('pet-message').textContent=text(message);previous=message;}
@@ -77,7 +77,7 @@
     }
     $('pet-message').style.width=`${Math.max(56,brand.getBoundingClientRect().right-bounds.left-15)}px`;
   }
-  function stop(){roamControls=null;food.hidden=true;$('pet-stage').removeAttribute('title');cancelAnimationFrame(roamRequest);roamRequest=0;roaming=false;roamTicket++;roamPet.hidden=true;cancelAnimationFrame(frameRequest);frameRequest=0;clearTimeout(finishTimer);clearTimeout(phaseTimer);clearTimeout(restTimer);clearInterval(previewLoopTimer);playing=false;previewPlaying=false;idle=false;idlePreview=false;$('pet-stage').hidden=true;$('island').classList.remove('pet-playing');brand.classList.remove('pet-idle');void window.quota.petHeight(0);nextIdle=Date.now()+120000+Math.random()*180000;}
+  function stop(){roamControls=null;food.hidden=true;$('pet-stage').removeAttribute('title');cancelAnimationFrame(roamRequest);roamRequest=0;roaming=false;roamTicket++;roamPet.hidden=true;cancelAnimationFrame(frameRequest);frameRequest=0;clearTimeout(finishTimer);clearTimeout(phaseTimer);clearTimeout(restTimer);clearInterval(previewLoopTimer);playing=false;previewPlaying=false;idle=false;idlePreview=false;idleResident=false;roamOverride=false;$('pet-stage').hidden=true;$('island').classList.remove('pet-playing');brand.classList.remove('pet-idle','pet-resident');void window.quota.petHeight(0);nextIdle=Date.now()+120000+Math.random()*180000;}
   function alert(event,preview=false){
     stop();playing=true;previewPlaying=preview;if(!preview){lastAlert=Date.now();seen=window.QuotaPetPolicy.claim(seen,event);try{localStorage.setItem('quota-pet-alerts',JSON.stringify(seen));}catch{}}
     const account=preview?text('預覽・展示資料'):state.accounts?.find(a=>a.id===event.id)?.label??(event.provider==='gemini'?'Antigravity':event.provider==='codex'?'Codex':'Claude');
@@ -98,8 +98,8 @@
     phases();if(preview&&!reduced.matches)previewLoopTimer=setInterval(phases,6000);
     finishTimer=setTimeout(stop,preview?180000:6000);
   }
-  function showIdle(preview=false,requested){
-    stop();idle=true;idlePreview=preview;brandPet.style.animationDuration=preview?'15s':'4.5s';sprite(brandPet,['claude','codex','gemini','octopus'].includes(requested)?requested:['claude','codex','gemini','octopus'][idleIndex++%4]);brand.classList.add('pet-idle');startAnimation();finishTimer=setTimeout(stop,preview?15000:4500);
+  function showIdle(preview=false,requested,resident=false){
+    stop();idle=true;idlePreview=preview;idleResident=resident;brand.classList.toggle('pet-resident',resident);brandPet.style.animationDuration=preview?'15s':'4.5s';sprite(brandPet,['claude','codex','gemini','octopus'].includes(requested)?requested:['claude','codex','gemini','octopus'][idleIndex++%4]);brand.classList.add('pet-idle');if(resident)lastRole=brandPet.dataset.actor;startAnimation();if(!resident)finishTimer=setTimeout(stop,preview?15000:4500);
   }
   function check(){
     if(!state||state.expanded||nativeSuspended||document.hidden||state.paused){if(playing||idle||roaming)stop();return;}
@@ -108,6 +108,9 @@
     if(idlePreview)return;
     const event=window.QuotaPetPolicy.events(state,seen)[0];
     if(event&&Date.now()-lastAlert>=30000){alert(event);return;}
+    if(roaming&&roamOverride)return;
+    if((state.settings.petRoam===true||roamWanted)&&state.settings.petPlacement==='title'){if(!idleResident)showIdle(false,lastRole,true);return;}
+    if(idleResident)stop();
     if(roaming){if(!roamWanted&&state.settings.petRoam!==true)stop();return;}
     if(state.settings.petRoam===true||roamWanted){roam();return;}
     if(state.settings.petIdle===false||reduced.matches){if(idle)stop();return;}
@@ -122,5 +125,6 @@
   reduced.addEventListener('change',()=>{if(idle||roaming)stop();else startAnimation();});
   setInterval(check,1000);
   new ResizeObserver(align).observe($('provider-strip'));
-  window.QuotaPets={action:(action,role)=>roam(true,role,action),previewIdle(role){if(state&&!state.expanded&&!nativeSuspended&&!document.hidden&&!state.paused)showIdle(true,role);},roam:role=>roam(true,role),update(next){if(state?.settings.petRoam===true&&next.settings.petRoam===false)roamWanted=false;state=next;chooseStyle(next.settings.petStyle);check();align();},preview(){if(state&&!state.expanded)alert({provider:'claude',id:'claude',label:'每週',remaining:15,reset:new Date(Date.now()+86400000).toISOString(),level:1},true);}};
+  function summon(role){if(!state||state.expanded||nativeSuspended||document.hidden||state.paused)return;roamWanted=true;if(state.settings.petPlacement==='title')showIdle(false,role,true);else roam(true,role);}
+  window.QuotaPets={action:(action,role)=>roam(true,role,action),previewIdle(role){if(state&&!state.expanded&&!nativeSuspended&&!document.hidden&&!state.paused)showIdle(true,role);},roam:role=>summon(role),update(next){if(state?.settings.petRoam===true&&next.settings.petRoam===false)roamWanted=false;state=next;chooseStyle(next.settings.petStyle);check();align();},preview(){if(state&&!state.expanded)alert({provider:'claude',id:'claude',label:'每週',remaining:15,reset:new Date(Date.now()+86400000).toISOString(),level:1},true);}};
 })();
