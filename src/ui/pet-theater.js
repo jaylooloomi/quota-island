@@ -14,7 +14,9 @@
     if(!state||state.expanded||document.hidden||state.paused)return;
     if(manual)stop();else if(playing||roaming)return;
     stop();roaming=true;if(manual)roamWanted=true;const ticket=++roamTicket,roles=['claude','codex','gemini','octopus'].filter(id=>id!==lastRole),role=['claude','codex','gemini','octopus'].includes(requested)?requested:roles[Math.floor(Math.random()*roles.length)];lastRole=role;
-    Promise.all([window.QuotaPetAnimation.load('walk'),window.QuotaPetAnimation.load('smooth'),window.QuotaPetAnimation.loadRest(),window.QuotaPetAnimation.loadCare()]).then(([frames,greetings,rest,care])=>{
+    const isPixel=state.settings.petStyle==='pixel';roamPet.dataset.renderStyle=isPixel?'pixel':'smooth';
+    const resources=isPixel?window.QuotaPetAnimation.loadPixelBundle().then(b=>[b.walk,b.greetings,b.rest,b.care]):Promise.all([window.QuotaPetAnimation.load('walk'),window.QuotaPetAnimation.load('smooth'),window.QuotaPetAnimation.loadRest(),window.QuotaPetAnimation.loadCare()]);
+    resources.then(([frames,greetings,rest,care])=>{
       if(ticket!==roamTicket||!roaming)return;
       const stage=$('pet-stage');stage.dataset.phase='roam';stage.title=text('點擊舞台投食');stage.hidden=false;roamPet.hidden=false;roamPet.dataset.role=role;$('island').classList.add('pet-playing');
       $('pet-caption').textContent=`${text('太空散步')} · ${role==='claude'?'Claude':role==='codex'?'Codex':role==='octopus'?text('小章魚'):'Antigravity'}`;$('pet-caption').title=text('隨機角色陪伴，不代表帳號配額');$('pet-message').style.width='68px';$('pet-close').setAttribute('aria-label',text('關閉散步'));void window.quota.petHeight(112);
@@ -30,27 +32,29 @@
         const walking=action.mode==='walk'||action.mode==='seek';if(walking&&position.moving&&!reduced.matches)elapsed+=dt*1000*position.speed/38;
         roamPet.style.transform=`translateX(${position.x}px)`;roamCanvas.style.transform=`scaleX(${position.face})`;roamPet.dataset.moving=String(walking&&position.moving&&!reduced.matches);roamPet.dataset.action=action.mode;
         const message=reduced.matches?'陪你休息':messages[action.mode];if(message!==previous){$('pet-message').textContent=text(message);previous=message;}
-        let list=frames[role],sample=window.QuotaPetAnimation.sample('walk',role,elapsed,reduced.matches);
+        let list=frames[role],sample=window.QuotaPetAnimation.sample(isPixel?'pixel-walk':'walk',role,elapsed,reduced.matches);
         if(!walking){
           const age=reduced.matches?0:action.elapsed*1000;
-          if(action.mode==='hello'){list=greetings[role];sample=window.QuotaPetAnimation.sample(role==='octopus'?'hello':'smooth',role,age,reduced.matches);}
+          if(action.mode==='hello'){list=greetings[role];sample=window.QuotaPetAnimation.sample(isPixel?'pixel':role==='octopus'?'hello':'smooth',role,age,reduced.matches);}
           else if(action.mode==='drink'||action.mode==='eat'){list=care[role];const phase=age%2400/2400*6,i=Math.floor(phase),offset=action.mode==='eat'?6:0;sample={frame:offset+i,next:offset+(i+1)%6,mix:reduced.matches?0:phase-i};}
-          else if(role==='octopus'){list=rest.octopus;const phase=age%3000/3000*6,i=Math.floor(phase),offset=action.mode==='sleep'?6:0;sample={frame:offset+i,next:offset+(i+1)%6,mix:reduced.matches?0:phase-i};}
+          else if(role==='octopus'||isPixel){list=rest[role];const phase=age%3000/3000*6,i=Math.floor(phase),offset=action.mode==='sleep'?6:0;sample={frame:offset+i,next:offset+(i+1)%6,mix:reduced.matches?0:phase-i};}
           else {list=rest[role];const pose=action.mode==='sleep'?2:1;sample={frame:pose,next:pose,mix:0};}
         }
-        const ctx=roamCanvas.getContext('2d');ctx.clearRect(0,0,144,144);ctx.save();if(!walking&&!reduced.matches){const breath=Math.sin(action.elapsed*2)*.012;ctx.translate(0,134);ctx.scale(1,1+breath);ctx.translate(0,-134);}ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1-sample.mix;ctx.drawImage(list[sample.frame],0,0);if(sample.mix){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=sample.mix;ctx.drawImage(list[sample.next],0,0);}ctx.restore();roamPet.dataset.frame=String(sample.frame);
+        if(isPixel)sample.mix=0;
+        const ctx=roamCanvas.getContext('2d');ctx.imageSmoothingEnabled=!isPixel;ctx.clearRect(0,0,144,144);ctx.save();if(!walking&&!reduced.matches&&!isPixel){const breath=Math.sin(action.elapsed*2)*.012;ctx.translate(0,134);ctx.scale(1,1+breath);ctx.translate(0,-134);}ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1-sample.mix;ctx.drawImage(list[sample.frame],0,0);if(sample.mix){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=sample.mix;ctx.drawImage(list[sample.next],0,0);}ctx.restore();roamPet.dataset.frame=String(sample.frame);
         if(!reduced.matches)roamRequest=requestAnimationFrame(step);
       };
       step(last);
     }).catch(()=>{if(ticket===roamTicket)stop();});
   }
+  let pixelAssets=null;
   let frameRequest=0,animationStart=0,atlas=null,style=null,assetVersion=0;
   const actors=[brandPet,...$('pet-stage').querySelectorAll('.pet-sprite')];
   for(const el of actors){const canvas=document.createElement('canvas');canvas.width=144;canvas.height=144;canvas.className='pet-canvas';canvas.setAttribute('aria-hidden','true');el.append(canvas);}
   function draw(time){
     frameRequest=0;if((!playing&&!idle)||document.hidden||!atlas)return;
-    const elapsed=time-animationStart;
-    for(const el of actors){if(el===brandPet?!idle:!playing||el.hidden)continue;const provider=el.dataset.actor??el.dataset.pet,frames=atlas[provider];if(style==='classic'&&provider!=='octopus')continue;if(!frames)continue;const sample=window.QuotaPetAnimation.sample(provider==='octopus'?'hello':style,provider,elapsed,reduced.matches),canvas=el.querySelector('canvas'),ctx=canvas.getContext('2d');ctx.clearRect(0,0,144,144);ctx.imageSmoothingEnabled=style!=='pixel';ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1-sample.mix;ctx.drawImage(frames[sample.frame],0,0);if(sample.mix){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=sample.mix;ctx.drawImage(frames[sample.next],0,0);}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';el.dataset.frame=String(sample.frame);}
+    const elapsed=Math.max(0,time-animationStart);
+    for(const el of actors){if(el===brandPet?!idle:!playing||el.hidden)continue;const provider=el.dataset.actor??el.dataset.pet,frames=atlas[provider];if(style==='classic'&&provider!=='octopus')continue;if(!frames)continue;let sample=window.QuotaPetAnimation.sample(style==='pixel'?'pixel':provider==='octopus'?'hello':style,provider,elapsed,reduced.matches),activeFrames=frames;if(style==='pixel'&&playing&&el!==brandPet&&pixelAssets){const phase=$('pet-stage').dataset.phase;const action=phase==='rest'?'sleep':phase==='rescue'&&provider==='codex'?'drink':phase==='warning'&&provider===$('pet-stage').dataset.affected?'sad':'hello';if(action!=='hello'){activeFrames=action==='drink'?pixelAssets.care[provider]:pixelAssets.rest[provider];const offset=action==='sleep'?6:0,index=reduced.matches?0:Math.floor(elapsed%2400/400);sample={frame:offset+index,next:offset+index,mix:0};}}const canvas=el.querySelector('canvas'),ctx=canvas.getContext('2d');ctx.clearRect(0,0,144,144);ctx.imageSmoothingEnabled=style!=='pixel';ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1-sample.mix;ctx.drawImage(activeFrames[sample.frame],0,0);if(sample.mix){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=sample.mix;ctx.drawImage(activeFrames[sample.next],0,0);}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';el.dataset.frame=String(sample.frame);}
     if(!reduced.matches)frameRequest=requestAnimationFrame(draw);
   }
   function startAnimation(){cancelAnimationFrame(frameRequest);animationStart=performance.now();if(atlas)draw(animationStart);}
@@ -58,7 +62,7 @@
     const selected=['classic','smooth','pixel'].includes(next)?next:'smooth';if(selected===style)return;
     style=selected;atlas=null;const version=++assetVersion;cancelAnimationFrame(frameRequest);
     $('island').dataset.petStyle=style;
-    window.QuotaPetAnimation.load(style).then(result=>{if(version!==assetVersion)return;atlas=result;startAnimation();}).catch(()=>{if(version!==assetVersion)return;style='classic';$('island').dataset.petStyle='classic';});
+    (style==='pixel'?window.QuotaPetAnimation.loadPixelBundle().then(b=>{pixelAssets=b;return b.greetings;}):window.QuotaPetAnimation.load(style)).then(result=>{if(version!==assetVersion)return;atlas=result;startAnimation();}).catch(()=>{if(version!==assetVersion)return;style='classic';$('island').dataset.petStyle='classic';});
   }
   function sprite(el,provider,pose=0){el.dataset.actor=provider;el.style.setProperty('--pet-row',provider==='codex'?50:provider==='gemini'?100:0);el.style.setProperty('--pet-pose',pose*50);}
   function align(){
