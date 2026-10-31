@@ -477,3 +477,5 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 
 
 .compact-brand.pet-resident{overflow:hidden}.compact-brand.pet-resident .brand-pet{left:13px;margin-left:0;animation:none;transform:none}
+
+.compact-brand.pet-resident{height:48px;min-height:48px;flex-shrink:0}.compact-brand.pet-resident .brand-pet{width:44px;height:44px;margin-top:-22px}
