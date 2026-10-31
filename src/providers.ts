@@ -1,3 +1,4 @@
+import {readStatusline} from './claude-statusline';
 import { readFile } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { homedir } from 'node:os';
@@ -41,22 +42,9 @@ export class Providers {
       return this.googleSource() === 'antigravity' ? this.antigravity.read() : this.gemini.read();
     }
     const dir = this.claudeConfigDir || process.env.CLAUDE_CONFIG_DIR || path.join(homedir(), '.claude');
-    let credentials: any;
-    try { credentials = JSON.parse(await readFile(path.join(dir, '.credentials.json'), 'utf8')); } catch { /* Keychain fallback below */ }
-    if (!this.claudeConfigDir && !credentials?.claudeAiOauth?.accessToken && process.platform === 'darwin') {
-      try {
-        const { stdout } = await exec('/usr/bin/security', ['find-generic-password', '-s', 'Claude Code-credentials', '-w'], { timeout: 10_000, maxBuffer: 128 * 1024 });
-        const text = stdout.trim();
-        credentials = JSON.parse(text.startsWith('{') ? text : Buffer.from(text.replace(/^0x/, ''), 'hex').toString('utf8'));
-      } catch { /* Report signed out without leaking keychain output */ }
-    }
-    const oauth = credentials?.claudeAiOauth;
-    if (!oauth?.accessToken) throw new ProviderError('auth', '請先登入 Claude Code，以讀取訂閱配額');
-    const data = await jsonRequest('https://api.anthropic.com/api/oauth/usage', {
-      Authorization: `Bearer ${oauth.accessToken}`, Accept: 'application/json', 'anthropic-beta': 'oauth-2025-04-20', 'User-Agent': 'quota-island/0.1.0'
-    });
-    return parseClaude(data, typeof oauth.subscriptionType === 'string' ? oauth.subscriptionType : null);
+    return readStatusline(dir);
   }
+
   async login(id: ProviderId, openUrl: (url: string) => Promise<void>, progress: (value: LoginProgress) => void = () => {}) {
     if (this.authJobs.has(id)) return this.authJobs.get(id)!;
     const job = this.performLogin(id, openUrl, progress).finally(() => this.authJobs.delete(id));
