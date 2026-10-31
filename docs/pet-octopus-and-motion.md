@@ -11,3 +11,9 @@ Built-in imagegen was used (not CLI). Final prompt set: regular six-column trans
 
 ## Validation
 scripts/pet-crew-test.cjs checks four roles through the actual settings UI, twelve nonempty centered grounded frames, both directions, continuous motion, octopus hello rendering and renderer errors. Existing i18n and three-style desktop regression tests remain applicable.
+
+## Orange reference redesign (1.7.2)
+
+Active octopus atlas: src/ui/pets/space-octopus-orange.png. Previous turquoise atlas is retained. Built-in imagegen used the user-provided orange octopus as design reference only. Final prompt: transparent 6-column, 4-row atlas, 24 equal cells; friendly orange octopus with round head, large brown eyes and white sclera, curved eyebrows, joyful smile, subtly textured skin and cream-peach suction cups; no clothing or props; fixed three-quarter right-facing camera; first twelve frames seamless tentacle walk, last twelve frames greeting wave. Keep body scale and floor baseline consistent.
+
+Rendered opaque silhouettes are recentered after resampling to avoid jitter caused by low-alpha tentacle edges. Moving status now reads 職守中 / On duty / 見守り中 / 근무 중.

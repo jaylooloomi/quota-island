@@ -20,7 +20,7 @@
         roamRequest=0;if(!roaming||document.hidden)return;
         const dt=(time-last)/1000;last=time;const position=path.step(reduced.matches?0:dt);if(position.moving&&!reduced.matches)elapsed+=dt*1000*position.speed/38;
         roamPet.style.transform=`translateX(${position.x}px)`;roamCanvas.style.transform=`scaleX(${position.face})`;roamPet.dataset.moving=String(position.moving&&!reduced.matches);
-        const message=reduced.matches?'陪你休息':position.moving?'散步中':'休息一下';if(message!==previous){$('pet-message').textContent=text(message);previous=message;}
+        const message=reduced.matches?'陪你休息':position.moving?'職守中':'休息一下';if(message!==previous){$('pet-message').textContent=text(message);previous=message;}
         const sample=window.QuotaPetAnimation.sample('walk',role,position.moving?elapsed:0,reduced.matches),ctx=roamCanvas.getContext('2d');ctx.clearRect(0,0,144,144);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1-sample.mix;ctx.drawImage(frames[role][sample.frame],0,0);if(sample.mix){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=sample.mix;ctx.drawImage(frames[role][sample.next],0,0);}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';roamPet.dataset.frame=String(sample.frame);
         if(!reduced.matches)roamRequest=requestAnimationFrame(step);
       };
