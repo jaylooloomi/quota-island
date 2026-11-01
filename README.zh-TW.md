@@ -20,11 +20,11 @@
 
 ## 10 秒認識 Quota Pebble
 
-中文語音／字幕 · AI 生成介紹影片，非 App 實際操作錄影。點擊動態預覽，可開啟原始 MP4 有聲版本。
+中文介紹動畫 · AI 生成宣傳素材，非 App 實際操作錄影。GIF 為無聲動畫。
 
-<p align="center"><a href="docs/videos/intro-01-zh-TW.mp4"><img src="docs/videos/intro-01-zh-TW.gif" alt="01 · 告別額度突然見底" width="480"></a><br><b>01 · 告別額度突然見底</b><br><sub>▶ 點擊觀看有聲影片 · 中文</sub></p>
+<p align="center"><img src="docs/videos/intro-01-zh-TW.gif" alt="01 · 告別額度突然見底" width="480"><br><b>01 · 告別額度突然見底</b></p>
 
-<p align="center"><a href="docs/videos/intro-02-zh-TW.mp4"><img src="docs/videos/intro-02-zh-TW.gif" alt="02 · 額度、配速與桌面小夥伴" width="480"></a><br><b>02 · 額度、配速與桌面小夥伴</b><br><sub>▶ 點擊觀看有聲影片 · 中文</sub></p>
+<p align="center"><img src="docs/videos/intro-02-zh-TW.gif" alt="02 · 額度、配速與桌面小夥伴" width="480"><br><b>02 · 額度、配速與桌面小夥伴</b></p>
 
 ## 使用情境
 

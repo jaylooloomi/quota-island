@@ -5,3 +5,6 @@ references/
 test-results/
 *.log
 .env
+
+# Keep original promotional videos outside Git; publish optimized GIFs only.
+/docs/videos/*.mp4
