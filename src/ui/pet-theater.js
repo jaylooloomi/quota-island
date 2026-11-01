@@ -10,7 +10,7 @@
   let roamControls=null;
   const food=document.createElement('span');food.id='pet-food';food.hidden=true;food.setAttribute('aria-hidden','true');$('pet-stage').append(food);
   $('pet-stage').addEventListener('click',event=>{if(!roaming||event.target.closest('button'))return;const bounds=$('pet-stage').getBoundingClientRect();roamControls?.feed(Math.max(24,Math.min(bounds.width-24,event.clientX-bounds.left)),event.clientY-bounds.top);});
-  function roam(manual=false,requested,initialAction){
+  function roam(manual=false,requested=state?.settings.petCharacter??'claude',initialAction){
     if(!state||state.expanded||document.hidden||state.paused)return;
     if(manual)stop();else if(playing||roaming)return;
     stop();roaming=true;roamOverride=!!initialAction;if(manual)roamWanted=true;const ticket=++roamTicket,roles=['claude','codex','gemini','octopus'].filter(id=>id!==lastRole),role=['claude','codex','gemini','octopus'].includes(requested)?requested:roles[Math.floor(Math.random()*roles.length)];lastRole=role;
@@ -19,7 +19,7 @@
     resources.then(([frames,greetings,rest,care,sad,recharge])=>{
       if(ticket!==roamTicket||!roaming)return;
       const stage=$('pet-stage');stage.dataset.phase='roam';stage.title=text('點擊舞台投食');stage.hidden=false;roamPet.hidden=false;roamPet.dataset.role=role;$('island').classList.add('pet-playing');
-      $('pet-caption').textContent=`${text('太空散步')} · ${role==='claude'?'Claude':role==='codex'?'Codex':role==='octopus'?text('小章魚'):'Antigravity'}`;$('pet-caption').title=text('隨機角色陪伴，不代表帳號配額');$('pet-message').style.width='68px';$('pet-close').setAttribute('aria-label',text('關閉散步'));void window.quota.petHeight(112);
+      $('pet-caption').textContent=`${text('太空散步')} · ${role==='claude'?'Claude':role==='codex'?'Codex':role==='octopus'?text('小章魚'):'Antigravity'}`;$('pet-caption').title=$('pet-caption').textContent;$('pet-message').style.width='68px';$('pet-close').setAttribute('aria-label',text('關閉散步'));void window.quota.petHeight(112);
       const path=window.QuotaPetWander.create(stage.clientWidth),behavior=window.QuotaPetBehavior.create();let last=performance.now(),elapsed=0,previous='',previousMode='walk';
       const messages={walk:'職守中',seek:'開飯了！',eat:'好好吃！',hello:'跟你打招呼',sad:'偶爾也會有點累',sleep:'充電小睡中',drink:'記得喝水喔',recharge:'補充電力'};
       roamControls={act(action){if(behavior.act(action)){path.cancelGoal();food.hidden=true;roamPet.dataset.action=action;}},feed(x,y){const target=window.QuotaPetWander.feedingTarget(stage.clientWidth,x);food.hidden=false;food.style.left=target.foodX+'px';food.style.setProperty('--fall',Math.min(0,y-stage.clientHeight+18)+'px');food.style.animation='none';void food.offsetWidth;food.style.animation='pet-food-fall .45s ease-in both';path.go(target.petX);behavior.feed();if(reduced.matches){for(let i=0;i<100;i++)if(path.step(.1).arrived)break;behavior.arrive();step(performance.now());}}};
@@ -116,7 +116,7 @@
       if(!reduced.matches)frameRequest=requestAnimationFrame(tick);
     };tick(last);
   }
-  function showIdle(preview=false,requested,resident=false,initialAction){
+  function showIdle(preview=false,requested=state?.settings.petCharacter??'claude',resident=false,initialAction){
     stop();idle=true;idlePreview=preview;idleResident=resident;brand.classList.toggle('pet-resident',resident);brandPet.style.animationDuration=preview?'15s':'4.5s';sprite(brandPet,['claude','codex','gemini','octopus'].includes(requested)?requested:['claude','codex','gemini','octopus'][idleIndex++%4]);brand.classList.add('pet-idle');if(resident){lastRole=brandPet.dataset.actor;void startTitleResident(lastRole,initialAction).catch(stop);}else startAnimation();if(!resident)finishTimer=setTimeout(stop,preview?15000:4500);
   }
   function check(){
@@ -128,7 +128,7 @@
     const event=window.QuotaPetPolicy.events(state,seen)[0];
     if(event&&Date.now()-lastAlert>=30000){alert(event);return;}
     if(roaming&&roamOverride)return;
-    if((state.settings.petRoam===true||roamWanted)&&state.settings.petPlacement==='title'){if(!idleResident)showIdle(false,lastRole,true);return;}
+    if((state.settings.petRoam===true||roamWanted)&&state.settings.petPlacement==='title'){if(!idleResident)showIdle(false,undefined,true);return;}
     if(idleResident)stop();
     if(roaming){if(!roamWanted&&state.settings.petRoam!==true)stop();return;}
     if(state.settings.petRoam===true||roamWanted){roam();return;}
@@ -145,5 +145,5 @@
   setInterval(check,1000);
   new ResizeObserver(align).observe($('provider-strip'));
   function summon(role,action){if(!state||state.expanded||nativeSuspended||document.hidden||state.paused)return;roamWanted=true;if(state.settings.petPlacement==='title')showIdle(false,role,true,action);else roam(true,role,action);}
-  window.QuotaPets={action:(action,role)=>{if(Object.hasOwn(QuotaPetBehavior.durations,action))summon(role,action);else if(action==='walk')summon(role);},previewIdle(role){if(state&&!state.expanded&&!nativeSuspended&&!document.hidden&&!state.paused)showIdle(true,role);},roam:role=>summon(role),update(next){if(state?.settings.petRoam===true&&next.settings.petRoam===false)roamWanted=false;state=next;chooseStyle(next.settings.petStyle);check();align();},preview(){if(state&&!state.expanded)alert({provider:'claude',id:'claude',label:'每週',remaining:15,reset:new Date(Date.now()+86400000).toISOString(),level:1},true);}};
+  window.QuotaPets={action:(action,role)=>{if(Object.hasOwn(QuotaPetBehavior.durations,action))summon(role,action);else if(action==='walk')summon(role);},previewIdle(role){if(state&&!state.expanded&&!nativeSuspended&&!document.hidden&&!state.paused)showIdle(true,role);},roam:role=>summon(role),update(next){if(state&&((state.settings.petCharacter??'claude')!==(next.settings.petCharacter??'claude')||state.settings.petPlacement!==next.settings.petPlacement)&&(roaming||idle))stop();if(state?.settings.petRoam===true&&next.settings.petRoam===false)roamWanted=false;state=next;chooseStyle(next.settings.petStyle);check();align();},preview(){if(state&&!state.expanded)alert({provider:'claude',id:'claude',label:'每週',remaining:15,reset:new Date(Date.now()+86400000).toISOString(),level:1},true);}};
 })();

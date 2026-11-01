@@ -419,6 +419,7 @@ function render(next){
   document.querySelector('.footer-dot').classList.toggle('off',!healthy);$('footer-status').textContent=state.paused?'已暫停同步':'自動同步';
   for(const key of ['autoStart','alwaysOnTop','notifications','petIdle','petAlerts','petRoam'])$(key).checked=state.settings[key];
   $('autoStart').disabled=!['win32','darwin'].includes(state.platform);
+  $('pet-character').value=state.settings.petCharacter??'claude';
   $('pet-placement').value=state.settings.petPlacement??'title';
   $('pet-background').value=state.settings.petBackground??'meteor';
   $('island').dataset.petBackground=state.settings.petBackground??'meteor';
@@ -512,8 +513,9 @@ $('language').addEventListener('change',event=>api.settings({locale:event.target
 for(const key of ['autoStart','alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 for(const key of ['petIdle','petAlerts','petRoam'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 $('pet-placement').addEventListener('change',event=>api.settings({petPlacement:event.target.value}));
+$('pet-character').addEventListener('change',event=>api.settings({petCharacter:event.target.value}));
 $('pet-background').addEventListener('change',event=>api.settings({petBackground:event.target.value}));
-$('pet-action-preview').addEventListener('click',async()=>{const action=$('pet-action').value,role=$('pet-character').value;await api.settings({petRoam:true});await api.expand(false);setTimeout(()=>action==='walk'?window.QuotaPets.roam(role):window.QuotaPets.action(action,role),300);});
+$('pet-action-preview').addEventListener('click',async()=>{const action=$('pet-action').value,role=$('pet-character').value;await api.settings({petRoam:true,petCharacter:role});await api.expand(false);setTimeout(()=>action==='walk'?window.QuotaPets.roam(role):window.QuotaPets.action(action,role),300);});
 $('morningHelloEnabled').addEventListener('change',event=>api.settings({morningHelloEnabled:event.target.checked}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
 for(const input of document.querySelectorAll('[data-visible]'))input.addEventListener('change',()=>api.settings({visible:{[input.dataset.visible]:input.checked}}));
