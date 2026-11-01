@@ -18,6 +18,14 @@
 
 *Illustrated overview updated using actual v1.16.10 screenshots. All pictured percentages are demo data.*
 
+## A quick introduction
+
+Chinese audio / captions · AI-generated promotional videos, not recordings of the running app. Click a preview to open the original MP4 with sound.
+
+<p align="center"><a href="docs/videos/intro-01-zh-TW.mp4"><img src="docs/videos/intro-01-zh-TW.gif" alt="01 · From quota surprises to a clear overview" width="480"></a><br><b>01 · From quota surprises to a clear overview</b><br><sub>▶ Open video with sound · Chinese</sub></p>
+
+<p align="center"><a href="docs/videos/intro-02-zh-TW.mp4"><img src="docs/videos/intro-02-zh-TW.gif" alt="02 · Quotas, pacing and little companions" width="480"></a><br><b>02 · Quotas, pacing and little companions</b><br><sub>▶ Open video with sound · Chinese</sub></p>
+
 ## Use cases
 
 | Situation | What you do | What Pebble shows |

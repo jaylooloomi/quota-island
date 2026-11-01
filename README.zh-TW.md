@@ -18,6 +18,14 @@
 
 *以 v1.16.10 實際截圖更新的功能介紹圖；圖片中的百分比均為展示資料。*
 
+## 10 秒認識 Quota Pebble
+
+中文語音／字幕 · AI 生成介紹影片，非 App 實際操作錄影。點擊動態預覽，可開啟原始 MP4 有聲版本。
+
+<p align="center"><a href="docs/videos/intro-01-zh-TW.mp4"><img src="docs/videos/intro-01-zh-TW.gif" alt="01 · 告別額度突然見底" width="480"></a><br><b>01 · 告別額度突然見底</b><br><sub>▶ 點擊觀看有聲影片 · 中文</sub></p>
+
+<p align="center"><a href="docs/videos/intro-02-zh-TW.mp4"><img src="docs/videos/intro-02-zh-TW.gif" alt="02 · 額度、配速與桌面小夥伴" width="480"></a><br><b>02 · 額度、配速與桌面小夥伴</b><br><sub>▶ 點擊觀看有聲影片 · 中文</sub></p>
+
 ## 使用情境
 
 | 什麼時候 | 怎麼使用 | 你會看到 |
