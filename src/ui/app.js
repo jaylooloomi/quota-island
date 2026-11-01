@@ -1,4 +1,5 @@
 'use strict';
+let petDraft=null,petBusy=false;
 const api=window.quota;
 const ids=['claude','gemini','codex'];
 const isExtra=id=>typeof id==='string'&&id.startsWith('claude-account-');
@@ -419,10 +420,10 @@ function render(next){
   document.querySelector('.footer-dot').classList.toggle('off',!healthy);$('footer-status').textContent=state.paused?'已暫停同步':'自動同步';
   for(const key of ['autoStart','alwaysOnTop','notifications','petIdle','petAlerts','petRoam'])$(key).checked=state.settings[key];
   $('autoStart').disabled=!['win32','darwin'].includes(state.platform);
-  $('pet-character').value=state.settings.petCharacter??'claude';
-  $('pet-placement').value=state.settings.petPlacement??'title';
-  $('pet-background').value=state.settings.petBackground??'meteor';
-  $('island').dataset.petBackground=state.settings.petBackground??'meteor';
+  $('pet-character').value=petDraft?.petCharacter??state.settings.petCharacter??'claude';
+  $('pet-placement').value=petDraft?.petPlacement??state.settings.petPlacement??'title';
+  $('pet-background').value=petDraft?.petBackground??state.settings.petBackground??'meteor';
+  $('island').dataset.petBackground=window.QuotaPets?.previewSettings?.petBackground??state.settings.petBackground??'meteor';
   $('morningHelloEnabled').checked=state.settings.morningHelloEnabled===true;
   $('google-source').value=state.settings.googleSource;$('google-source').disabled=!!state.auth.gemini?.pending;
   for(const input of document.querySelectorAll('[data-enable]'))input.checked=state.settings.enabled[input.dataset.enable];
@@ -512,12 +513,10 @@ $('close-quota-details').addEventListener('click',()=>{quotaDetailsOpen=false;re
 $('language').addEventListener('change',event=>api.settings({locale:event.target.value}));
 for(const key of ['autoStart','alwaysOnTop','notifications'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
 for(const key of ['petIdle','petAlerts','petRoam'])$(key).addEventListener('change',event=>api.settings({[key]:event.target.checked}));
-$('pet-placement').addEventListener('change',event=>api.settings({petPlacement:event.target.value}));
-$('pet-character').addEventListener('change',event=>api.settings({petCharacter:event.target.value}));
-$('pet-background').addEventListener('change',event=>api.settings({petBackground:event.target.value}));
-$('pet-action-preview').addEventListener('click',async()=>{const action=$('pet-action').value,role=$('pet-character').value;await api.settings({petRoam:true,petCharacter:role});await api.expand(false);setTimeout(()=>action==='walk'?window.QuotaPets.roam(role):window.QuotaPets.action(action,role),300);});
-$('morningHelloEnabled').addEventListener('change',event=>api.settings({morningHelloEnabled:event.target.checked}));
-for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
-for(const input of document.querySelectorAll('[data-visible]'))input.addEventListener('change',()=>api.settings({visible:{[input.dataset.visible]:input.checked}}));
+function selectedPet(){return {petPlacement:$('pet-placement').value,petBackground:$('pet-background').value,petCharacter:$('pet-character').value};}
+for(const id of ['pet-placement','pet-character','pet-background'])$(id).addEventListener('change',()=>{petDraft=selectedPet();});
+async function runPetChoice(apply){if(petBusy)return;petBusy=true;const config=selectedPet(),action=$('pet-action').value;for(const id of ['pet-action-preview','pet-action-apply'])$(id).disabled=true;try{if(apply){window.QuotaPets.cancelPreview();await api.settings({...config,petRoam:true});petDraft=null;}await api.expand(false);setTimeout(()=>{if(apply){action==='walk'?window.QuotaPets.roam(config.petCharacter):window.QuotaPets.action(action,config.petCharacter);}else window.QuotaPets.previewAction(action,config);},300);}finally{petBusy=false;for(const id of ['pet-action-preview','pet-action-apply'])$(id).disabled=false;}}
+$('pet-action-preview').addEventListener('click',()=>runPetChoice(false));
+$('pet-action-apply').addEventListener('click',()=>runPetChoice(true));
 document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(footerPopover){closeFooterPopover(true);event.preventDefault();}else if(paceDetailsProvider){paceDetailsProvider=null;render(state);}else if(quotaDetailsOpen){quotaDetailsOpen=false;render(state);}else if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
 api.subscribe(render);api.getState().then(render);setInterval(()=>{if(state)render(state);},15000);

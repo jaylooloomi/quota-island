@@ -466,7 +466,7 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 #pet-action-preview:focus-visible{outline:2px solid #c0caff;outline-offset:2px}
 #pet-action-preview:disabled{opacity:.5;cursor:default}
 
-.pet-action-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:10px;margin:4px 0}.pet-action-row label{min-width:0}.pet-action-row select{min-width:0;max-width:100%}.settings .pet-action-row #pet-action-preview{grid-column:2 / 4;width:100%;margin:0;white-space:nowrap}
+.pet-action-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:10px;margin:4px 0}.pet-action-row label{min-width:0}.pet-action-row select{min-width:0;max-width:100%}.settings .pet-action-row #pet-action-preview{grid-column:2;width:100%;margin:0;white-space:nowrap}
 
 .pet-action-row{align-items:end}.settings .pet-action-row label{flex-direction:column;align-items:stretch;gap:3px;padding:0;font-size:11px;line-height:14px}
 
@@ -499,3 +499,5 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 .island[data-pet-background=cloud-day] #pet-stage .pet-ground,.island[data-pet-background=sakura-day] #pet-stage .pet-ground,.island[data-pet-background=coast-day] #pet-stage .pet-ground,.island[data-pet-background=snow-day] #pet-stage .pet-ground,.island[data-pet-background=greenhouse-day] #pet-stage .pet-ground{background:linear-gradient(#8395a8,#566b80);border-top-color:#c0ccd5;box-shadow:0 -2px 0 #43556888}
 
 .settings .settings-pet-selectors select{height:32px;min-height:32px}
+
+.settings .pet-action-row #pet-action-apply{grid-column:3;height:32px;min-width:0;border:1px solid #929ed0;border-radius:8px;background:#4c587f;color:#f6f7ff;font-size:12px;font-weight:600}.settings .pet-action-row #pet-action-apply:hover{background:#606d9b}.settings .pet-action-row #pet-action-preview{background:#252a38;border-color:#555e75}
