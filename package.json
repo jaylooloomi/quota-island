@@ -1,6 +1,6 @@
 {
   "name": "quota-island",
-  "version": "1.16.5",
+  "version": "1.16.6",
   "private": true,
   "description": "A local-first desktop island for Claude, Gemini CLI and Codex quotas",
   "author": "Quota Island",
@@ -31,7 +31,8 @@
     "test:pets": "npm run build && node scripts/pets-desktop-test.cjs",
     "test:pet-styles": "npm run build && node scripts/pet-styles-test.cjs",
     "test:pet-roaming": "npm run build && node scripts/pet-roaming-test.cjs",
-    "test:pet-resident": "npm run build && node scripts/pet-resident-test.cjs"
+    "test:pet-resident": "npm run build && node scripts/pet-resident-test.cjs",
+    "test:backgrounds": "npm run build && node scripts/stage-backgrounds-test.cjs"
   },
   "build": {
     "appId": "app.quota-island.desktop",

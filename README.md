@@ -47,7 +47,7 @@ Claude supports additional independent account profiles. Claude and Codex expose
 
 <img src="docs/readme-v1.16.5/pet-en.png" alt="Actual orange octopus companion in the upper area of the compact island" width="464">
 
-Four soft 3D companions: an astronaut cat, a mechanical robot, a star rabbit and an octopus. Choose the upper area or lower stage, then preview an action in that position. Upper-area companions walk for 8–14 seconds and perform an action for 8–14 seconds before walking again. Actions rotate; water breaks have a 20-minute interval. The lower stage also supports click-to-feed interaction. Dragging the title pauses and resumes the current action.
+Four soft 3D companions: an astronaut cat, a mechanical robot, a star rabbit and an octopus. Choose the upper area or lower stage, then preview an action in that position. Upper-area companions walk for 8–14 seconds and perform an action for 8–14 seconds before walking again. Actions rotate; water breaks have a 20-minute interval. The lower stage also supports click-to-feed interaction. Stage backgrounds include Meteor Forest plus day/night variants of Cloud Islands, Sakura Garden, Coastal Lighthouse, Snowy Cabin and Space Greenhouse. Dragging the title pauses and resumes the current action.
 
 Pet growth and token-based XP are not implemented.
 

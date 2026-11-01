@@ -9,7 +9,7 @@
     ['寵物動作風格','Pet animation style','ペットの動作スタイル','펫 애니메이션 스타일'],['柔順 3D','Smooth 3D','なめらか3D','부드러운 3D'],['像素逐格','Pixel animation','ピクセルアニメ','픽셀 애니메이션'],['原版 3D','Classic 3D','従来の3D','기존 3D'],
     ['預覽名稱區寵物','Preview title pet','タイトルのペットをプレビュー','제목 영역 펫 미리보기'],
     ['點擊舞台投食','Click the stage to feed','ステージをクリックしてごはん','무대를 클릭하여 먹이 주기'],
-    ['舞台背景','Stage background','ステージ背景','무대 배경'],['流星山林','Meteor forest','流星と山林','유성과 숲'],['絢麗星雲','Vivid nebula','きらめく星雲','찬란한 성운'],['原始夜空','Classic night','従来の夜空','기본 밤하늘'],
+    ['舞台背景','Stage background','ステージ背景','무대 배경'],['流星山林','Meteor forest','流星と山林','유성과 숲'],["雲海浮島 · 白天","Cloud islands · Day","雲海の浮島 · 昼","구름 위 섬 · 낮"],["雲海浮島 · 夜晚","Cloud islands · Night","雲海の浮島 · 夜","구름 위 섬 · 밤"],["櫻花庭園 · 白天","Sakura garden · Day","桜の庭園 · 昼","벚꽃 정원 · 낮"],["櫻花庭園 · 夜晚","Sakura garden · Night","桜の庭園 · 夜","벚꽃 정원 · 밤"],["海岸燈塔 · 白天","Coastal lighthouse · Day","海岸の灯台 · 昼","해안 등대 · 낮"],["海岸燈塔 · 夜晚","Coastal lighthouse · Night","海岸の灯台 · 夜","해안 등대 · 밤"],["雪山木屋 · 白天","Snowy cabin · Day","雪山の山小屋 · 昼","설산 오두막 · 낮"],["雪山木屋 · 夜晚","Snowy cabin · Night","雪山の山小屋 · 夜","설산 오두막 · 밤"],["太空溫室 · 白天","Space greenhouse · Day","宇宙温室 · 昼","우주 온실 · 낮"],["太空溫室 · 夜晚","Space greenhouse · Night","宇宙温室 · 夜","우주 온실 · 밤"],
     ['呼…','Sigh…','ふぅ…','후…'],
     ['開機自動啟動','Launch at login','ログイン時に起動','로그인 시 자동 시작'],
     ['叫出常駐寵物','Summon resident pet','常駐ペットを呼ぶ','상주 펫 부르기'],
