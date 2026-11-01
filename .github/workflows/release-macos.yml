@@ -35,7 +35,7 @@ jobs:
           export QUOTA_PACKAGED_EXE="$(find "$PWD/release" -path '*/Quota Pebble.app/Contents/MacOS/Quota Pebble' -type f | head -1)"
           test -n "$QUOTA_PACKAGED_EXE"
           file "$QUOTA_PACKAGED_EXE"
-          codesign --verify --deep --strict "$(dirname "$(dirname "$QUOTA_PACKAGED_EXE")")"
+          codesign --verify --deep --strict "$(dirname "$(dirname "$(dirname "$QUOTA_PACKAGED_EXE")")")"
           node scripts/mac-package-smoke.cjs
           node scripts/pet-preview-apply-test.cjs
           node scripts/stage-backgrounds-test.cjs
