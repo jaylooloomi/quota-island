@@ -1,4 +1,4 @@
-<h1 align="center">Quota Pebble</h1>
+<h1 align="center">Quota Pebble <img src="docs/brand/timer-egg.png" width="36" height="36" alt="Timer egg logo"></h1>
 <p align="center"><b>三家 AI 訂閱，一顆桌面小島。</b><br>額度一眼掌握，工作有配速，桌上有陪伴。</p>
 <!-- project-badges -->
 <p align="center">

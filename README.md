@@ -1,4 +1,4 @@
-<h1 align="center">Quota Pebble</h1>
+<h1 align="center">Quota Pebble <img src="docs/brand/timer-egg.png" width="36" height="36" alt="Timer egg logo"></h1>
 <p align="center"><b>Three AI subscriptions. One tiny island.</b><br>See your quota. Pace your day. Keep a little companion nearby.</p>
 <!-- project-badges -->
 <p align="center">
