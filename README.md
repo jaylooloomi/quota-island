@@ -12,7 +12,7 @@
 <!-- /project-badges -->
 <p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">Download Windows / macOS</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="LICENSE">MIT</a></p>
 
-<p align="center"><img src="docs/readme-v1.16.5/stage-en.png" alt="Your quotas above. A little companion below." width="464"><br><b>Your quotas above. A little companion below.</b><br><sub>Actual app screenshot · demo data</sub></p>
+<p align="center"><img src="docs/readme-v1.16.10/stage-en.png" alt="Your quotas above. A little companion below." width="464"><br><b>Your quotas above. A little companion below.</b><br><sub>Actual app screenshot · demo data</sub></p>
 
 ![Quota Pebble illustrated feature overview](docs/readme-v1.16.5/overview-en.png)
 
@@ -35,27 +35,31 @@ These are screenshots of the actual Windows app in isolated demo mode, not live 
 
 ### A glance, then the details
 
-<img src="docs/readme-v1.16.5/compact-en.png" alt="Actual compact app with separate provider percentages" width="464">
+<img src="docs/readme-v1.16.10/compact-en.png" alt="Actual compact app with separate provider percentages" width="464">
 
-<img src="docs/readme-v1.16.5/quota-en.png" alt="Expanded quota panel, remaining/used/pacing selector, quota/accounts tabs and reset countdowns" width="464">
+<img src="docs/readme-v1.16.10/quota-en.png" alt="Expanded quota panel, remaining/used/pacing selector, quota/accounts tabs and reset countdowns" width="464">
 
 Switch Remaining / Used / Pacing without changing the provider order. Drag cards to reorder, choose which services are visible, and inspect additional model windows when the source supplies them. Compact multi-account displays cycle individual accounts; their quotas are never summed.
 
 ### Pace your usage
 
-<img src="docs/readme-v1.16.5/pacing-en.png" alt="Actual pacing view with suggested daily usage and a ten percent reserve" width="464">
+<img src="docs/readme-v1.16.10/pacing-en.png" alt="Actual pacing view with suggested daily usage and a ten percent reserve" width="464">
 
 The default reserve is **10% of total quota**. Guidance divides the remaining usable quota by the actual time until reset; it is a planning suggestion, not a provider-enforced daily allowance. Open pacing details to adjust the reserve and quota window.
 
 ### Keep account controls separate
 
-<img src="docs/readme-v1.16.5/accounts-en.png" alt="Actual accounts tab with provider connection controls" width="464">
+<img src="docs/readme-v1.16.10/accounts-en.png" alt="Actual accounts tab with provider connection controls" width="464">
 
 Claude supports additional independent account profiles. Claude and Codex expose account switching and sign-out controls. Antigravity uses its local account and supports switching/disconnection; disconnecting Pebble does not necessarily sign out of Antigravity itself.
 
 ### Small companions, your choice of position
 
-<img src="docs/readme-v1.16.5/pet-en.png" alt="Actual orange octopus companion in the upper area of the compact island" width="464">
+<img src="docs/readme-v1.16.10/pet-en.png" alt="Actual orange octopus companion in the upper area of the compact island" width="464">
+
+<img src="docs/readme-v1.16.10/settings-pets-en.png" alt="Actual pet settings: Preview is temporary; Apply saves the selected character, location and background." width="400">
+
+Actual pet settings: Preview is temporary; Apply saves the selected character, location and background.
 
 Four soft 3D companions: an astronaut cat, a mechanical robot, a star rabbit and an octopus. Choose the upper area or lower stage, then preview an action in that position. Upper-area companions walk for 8–14 seconds and perform an action for 8–14 seconds before walking again. Actions rotate; water breaks have a 20-minute interval. The lower stage also supports click-to-feed interaction. Stage backgrounds include Meteor Forest plus day/night variants of Cloud Islands, Sakura Garden, Coastal Lighthouse, Snowy Cabin and Space Greenhouse. Dragging the title pauses and resumes the current action.
 
@@ -116,7 +120,7 @@ npm run dist:win
 
 v1.16.5: **117 unit tests passed** during release preparation. The portable application was observed running with the expected version; Playwright's attachment to the self-extracting launcher timed out and is not reported as a pass. Tests and demo screenshots do not prove that every provider account or service is available.
 
-Diagnostic logs record sanitized state transitions, error categories and retry times. They should not contain tokens, cookies or authorization codes. See [visual provenance](docs/readme-v1.16.5/PROVENANCE.md) for the screenshots and generated artwork.
+Diagnostic logs record sanitized state transitions, error categories and retry times. They should not contain tokens, cookies or authorization codes. See [visual provenance](docs/readme-v1.16.10/PROVENANCE.md) for the screenshots and generated artwork.
 
 ## License
 
