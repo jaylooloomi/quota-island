@@ -14,9 +14,9 @@
 
 <p align="center"><img src="docs/readme-v1.16.10/stage-zh-TW.png" alt="上面掌握額度，下面有個小夥伴。" width="464"><br><b>上面掌握額度，下面有個小夥伴。</b><br><sub>App 實際截圖 · 展示資料</sub></p>
 
-![Quota Pebble 核心功能介紹圖](docs/readme-v1.16.5/overview-zh-TW.png)
+![Quota Pebble 核心功能介紹圖](docs/readme-v1.16.10/overview-zh-TW.png)
 
-*以 v1.16.5 實際截圖為參考繪製的功能介紹圖；圖片中的百分比均為展示資料。*
+*以 v1.16.10 實際截圖更新的功能介紹圖；圖片中的百分比均為展示資料。*
 
 ## 使用情境
 

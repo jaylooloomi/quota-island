@@ -6,4 +6,4 @@ All readings are explicitly synthetic screenshot fixtures. The capture injects a
 
 English and Traditional Chinese variants show actual renderer layout. Pacing uses the weekly windows with a 10% total-quota reserve. The settings crop shows actual Preview/Apply controls. These are screenshots, not imagegen mockups.
 
-The two illustrated overview artworks remain in ../readme-v1.16.5/. They are intentionally retained as labeled concept illustrations; see that folder's PROVENANCE.md for imagegen prompts and references.
+The two overview-en.png and overview-zh-TW.png illustrations are refreshed with built-in imagegen from the original v1.16.5 artwork and current compact/quota/pacing screenshots. Their compact Antigravity state is a lavender star with 25% and a matching progress bar. Codex and pacing figures match the current demo fixture. These remain labeled illustrations, not exact screenshots. See OVERVIEW-EDIT.md for prompts and references.
