@@ -501,3 +501,7 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 .settings .settings-pet-selectors select{height:32px;min-height:32px}
 
 .settings .pet-action-row #pet-action-apply{grid-column:3;height:32px;min-width:0;border:1px solid #929ed0;border-radius:8px;background:#4c587f;color:#f6f7ff;font-size:12px;font-weight:600}.settings .pet-action-row #pet-action-apply:hover{background:#606d9b}.settings .pet-action-row #pet-action-preview{background:#252a38;border-color:#555e75}
+
+.island[data-pet-background=meteor-day] #pet-stage{background:linear-gradient(#04102018,#04102008),url('pets/backgrounds/meteor-day.png') center 55%/cover no-repeat}
+.island[data-pet-background=meteor-day] .pet-sky{display:none}
+.island[data-pet-background=meteor-day] #pet-stage .pet-ground{background:linear-gradient(#8395a8,#566b80);border-top-color:#c0ccd5;box-shadow:0 -2px 0 #43556888}

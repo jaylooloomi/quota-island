@@ -1,5 +1,16 @@
 [
   {
+    "id": "meteor-day",
+    "labels": [
+      "流星山林 · 白天",
+      "Meteor forest · Day",
+      "流星と山林 · 昼",
+      "유성과 숲 · 낮"
+    ],
+    "source": "exec-5d81b08f-651d-4415-9a51-d0a2a6983e5c.png",
+    "number": "meteor-day"
+  },
+  {
     "id": "cloud-day",
     "labels": [
       "雲海浮島 · 白天",
