@@ -242,7 +242,7 @@ function makeTray() {
     { label: t('顯示動態島'), click: () => { win.show(); win.focus(); } },
     { label: t('展開配額面板'), click: () => { setExpanded(true); win.show(); win.focus(); } },
     { label: t(paused ? '繼續更新' : '暫停更新'), click: () => { paused = !paused; updateMenu(); publish(); if (!paused) void poller.tick(); } },
-    { type: 'separator' }, { label: t('結束 Quota Pebble'), click: () => { quitting = true; app.quit(); } }
+    { type: 'separator' }, { label: t('結束'), click: () => { quitting = true; app.quit(); } }
   ]));
   updateTrayMenu=updateMenu;
   updateMenu(); tray.on('click', () => { win.show(); win.focus(); });
