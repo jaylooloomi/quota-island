@@ -15,12 +15,14 @@ const os = require('node:os');
     // No misleading official-page link before an account has been connected.
     assert.equal(await page.locator('.card.claude .provider-link').isVisible(),false);
     await page.locator('.card.claude .connect-primary').click();
+    await page.locator('.card.claude .continue-claude-login').click();
     await page.locator('.card.claude .auth-code-form').waitFor({state:'visible'});
     await page.locator('.card.claude .cancel-login').click();
     await page.waitForFunction(()=>!document.querySelector('.card.claude .login').disabled);
     await page.locator('.card.claude .auth-code-form').waitFor({state:'hidden'});
     assert.equal((await page.evaluate(()=>window.quota.getState())).auth.claude.phase,'error');
     await page.locator('.card.claude .login').click();
+    await page.locator('.card.claude .continue-claude-login').click();
     await page.locator('.card.claude .auth-code-form').waitFor({state:'visible'});
     await page.locator('.card.claude .auth-code').fill('TEST-AUTH-CODE');
     await page.locator('.card.claude .auth-code-form button').click();

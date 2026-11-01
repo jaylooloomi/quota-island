@@ -30,7 +30,7 @@ const os = require('node:os');
     await page.waitForFunction(()=>document.querySelector('#cards').firstElementChild.dataset.provider==='codex');
     assert.deepEqual(await cardOrder(page),['codex','claude','gemini']);
     // Expanded cards use the same shared order.
-    await page.locator('.card.gemini .card-heading').dragTo(page.locator('.card.codex .card-heading'));
+    await page.locator('.card.gemini .card-grip').dragTo(page.locator('.card.codex .card-grip'));
     await page.waitForFunction(() => document.querySelector('.provider-strip').firstElementChild.dataset.provider === 'gemini');
     assert.deepEqual(await cardOrder(page), ['gemini','codex','claude']);
     await page.locator('#collapse').click();
