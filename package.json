@@ -68,7 +68,8 @@
     "linux": {
       "category": "Development",
       "target": "AppImage"
-    }
+    },
+    "icon": "build/icons/quota-pebble.png"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
