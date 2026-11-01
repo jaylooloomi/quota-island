@@ -12,7 +12,7 @@
 <!-- /project-badges -->
 <p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">下載 Windows / macOS</a> · <a href="README.md">English</a> · <a href="LICENSE">MIT</a></p>
 
-<p align="center"><img src="docs/readme-v1.16.5/stage-zh-TW.png" alt="上面掌握額度，下面有個小夥伴。" width="464"><br><b>上面掌握額度，下面有個小夥伴。</b><br><sub>App 實際截圖 · 展示資料</sub></p>
+<p align="center"><img src="docs/readme-v1.16.10/stage-zh-TW.png" alt="上面掌握額度，下面有個小夥伴。" width="464"><br><b>上面掌握額度，下面有個小夥伴。</b><br><sub>App 實際截圖 · 展示資料</sub></p>
 
 ![Quota Pebble 核心功能介紹圖](docs/readme-v1.16.5/overview-zh-TW.png)
 
@@ -35,27 +35,31 @@
 
 ### 收合看重點，展開看細節
 
-<img src="docs/readme-v1.16.5/compact-zh-TW.png" alt="實際收合畫面，各家額度分開顯示" width="464">
+<img src="docs/readme-v1.16.10/compact-zh-TW.png" alt="實際收合畫面，各家額度分開顯示" width="464">
 
-<img src="docs/readme-v1.16.5/quota-zh-TW.png" alt="實際配額畫面，包含剩餘、已用、配速，以及重置倒數" width="464">
+<img src="docs/readme-v1.16.10/quota-zh-TW.png" alt="實際配額畫面，包含剩餘、已用、配速，以及重置倒數" width="464">
 
 切換「剩餘／已用／配速」，保留供應商排列。拖拉卡片調整順序，也能在設定隱藏不想顯示的服務。來源提供模型細分時，可再展開查看。收合的多帳號數值會輪播，各帳號額度不會合併。
 
 ### 額度也有配速員
 
-<img src="docs/readme-v1.16.5/pacing-zh-TW.png" alt="實際配速畫面，顯示每日建議用量與保留百分之十" width="464">
+<img src="docs/readme-v1.16.10/pacing-zh-TW.png" alt="實際配速畫面，顯示每日建議用量與保留百分之十" width="464">
 
 預設保留**總配額的 10%**，再依距離重置的實際時間計算每日建議用量。這是規劃建議，不是服務端的每日上限；「配速詳情」可調整保留比例及計算窗口。
 
 ### 帳號管理獨立分頁
 
-<img src="docs/readme-v1.16.5/accounts-zh-TW.png" alt="實際帳號管理畫面，各服務提供自己的帳號控制" width="464">
+<img src="docs/readme-v1.16.10/accounts-zh-TW.png" alt="實際帳號管理畫面，各服務提供自己的帳號控制" width="464">
 
 支援新增獨立 Claude 帳號。Claude、Codex 提供切換帳號與登出；Antigravity 使用本機帳號，提供切換與中斷連接。中斷 Quota Pebble 連接不等於將 Antigravity 本身登出。
 
 ### 寵物常駐上方，也能在下方陪伴
 
-<img src="docs/readme-v1.16.5/pet-zh-TW.png" alt="上方區域中實際顯示的橘色章魚寵物" width="464">
+<img src="docs/readme-v1.16.10/pet-zh-TW.png" alt="上方區域中實際顯示的橘色章魚寵物" width="464">
+
+<img src="docs/readme-v1.16.10/settings-pets-zh-TW.png" alt="實際寵物設定：預覽暫時播放；套用保存角色、位置與背景。" width="400">
+
+實際寵物設定：預覽暫時播放；套用保存角色、位置與背景。
 
 太空貓、機器人、星兔、小章魚，統一柔順 3D 風格。選「上方區域」或「下方舞台」，預覽會跟隨所選位置。上方寵物走路 8～14 秒，再執行動作 8～14 秒；動作打散輪替，喝水保留 20 分鐘間隔。下方舞台支援點擊投食。舞台背景可選流星山林，以及雲海浮島、櫻花庭園、海岸燈塔、雪山木屋、太空溫室的日夜版本。拖動標題時暫停，放開後接續原動作。
 
@@ -116,7 +120,7 @@ npm run dist:win
 
 v1.16.5 發布準備時 **117 項單元測試通過**。免安裝版實際啟動且版本確認正確；Playwright 連接自解壓啟動器逾時，未算通過。測試與展示截圖不代表所有帳號及外部服務均可用。
 
-診斷紀錄包含經篩選的狀態、錯誤類型及重試時間，不應記錄 Token、Cookie 或授權碼。[圖片來源與製作說明](docs/readme-v1.16.5/PROVENANCE.md)。
+診斷紀錄包含經篩選的狀態、錯誤類型及重試時間，不應記錄 Token、Cookie 或授權碼。[圖片來源與製作說明](docs/readme-v1.16.10/PROVENANCE.md)。
 
 ## 授權
 
