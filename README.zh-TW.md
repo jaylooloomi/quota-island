@@ -124,4 +124,14 @@ v1.16.5 發布準備時 **117 項單元測試通過**。免安裝版實際啟動
 
 ## 授權
 
-[MIT](LICENSE)；另見 [第三方聲明](THIRD_PARTY_NOTICES.md)。
+本專案採用 [MIT License](LICENSE)，歡迎使用、修改、分享與商業應用。**再散布本軟體或其重要部分時，必須保留原作者的著作權聲明及完整 MIT 授權聲明**；相關第三方素材與依賴仍須遵守各自的授權，詳見 [第三方聲明](THIRD_PARTY_NOTICES.md)。
+
+若你將它用於自己的作品，也歡迎在 README、關於頁面或介紹文章附上以下出處，讓更多人找到原始專案（這是額外的友善邀請，不增加 MIT 以外的授權限制）：
+
+> Quota Pebble，由 Arthur Wang（[@jaylooloomi](https://github.com/jaylooloomi)）創作，採 MIT 授權。[原始專案](https://github.com/jaylooloomi/quota-island)。
+
+## 關於作者與交流
+
+嗨，我是 Arthur Wang（jaylooloomi），Quota Pebble 的作者。我喜歡把工作中的小困擾做成實用又有趣的工具，也很樂意認識有相同興趣的朋友。
+
+無論是使用心得、功能點子、技術討論，或只是想打聲招呼，都歡迎透過 [GitHub](https://github.com/jaylooloomi)、[Issues](https://github.com/jaylooloomi/quota-island/issues) 或 Pull Request 和我交流。希望這個小工具不只讓工作順一點，也能成為我們認識彼此的起點。
