@@ -22,9 +22,7 @@
 
 AI-generated promotional videos, not recordings of the running app. Video 01 is in English; video 02 temporarily uses Chinese captions. GIF animations are silent.
 
-<p align="center"><img src="docs/videos/intro-01-en.gif" alt="01 · From quota surprises to a clear overview" width="480"><br><b>01 · From quota surprises to a clear overview</b></p>
-
-<p align="center"><img src="docs/videos/intro-02-zh-TW.gif" alt="02 · Quotas, pacing and little companions" width="480"><br><b>02 · Quotas, pacing and little companions</b></p>
+<p align="center"><img src="docs/videos/intro-01-en.gif" alt="01 · From quota surprises to a clear overview" width="800"><br><b>01 · From quota surprises to a clear overview</b></p>
 
 ## Use cases
 
@@ -62,6 +60,8 @@ The default reserve is **10% of total quota**. Guidance divides the remaining us
 Claude supports additional independent account profiles. Claude and Codex expose account switching and sign-out controls. Antigravity uses its local account and supports switching/disconnection; disconnecting Pebble does not necessarily sign out of Antigravity itself.
 
 ### Small companions, your choice of position
+
+<p align="center"><img src="docs/videos/intro-02-zh-TW.gif" alt="02 · Quotas, pacing and little companions" width="800"><br><b>02 · Quotas, pacing and little companions</b><br><sub>AI-generated promotional animation · Chinese captions · silent GIF</sub></p>
 
 <img src="docs/readme-v1.16.10/pet-en.png" alt="Actual orange octopus companion in the upper area of the compact island" width="464">
 
