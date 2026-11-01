@@ -230,13 +230,8 @@ function installHandlers() {
   }
 }
 function makeTray() {
-  const pixels = Buffer.alloc(32 * 32 * 4);
-  for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
-    const offset = (y * 32 + x) * 4;
-    const inside = (x - 16) ** 2 + (y - 16) ** 2 < 13 ** 2 && (x - 16) ** 2 + (y - 16) ** 2 > 7 ** 2;
-    if (inside) { pixels[offset] = 221; pixels[offset + 1] = 210; pixels[offset + 2] = 130; pixels[offset + 3] = 255; }
-  }
-  tray = new Tray(nativeImage.createFromBitmap(pixels, { width: 32, height: 32 }));
+  const icon = nativeImage.createFromPath(path.join(__dirname, 'ui/icons/quota-pebble-tray.png'));
+  tray = new Tray(icon);
   tray.setToolTip('Quota Pebble · Claude / Gemini / Codex');
   const updateMenu = () => tray.setContextMenu(Menu.buildFromTemplate([
     { label: t('顯示動態島'), click: () => { win.show(); win.focus(); } },
@@ -285,7 +280,7 @@ else {
     const area = screen.getPrimaryDisplay().workArea;
     win = new BrowserWindow({ width: 464, height: 76, x: settings.x ?? Math.round(area.x + (area.width - 464) / 2), y: settings.y ?? area.y + 12,
       frame: false, transparent: true, resizable: false, maximizable: false, fullscreenable: false, hasShadow: false,
-      alwaysOnTop: settings.alwaysOnTop, skipTaskbar: true, show: false, title: 'Quota Pebble',
+      alwaysOnTop: settings.alwaysOnTop, skipTaskbar: true, show: false, title: 'Quota Pebble', icon: path.join(__dirname, 'ui/icons/quota-pebble.png'),
       webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true }
     });
     win.setMenu(null); reposition();

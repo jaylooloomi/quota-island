@@ -1,6 +1,6 @@
 {
   "name": "quota-island",
-  "version": "1.16.12",
+  "version": "1.16.13",
   "private": true,
   "description": "A local-first desktop island for Claude, Gemini CLI and Codex quotas",
   "author": "Quota Island",
@@ -34,7 +34,8 @@
     "test:pet-resident": "npm run build && node scripts/pet-resident-test.cjs",
     "test:backgrounds": "npm run build && node scripts/stage-backgrounds-test.cjs",
     "test:pet-character": "npm run build && node scripts/pet-character-test.cjs",
-    "test:pet-preview-apply": "npm run build && node scripts/pet-preview-apply-test.cjs"
+    "test:pet-preview-apply": "npm run build && node scripts/pet-preview-apply-test.cjs",
+    "build:icons": "electron scripts/build-brand-icons.cjs"
   },
   "build": {
     "appId": "app.quota-island.desktop",
@@ -56,7 +57,9 @@
     },
     "win": {
       "target": "portable",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": true,
+      "icon": "build/icons/quota-pebble.ico",
+      "signExecutable": false
     },
     "mac": {
       "category": "public.app-category.developer-tools",
@@ -65,7 +68,8 @@
     "linux": {
       "category": "Development",
       "target": "AppImage"
-    }
+    },
+    "icon": "build/icons/quota-pebble.png"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
