@@ -1,67 +1,113 @@
-# Quota Island
+<h1 align="center">Quota Pebble</h1>
+<p align="center"><b>Three AI subscriptions. One tiny island.</b><br>See your quota. Pace your day. Keep a little companion nearby.</p>
+<p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">Download for Windows</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="LICENSE">MIT</a></p>
 
-Claude Code、Gemini CLI / Code Assist、Codex 的本機桌面動態島。使用 Electron + TypeScript。
+<p align="center"><img src="docs/readme-v1.16.5/stage-en.png" alt="Your quotas above. A little companion below." width="464"><br><b>Your quotas above. A little companion below.</b><br><sub>Actual app screenshot · demo data</sub></p>
 
-## 使用
+![Quota Pebble illustrated feature overview](docs/readme-v1.16.5/overview-en.png)
 
-Windows 最新成品：`release/0.2.0/Quota Island 0.2.0.exe`（portable），或 `release/0.2.0/win-unpacked/Quota Island.exe`。
+*Illustrated overview generated from actual v1.16.5 screenshots. All pictured percentages are demo data.*
 
-0.2.0 已依照設計稿重做收合列、展開面板、剩餘／已用切換、連線狀態與四階段連接畫面。首次升級切換成設計稿的「剩餘」模式，其後會保留你的選擇。原本的排序、登入與來源設定會保留。
+## Use cases
 
-1. 啟動後點任一配額或右側箭頭展開；拖曳左側雙點移動。
+| Situation | What you do | What Pebble shows |
+|---|---|---|
+| Coding with several AI subscriptions | Keep the compact island nearby | Separate Claude, Codex and Gemini / Antigravity quotas |
+| Planning work before the reset | Switch to Pacing | Suggested daily usage and an adjustable reserve |
+| Using several Claude accounts | Add an account in the panel | Independent account cards; accounts are not added together |
+| Needing a quiet desktop | Collapse, drag, or hide to the tray | A small, movable quota display |
+| Taking a short break | Preview a companion action | Walking, greetings, feeling low, sleeping, water breaks or recharging |
+| A quota service returns 429 | Wait for the next permitted attempt | Cooldown information rather than repeated requests |
 
-可直接拖曳上方服務圖示／百分比調整順序，或拖曳展開卡片的標題換位。兩個視圖使用同一順序，重新啟動也會保留。鍵盤可聚焦服務圖示後使用 `Alt + ←/→` 排序。
-2. Claude：先安裝 [Claude Code](https://code.claude.com/docs/en/setup)，點「登入 Claude 並同步」。若官方 CLI 使用授權碼流程，將瀏覽器授權頁提供的授權碼貼進 App 出現的欄位，按「完成連接並同步」。授權完成後 App 自動取回配額，不需要自己查看官方用量頁，也不需要按重新整理。
-3. Codex：先安裝 [Codex CLI](https://developers.openai.com/codex/cli)，點「登入 Codex」，使用 ChatGPT 訂閱帳號；已有本機登入可直接讀取。
-4. Gemini（個人版）：預設讀取 **Antigravity 的 Gemini 模型配額**。開啟並登入 Antigravity 後即可自動讀取，不需要在本工具重做舊 Gemini CLI OAuth。也可點「連接 Antigravity 並同步」。收合列顯示最吃緊的 Gemini 模型，展開列出模型與重設時間。Antigravity 中的 Claude/GPT 額度不會混入獨立的 Claude Code 或 Codex 卡片。
-5. 若使用企業 Code Assist，請在設定將「Google 配額來源」改為 Code Assist，再使用原本的 Google OAuth 登入。這是另一個明確區分的來源。
+## The product, in pictures
 
-Google 已公告個人 Free/Pro/Ultra 的 Gemini CLI 在 2026-06-18 遷移至 Antigravity CLI。官方 CLI 指令為 `agy`；啟動後用 `/usage`（或 `/quota`）查看配額。本工具顯示的 Antigravity 配額也不是 Gemini 網頁版額度。
+These are screenshots of the actual Windows app in isolated demo mode, not live customer accounts. Demo Gemini rows do not demonstrate every Antigravity quota group.
 
-登入期間會顯示「等待授權／等待授權碼／同步中／已同步／失敗原因」。完成授權後自動展開 App 並同步配額。瀏覽器登入網站本身不會授權此 App；未連接前不再顯示易混淆的官方頁面箭頭。外部官方 CLI 的授權檔更新也會在 5 秒檢查週期自動偵測並重新讀取。
+### A glance, then the details
 
-三家來源預設開啟，各自每 2 分鐘更新。未知顯示「—」，舊資料標記 `*`。手動重新整理仍尊重服務冷卻。設定可切換置頂、90% 用量提醒與監控來源；隱藏的來源停止查詢。切換百分比可看剩餘或已用。全域快捷鍵為 `Ctrl/⌘ + Alt + Q`。
+<img src="docs/readme-v1.16.5/compact-en.png" alt="Actual compact app with separate provider percentages" width="464">
 
-右上角箭頭收合成膠囊；設定內可隱藏到系統匣或結束應用，右鍵系統匣也可暫停、還原或結束。點卡片右上角的連線狀態可管理連接、查看資料來源。成功連接會顯示完成進度，接著自動回到配額。無自動開機啟動設定。
+<img src="docs/readme-v1.16.5/quota-en.png" alt="Expanded quota panel, remaining/used/pacing selector, quota/accounts tabs and reset countdowns" width="464">
 
-更新按鈕可在短暫的 5 秒防連點時間後立即更新資料；正常背景同步為每 2 分鐘。上游回傳 429 時保留 Retry-After 到本機冷卻檔，重開應用或手動更新不會繞過服務要求。畫面會顯示限流與自動重試倒數。
+Switch Remaining / Used / Pacing without changing the provider order. Drag cards to reorder, choose which services are visible, and inspect additional model windows when the source supplies them. Compact multi-account displays cycle individual accounts; their quotas are never summed.
 
-## 開發與驗證
+### Pace your usage
 
-需要 Node.js 22.16+（建議 Node 24 LTS）與 npm。
+<img src="docs/readme-v1.16.5/pacing-en.png" alt="Actual pacing view with suggested daily usage and a ten percent reserve" width="464">
+
+The default reserve is **10% of total quota**. Guidance divides the remaining usable quota by the actual time until reset; it is a planning suggestion, not a provider-enforced daily allowance. Open pacing details to adjust the reserve and quota window.
+
+### Keep account controls separate
+
+<img src="docs/readme-v1.16.5/accounts-en.png" alt="Actual accounts tab with provider connection controls" width="464">
+
+Claude supports additional independent account profiles. Claude and Codex expose account switching and sign-out controls. Antigravity uses its local account and supports switching/disconnection; disconnecting Pebble does not necessarily sign out of Antigravity itself.
+
+### Small companions, your choice of position
+
+<img src="docs/readme-v1.16.5/pet-en.png" alt="Actual orange octopus companion in the upper area of the compact island" width="464">
+
+Four soft 3D companions: an astronaut cat, a mechanical robot, a star rabbit and an octopus. Choose the upper area or lower stage, then preview an action in that position. Upper-area companions walk for 8–14 seconds and perform an action for 8–14 seconds before walking again. Actions rotate; water breaks have a 20-minute interval. The lower stage also supports click-to-feed interaction. Stage backgrounds include Meteor Forest plus day/night variants of Cloud Islands, Sakura Garden, Coastal Lighthouse, Snowy Cabin and Space Greenhouse. Dragging the title pauses and resumes the current action.
+
+Pet growth and token-based XP are not implemented.
+
+## Get started
+
+1. **Download** the Windows x64 portable executable from [Releases](https://github.com/jaylooloomi/quota-island/releases/latest). Extracting an installer is unnecessary; run the executable. Verify it with the release's `SHA256SUMS.txt` if desired. Windows builds are currently unsigned.
+2. **Connect** the provider accounts you want to monitor, using the table below.
+3. **Choose your view**: quotas or accounts, Remaining / Used / Pacing, visible services, language and pet position.
+
+| Provider | Requirements and connection |
+|---|---|
+| Claude | Install the official [Claude Code CLI](https://code.claude.com/docs/en/setup). Click Login: Pebble first opens `https://claude.ai/new`. Sign in to the correct account, return and click **Signed in to the correct account — continue**. Complete browser authorization and paste a code into Pebble only if prompted. No interactive Claude terminal or Hello is required for quota polling. |
+| Codex | Install the official [Codex CLI](https://developers.openai.com/codex/cli) and sign in with the ChatGPT subscription you want to monitor. |
+| Gemini / Antigravity | Keep Antigravity running and signed in for its local quota service. These are Antigravity allocations, not the Gemini website's usage meter. Enterprise Code Assist is an alternative source in settings. |
+
+**Browser sign-in, OAuth authorization and quota synchronization are separate steps.** Signing in successfully does not guarantee the quota endpoint will accept a request immediately. Opening `/new` prepares the browser login; it does not reset rate limits.
+
+## Refresh behavior and limits
+
+- Claude's normal per-account quota interval is **at least 10 minutes**. Manual refresh shares that interval. Completed authentication may trigger one synchronization, while an active 429 cooldown still takes priority.
+- Codex and Gemini normally refresh about every two minutes. Disabled sources stop polling.
+- Claude uses local official-CLI credentials to query the OAuth usage endpoint. It does **not** currently use statusline snapshots. The endpoint can change or return 429 even when normal Claude conversations work.
+- Cooldowns survive restart. Do not repeatedly sign in to resolve a 429. A retry time means the app may try again, not that the server guarantees recovery.
+- Model-specific limits and reset times are displayed only when supplied. Unknown values are not invented. Antigravity Claude/GPT pools remain separate from independent subscription cards.
+- The numbers are **subscription quotas**, not network traffic, token counts, API spend or context-window percentages.
+
+## Desktop controls
+
+| Control | Behavior |
+|---|---|
+| Title drag / screen edges | Move the island; nearby work-area edges can snap into alignment |
+| Quota / Accounts | Separate readings from account management |
+| Settings | Visible services, sources, always-on-top, launch at login, pets and more |
+| Language | Traditional Chinese, English, Japanese and Korean |
+| Refresh | Recheck when the account's schedule/cooldown permits |
+| `Ctrl / Command + Alt + Q` | Show or hide the app |
+| Tray menu | Show, hide or quit |
+
+Always-on-top applies to ordinary desktop windows; Windows secure desktop and exclusive fullscreen can take precedence.
+
+## Run from source
 
 ```sh
 npm ci
+npm run build
 npm start
+```
+
+Node.js 24 is recommended. Electron + TypeScript; the UI is HTML/CSS/JavaScript. Windows is the locally tested platform. macOS/Linux package targets and CI configuration exist, but the current release provides only a Windows binary.
+
+```sh
 npm test
-npm run test:desktop
-npm run test:auth
-npm run test:order
-npm run test:design
-npm run test:live
-npm run check:live
-npm run check:accounts
+npm run test:coverage
 npm run dist:win
 ```
 
-`npm run test:desktop` 使用明確標示的展示資料，不會發送 provider 用量請求或啟動登入。`npm run check:live` 在隔離設定目錄讀取本機官方 CLI 授權，不會自動登入、不會輸出 token；報告在 `test-results/live.json`。登入本工具的 Google 帳號需在正常啟動的應用內驗證，隔離測試不會讀取正常應用的加密帳號檔。
+v1.16.5: **117 unit tests passed** during release preparation. The portable application was observed running with the expected version; Playwright's attachment to the self-extracting launcher timed out and is not reported as a pass. Tests and demo screenshots do not prove that every provider account or service is available.
 
-完成正常應用內登入後，使用 `npm run check:accounts` 讀取正常應用的加密 Google 授權與兩家官方 CLI 授權，再驗證真實配額。報告在 `test-results/accounts.json`，不含 token。
+Diagnostic logs record sanitized state transitions, error categories and retry times. They should not contain tokens, cookies or authorization codes. See [visual provenance](docs/readme-v1.16.5/PROVENANCE.md) for the screenshots and generated artwork.
 
-啟動展示：`npx electron . --demo`。畫面中的數字是展示資料，不能作為帳號驗證。
+## License
 
-其他系統在各自平台執行 `npm run dist:mac`／`npm run dist:linux`。CI matrix 也會建置三個平台；配置存在不代表已執行成功。macOS 版本尚未簽章／公證，Windows portable 尚未簽章。
-
-## 授權資料
-
-Claude 與 Codex 由官方 CLI 管理；本工具不自行輪替它們的 refresh token。Claude token 過期時會要求重新登入；也可先在官方 CLI 更新登入再回到本工具。Google 授權以系統加密儲存於應用 userData 的 `gemini-session.bin`。不在 renderer、偏好檔或測試報告存 token。
-
-- Windows userData：`%APPDATA%/quota-island`。
-- macOS：`~/Library/Application Support/quota-island`。
-- Linux：`~/.config/quota-island`（或系統設定的 XDG 路徑）。需可用的 Secret Service；不支援 plaintext fallback。
-
-要取消 Google 授權，可在 Google 帳號安全頁撤銷 Gemini CLI 的存取權；這可能同時影響使用相同 OAuth client 的 CLI。要只移除本工具的本機副本，先結束應用再刪除其 `gemini-session.bin`。來源開關只停止監控，不會登出官方 CLI。
-
-目前讀取的是訂閱配額與重設窗口，不是網路頻寬、API 帳單或本地 token 統計。Antigravity 本機 RPC、Claude 與 Google 配額端點不是穩定公開 API，可能隨上游變更而需要更新。Antigravity 必須保持執行；工具會隨讀取重新發現本機服務的動態連接埠。macOS/Linux 的發現器使用 `ps` 與 `lsof`，尚待實機驗證。
-
-研究與選型：[docs/research.md](docs/research.md)。驗證結果：[docs/verification.md](docs/verification.md)。第三方聲明：[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+[MIT](LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md).
