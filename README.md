@@ -20,11 +20,11 @@
 
 ## A quick introduction
 
-AI-generated promotional videos, not recordings of the running app. Video 01 is in English; video 02 is temporarily shown in Chinese while its English version is being prepared. Click a preview to open the original MP4 with sound.
+AI-generated promotional videos, not recordings of the running app. Video 01 is in English; video 02 temporarily uses Chinese captions. GIF animations are silent.
 
-<p align="center"><a href="docs/videos/intro-01-en.mp4"><img src="docs/videos/intro-01-en.gif" alt="01 · From quota surprises to a clear overview" width="480"></a><br><b>01 · From quota surprises to a clear overview</b><br><sub>▶ Open video with sound · English</sub></p>
+<p align="center"><img src="docs/videos/intro-01-en.gif" alt="01 · From quota surprises to a clear overview" width="480"><br><b>01 · From quota surprises to a clear overview</b></p>
 
-<p align="center"><a href="docs/videos/intro-02-zh-TW.mp4"><img src="docs/videos/intro-02-zh-TW.gif" alt="02 · Quotas, pacing and little companions" width="480"></a><br><b>02 · Quotas, pacing and little companions</b><br><sub>▶ Open video with sound · Chinese</sub></p>
+<p align="center"><img src="docs/videos/intro-02-zh-TW.gif" alt="02 · Quotas, pacing and little companions" width="480"><br><b>02 · Quotas, pacing and little companions</b></p>
 
 ## Use cases
 
