@@ -124,4 +124,14 @@ Diagnostic logs record sanitized state transitions, error categories and retry t
 
 ## License
 
-[MIT](LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md).
+Released under the [MIT License](LICENSE). You are welcome to use, modify, share and use this project commercially. **When redistributing the software or substantial portions of it, you must retain the original copyright notice and the complete MIT permission notice.** Third-party assets and dependencies remain subject to their own licenses; see [third-party notices](THIRD_PARTY_NOTICES.md).
+
+If Pebble becomes part of your own work, a credit in your README, About page or article would also be appreciated. This is a friendly request, not an additional MIT license condition:
+
+> Quota Pebble, created by Arthur Wang ([@jaylooloomi](https://github.com/jaylooloomi)), licensed under MIT. [Original project](https://github.com/jaylooloomi/quota-island).
+
+## Meet the author
+
+Hi, I'm Arthur Wang (jaylooloomi), the creator of Quota Pebble. I enjoy turning small everyday frustrations into useful, playful tools, and I'm always happy to meet people with similar interests.
+
+Whether you have feedback, a feature idea, a technical question, or simply want to say hello, you're welcome to connect through [GitHub](https://github.com/jaylooloomi), [Issues](https://github.com/jaylooloomi/quota-island/issues), or a pull request. I hope this little tool makes your work easier—and gives us a chance to exchange ideas and become friends.
