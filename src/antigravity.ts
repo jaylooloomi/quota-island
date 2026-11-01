@@ -4,10 +4,26 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import https from 'node:https';
+import http from 'node:http';
 import { cliEnvironment } from './cli';
 import { ProviderError, Reading, iso } from './model';
 const exec = promisify(execFile);
 interface Candidate { pid: number; token: string; ports: number[]; }
+export function parseAntigravitySummary(data:any,plan:string|null=null):Reading {
+  const groups=data?.response?.groups??data?.groups;
+  if(!Array.isArray(groups))throw new ProviderError('schema','Antigravity 尚未提供完整群組配額');
+  const windows=groups.flatMap((group:any,index:number)=>{
+    if(typeof group?.displayName!=='string'||!Array.isArray(group.buckets))return [];
+    return group.buckets.flatMap((bucket:any,bucketIndex:number)=>{
+      const fraction=bucket?.remainingFraction;
+      if(typeof fraction!=='number'||!Number.isFinite(fraction)||fraction<0||fraction>1||bucket.isEnabled===false||bucket.enabled===false)return [];
+      const period=bucket.window==='weekly'?'每週':bucket.window==='5h'?'5 小時':typeof bucket.displayName==='string'?bucket.displayName:'配額';
+      return [{id:`antigravity-group-${bucket.bucketId??`${index}-${bucketIndex}`}`,label:`${group.displayName} · ${period}`,group:group.displayName,usedPercent:Math.round((1-fraction)*10000)/100,resetsAt:iso(bucket.resetTime)}];
+    });
+  });
+  if(!windows.length)throw new ProviderError('schema','Antigravity 尚未提供完整群組配額');
+  return {provider:'gemini',plan,windows,source:'Antigravity 群組配額 · Gemini、Claude／GPT 與模型專屬限制；不是獨立 Claude Code 或 Codex 額度'};
+}
 export function parseAntigravity(data: any): Reading {
   const configs = data?.userStatus?.cascadeModelConfigData?.clientModelConfigs;
   if (!Array.isArray(configs)) throw new ProviderError('schema', 'Antigravity 尚未提供模型配額，稍後會自動重試');
@@ -67,13 +83,13 @@ export async function discoverAntigravity(): Promise<Candidate[]> {
     return candidates;
   } catch { throw new ProviderError('network','無法偵測 Antigravity 本機服務，請確認 Antigravity 正在執行'); }
 }
-export function localAntigravityStatus(candidate: Candidate, port: number): Promise<any> {
+export function localAntigravityStatus(candidate: Candidate, port: number, method='GetUserStatus', protocol:'https'|'http'='https'): Promise<any> {
   if (!Number.isInteger(port) || port < 1 || port > 65535) return Promise.reject(new ProviderError('network','Antigravity 連接埠無法辨識'));
   return new Promise((resolve,reject) => {
-    const body = JSON.stringify({metadata:{ideName:'antigravity',extensionName:'antigravity',ideVersion:'unknown',locale:'en'}});
+    const body = JSON.stringify(method==='GetUserStatus'?{metadata:{ideName:'antigravity',extensionName:'antigravity',ideVersion:'unknown',locale:'en'}}:{});
     // The IDE creates a self-signed certificate. The exception is restricted to
     // this loopback request and a discovered process-owned port, never global.
-    const req = https.request({hostname:'127.0.0.1',port,method:'POST',path:'/exa.language_server_pb.LanguageServerService/GetUserStatus',
+    const req = (protocol==='http'?http:https).request({hostname:'127.0.0.1',port,method:'POST',path:`/exa.language_server_pb.LanguageServerService/${method}`,
       rejectUnauthorized:false,timeout:1800,headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body),'Connect-Protocol-Version':'1','X-Codeium-Csrf-Token':candidate.token}}, res => {
       let text='';
       res.on('data',chunk=>{text+=chunk.toString();if(text.length>2*1024*1024)req.destroy();});
@@ -87,15 +103,40 @@ export function localAntigravityStatus(candidate: Candidate, port: number): Prom
   });
 }
 export class Antigravity {
+  private identity:string|undefined;
+  private switching=false;
+  beginSwitch(){this.switching=true;}
+  cancelSwitch(){this.switching=false;}
+  get waitingForAccount(){return this.switching;}
+  private acceptIdentity(value:unknown){
+    const identity=typeof value==='string'?value.trim().toLowerCase():undefined;
+    if(this.switching&&(!identity||identity===this.identity))throw new ProviderError('auth','等待在 Antigravity 切換帳號，完成後會自動更新配額');
+    if(identity)this.identity=identity;
+    this.switching=false;
+  }
   constructor(private discover=discoverAntigravity,private status=localAntigravityStatus){}
   async read():Promise<Reading>{
     const candidates=await this.discover();
     if(!candidates.length)throw new ProviderError('auth','請開啟 Antigravity 並完成 Google 登入；此處會讀取 Antigravity 的 Gemini 配額');
     let error:ProviderError|undefined;
+    let fallback:Reading|undefined;
+    let fallbackIdentity:string|undefined;
     for(const candidate of candidates)for(const port of candidate.ports.slice(0,4)){
-      try{return parseAntigravity(await this.status(candidate,port));}
+      for(const protocol of ['https','http'] as const){
+        try{
+          const reading=parseAntigravitySummary(await this.status(candidate,port,'RetrieveUserQuotaSummary',protocol));
+          let metadata:any;
+          try{metadata=await this.status(candidate,port,'GetUserStatus',protocol);}catch{/* Summary remains usable without plan metadata unless another source established identity. */}
+          const identity=metadata?.userStatus?.email;
+          if(fallbackIdentity&&(typeof identity!=='string'||identity.trim().toLowerCase()!==fallbackIdentity))continue;
+          const plan=metadata?.userStatus?.planStatus?.planInfo?.planName;if(typeof plan==='string')reading.plan=plan;
+          this.acceptIdentity(identity);return reading;
+        }catch(e){if(e instanceof ProviderError&&e.code==='auth'&&this.switching)throw e;/* Older local services may not implement grouped summaries. */}
+      }
+      try{const metadata=await this.status(candidate,port);const reading=parseAntigravity(metadata);if(!fallback){fallback=reading;const identity=metadata?.userStatus?.email;if(typeof identity==='string')fallbackIdentity=identity.trim().toLowerCase();}}
       catch(e){if(e instanceof ProviderError)error=e;}
     }
+    if(fallback){this.acceptIdentity(fallbackIdentity);return fallback;}
     throw error??new ProviderError('network','Antigravity 配額服務尚未就緒，稍後會自動重試');
   }
   async connect(){

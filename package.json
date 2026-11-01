@@ -1,6 +1,6 @@
 {
   "name": "quota-island",
-  "version": "0.2.0",
+  "version": "1.16.11",
   "private": true,
   "description": "A local-first desktop island for Claude, Gemini CLI and Codex quotas",
   "author": "Quota Island",
@@ -10,21 +10,35 @@
     "build": "tsc && node scripts/copy-ui.cjs",
     "start": "npm run build && electron .",
     "test": "npm run build && node --test test/*.test.cjs",
+    "test:coverage": "npm run build && node scripts/test-coverage.cjs",
+    "test:i18n": "npm run build && node scripts/i18n-test.cjs",
     "test:desktop": "npm run build && node scripts/desktop-test.cjs",
     "test:auth": "npm run build && node scripts/auth-desktop-test.cjs",
+    "test:antigravity-account": "npm run build && node scripts/antigravity-account-test.cjs",
     "test:order": "npm run build && node scripts/order-test.cjs",
     "test:design": "npm run build && node scripts/design-test.cjs",
+    "test:pacing": "npm run build && node scripts/pacing-test.cjs",
+    "test:accounts": "npm run build && node scripts/accounts-desktop-test.cjs",
+    "test:snap": "npm run build && node scripts/window-snap-test.cjs",
     "test:live": "npm run build && node scripts/soak-live-test.cjs",
     "check:live": "npm run build && node scripts/live-check.cjs",
     "check:accounts": "npm run build && electron scripts/account-check.cjs",
     "pack": "npm run build && electron-builder --dir",
     "dist:win": "npm run build && electron-builder --win portable",
     "dist:mac": "npm run build && electron-builder --mac zip",
-    "dist:linux": "npm run build && electron-builder --linux AppImage"
+    "dist:linux": "npm run build && electron-builder --linux AppImage",
+    "test:compact-accounts": "npm run build && node scripts/compact-accounts-test.cjs",
+    "test:pets": "npm run build && node scripts/pets-desktop-test.cjs",
+    "test:pet-styles": "npm run build && node scripts/pet-styles-test.cjs",
+    "test:pet-roaming": "npm run build && node scripts/pet-roaming-test.cjs",
+    "test:pet-resident": "npm run build && node scripts/pet-resident-test.cjs",
+    "test:backgrounds": "npm run build && node scripts/stage-backgrounds-test.cjs",
+    "test:pet-character": "npm run build && node scripts/pet-character-test.cjs",
+    "test:pet-preview-apply": "npm run build && node scripts/pet-preview-apply-test.cjs"
   },
   "build": {
     "appId": "app.quota-island.desktop",
-    "productName": "Quota Island",
+    "productName": "Quota Pebble",
     "directories": {
       "output": "release"
     },
@@ -37,7 +51,9 @@
     ],
     "asar": true,
     "npmRebuild": false,
-    "portable": { "useZip": true },
+    "portable": {
+      "useZip": true
+    },
     "win": {
       "target": "portable",
       "signAndEditExecutable": false

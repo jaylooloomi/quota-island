@@ -23,7 +23,12 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm test
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ runner.os }}
+          path: test-results/coverage.txt
       - run: npm audit --omit=dev
       - if: runner.os == 'Linux'
         run: xvfb-run -a npm run test:desktop
@@ -35,6 +40,11 @@ jobs:
         run: npm run test:order
       - if: runner.os == 'Windows'
         run: npm run test:design
+      - if: runner.os == 'Windows'
+        run: npm run test:i18n
+        env:
+          # Hosted Windows displays can be 768px tall; keep the full settings view testable.
+          QUOTA_TEST_SCALE: '0.75'
       - run: npm run ${{ matrix.command }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'

@@ -1,0 +1,80 @@
+✔ Antigravity uses only measured Gemini quotas, keeps exact percentages and selects most constrained first (4.8898ms)
+✔ Antigravity row identity is stable when the local server changes row order (1.9424ms)
+✔ a wrong local listener does not hide a working Antigravity quota endpoint, and CSRF never leaves the adapter (0.8832ms)
+✔ unavailable and unknown Antigravity quotas are not rendered as zero (3.0553ms)
+✔ Claude child login validates authorization codes and completes through stdin (193.0792ms)
+✔ Claude login cancellation and timeout terminate the pending child (57.7466ms)
+✔ Claude process failures return sanitized errors (121.8413ms)
+✔ a code submission that never completes times out and can start again (291.1295ms)
+✔ canceling verification settles login and unrelated output does not reuse an old code prompt (170.5669ms)
+✔ CLI discovery prefers native executables and preserves the caller environment (8.5823ms)
+✔ npm CLI entrypoints run through Node mode instead of shell interpolation (1.6277ms)
+✔ missing official CLI produces an actionable error for either provider (3.2053ms)
+✔ browser completion automatically clears auth backoff, fetches quota, publishes and focuses app (5.2293ms)
+✔ successful authorization with unavailable quota reports a sync failure instead of pretending connected (1.0026ms)
+✔ completed authorization during quota cooldown is distinct from sign-in failure (0.9007ms)
+✔ Claude authorization-code route remains in-app and is refreshed once after CLI completion (0.7798ms)
+✔ Claude parser recognizes the live CLI manual redirect and never forwards arbitrary links (2.494ms)
+✔ pending login is deduplicated, reopening is scoped, and late progress is ignored (12.1021ms)
+✔ login and code-submission failures never reveal unexpected exception details (0.928ms)
+✔ new or changed credentials trigger automatic refresh once without reading credential contents (20.7049ms)
+✔ Google OAuth callback requires matching state and uses PKCE before saving credentials (115.3196ms)
+✔ Google OAuth cancellation and timeouts close the loopback callback (35.7749ms)
+✔ Gemini encrypted vault refuses plaintext fallback and does not persist raw tokens (13.2579ms)
+✔ Gemini queries metadata and model quota only and saves rotated tokens (2.3683ms)
+✔ HTTP failures use safe messages and honor Retry-After seconds and dates (59.5937ms)
+✔ invalid JSON and network errors never surface raw response bodies (4.443ms)
+✔ all four languages have matching complete catalog keys and safe locale fallback (5.3107ms)
+✔ translation handles all supported time patterns and safe diagnostic summaries (11.4069ms)
+✔ DOM localization restores originals across languages and translates accessibility attributes (1.1139ms)
+✔ localized countdowns and login messages preserve values and account identity (0.7767ms)
+✔ missing percentages never become zero, malformed numbers are rejected (2.1685ms)
+✔ Claude accepts all provider-defined windows and ignores nulls and extra billing (3.7828ms)
+✔ Codex preserves named limits and server-defined window durations (0.5824ms)
+✔ Codex legacy rateLimits fallback and unknown quota (1.696ms)
+✔ Gemini converts remaining to used, preserves every model and does not coerce missing values (0.6502ms)
+✔ in-flight deduplication and refresh cooldown prevent request storms (5.8746ms)
+✔ Retry-After is respected by manual refresh; provider failures are independent (0.9007ms)
+✔ network failure marks previous data stale; auth failure clears a previous account reading (0.6822ms)
+✔ disabled sources do not poll, including while a result is in flight (0.5695ms)
+✔ auth completion allows immediate refresh after a previous auth failure (0.5585ms)
+✔ manual refresh obtains fresh data after its short debounce without waiting for the automatic polling interval (0.6201ms)
+✔ manual refresh cannot bypass a provider Retry-After (0.5049ms)
+✔ persisted Retry-After survives a new poller instance and expires automatically (2.268ms)
+✔ successful reauthorization preserves quota cooldown and resumes at its deadline (0.6305ms)
+✔ equal Antigravity variants become one visible row without merging different models or quotas (2.4842ms)
+✔ model names and quota reset boundaries are preserved in compact presentation (2.3376ms)
+✔ compact window names retain the actual model or cadence (0.3171ms)
+✔ Codex app-server handshake precedes quota queries and concurrent replies match their IDs (167.8821ms)
+✔ missing Codex process rejects pending requests without crashing (5.7201ms)
+ℹ tests 49
+ℹ suites 0
+ℹ pass 49
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1057.9625
+ℹ start of coverage report
+ℹ ------------------------------------------------------------------------------------------------------------
+ℹ file                  | line % | branch % | funcs % | uncovered lines
+ℹ ------------------------------------------------------------------------------------------------------------
+ℹ dist                  |        |          |         | 
+ℹ  antigravity.js       |  49.12 |    81.25 |   72.73 | 54-90 94-120 147-169
+ℹ  claude-login.js      |  97.12 |    92.86 |   88.89 | 74-76
+ℹ  cli.js               | 100.00 |    63.64 |  100.00 | 
+ℹ  connections.js       | 100.00 |    97.37 |  100.00 | 
+ℹ  credential-watch.js  | 100.00 |   100.00 |  100.00 | 
+ℹ  gemini.js            |  85.12 |    59.68 |   70.83 | 70-79 121-122 154-157 164-168 171-174 184-186 194-197
+ℹ  http.js              | 100.00 |    87.50 |  100.00 | 
+ℹ  model.js             | 100.00 |    88.52 |  100.00 | 
+ℹ  poller.js            | 100.00 |    95.74 |  100.00 | 
+ℹ  rpc.js               |  86.60 |    87.50 |   87.50 | 36-37 44-49 80-84
+ℹ src                   |        |          |         | 
+ℹ  ui                   |        |          |         | 
+ℹ   i18n.js             | 100.00 |    98.18 |  100.00 | 
+ℹ   presentation.js     | 100.00 |    86.36 |  100.00 | 
+ℹ ------------------------------------------------------------------------------------------------------------
+ℹ all files             |  87.77 |    85.91 |   89.47 | 
+ℹ ------------------------------------------------------------------------------------------------------------
+ℹ end of coverage report

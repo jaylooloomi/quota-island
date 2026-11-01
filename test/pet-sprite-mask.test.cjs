@@ -1,0 +1,3 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),{cleanEdges}=require('../src/ui/pet-animation');
+test('edge fragments are removed while main body and interior decorations remain',()=>{const d=new Uint8ClampedArray(20*20*4),put=(x,y)=>d[(y*20+x)*4+3]=255;for(let y=3;y<18;y++)for(let x=5;x<16;x++)put(x,y);put(0,8);put(1,8);put(9,1);assert.equal(cleanEdges(d,20,20),2);assert.equal(d[(8*20)*4+3],0);assert.equal(d[(1*20+9)*4+3],255);assert.equal(d[(10*20+10)*4+3],255);});
+test('a main character touching the edge is never erased',()=>{const d=new Uint8ClampedArray(10*10*4);for(let y=0;y<10;y++)for(let x=0;x<6;x++)d[(y*10+x)*4+3]=255;assert.equal(cleanEdges(d,10,10),0);assert.equal(d[3],255);});

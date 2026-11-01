@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "packaged": true,
+  "locales": [
+    "zh-TW",
+    "en",
+    "ja",
+    "ko"
+  ],
+  "checks": [
+    "settings layout and screenshots in all languages",
+    "three provider login details",
+    "Claude authorization-code form",
+    "Claude verification waiting and cancel control",
+    "authorization completed separately from quota cooldown",
+    "timeout error with retry",
+    "expanded source details",
+    "percentage toggle has no wrapping",
+    "all quota cards fit",
+    "immediate translation and Chinese restoration",
+    "language persists across restart",
+    "invalid language ignored"
+  ]
+}

@@ -16,14 +16,21 @@ const os = require('node:os');
   try {
     application = await launch(); let page = await application.firstWindow();
     await page.locator('#mini-codex').filter({hasText:'12%'}).waitFor();
+    assert.deepEqual(await compactOrder(page),['claude','codex','gemini'],'Default order follows the requested provider order');
     await page.locator('.compact-provider.codex').dragTo(page.locator('.compact-provider.claude'));
     await page.waitForFunction(() => document.querySelector('.provider-strip').firstElementChild.dataset.provider === 'codex');
     assert.deepEqual(await compactOrder(page), ['codex','claude','gemini']);
     assert.equal(await page.locator('#panel').isVisible(), false, 'Dragging must not expand the island');
     await page.locator('#toggle').click();
     assert.deepEqual(await cardOrder(page), ['codex','claude','gemini']);
+    await page.locator('.card.claude .card-grip').dragTo(page.locator('.card.codex .card-grip'));
+    await page.waitForFunction(()=>document.querySelector('#cards').firstElementChild.dataset.provider==='claude');
+    assert.deepEqual(await cardOrder(page),['claude','codex','gemini']);
+    await page.locator('.card.claude .card-grip').focus();await page.keyboard.press('Alt+ArrowDown');
+    await page.waitForFunction(()=>document.querySelector('#cards').firstElementChild.dataset.provider==='codex');
+    assert.deepEqual(await cardOrder(page),['codex','claude','gemini']);
     // Expanded cards use the same shared order.
-    await page.locator('.card.gemini .card-heading').dragTo(page.locator('.card.codex .card-heading'));
+    await page.locator('.card.gemini .card-grip').dragTo(page.locator('.card.codex .card-grip'));
     await page.waitForFunction(() => document.querySelector('.provider-strip').firstElementChild.dataset.provider === 'gemini');
     assert.deepEqual(await cardOrder(page), ['gemini','codex','claude']);
     await page.locator('#collapse').click();

@@ -20,6 +20,14 @@ test('successful authorization with unavailable quota reports a sync failure ins
   const c = new Connections({ login: async () => {}, submitCode(){} }, p, async () => {}, () => {}, () => {});
   await c.login('claude'); assert.equal(c.states.claude.phase, 'error'); assert.match(c.states.claude.message, /配額同步失敗.*provider offline/);
 });
+
+test('completed authorization during quota cooldown is distinct from sign-in failure',async()=>{
+  const p=new Poller(async()=>{throw Error('must not query during cooldown')},()=>{});
+  p.restoreRateLimits({claude:{until:Date.now()+600000,message:'HTTP 429'}});
+  const c=new Connections({login:async()=>{},submitCode(){}},p,async()=>{},()=>{},()=>{});
+  await c.login('claude');assert.equal(c.states.claude.phase,'cooldown');
+  assert.equal(c.states.claude.pending,false);assert.match(c.states.claude.message,/授權已完成/);
+});
 test('Claude authorization-code route remains in-app and is refreshed once after CLI completion', async () => {
   let end, provided;
   const p = new Poller(async provider => ({ provider, windows:[], plan:null, source:'fixture' }), () => {});
@@ -32,4 +40,39 @@ test('Claude authorization-code route remains in-app and is refreshed once after
 test('Claude parser recognizes the live CLI manual redirect and never forwards arbitrary links', () => {
   assert.equal(claudeLoginProgress('Open https://claude.com/cai/oauth/authorize?redirect_uri=https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode%2Fcallback\n').codeRequired, true);
   assert.deepEqual(claudeLoginProgress('diagnostic https://evil.example/oauth/authorize'), {});
+});
+
+test('pending login is deduplicated, reopening is scoped, and late progress is ignored',async()=>{
+  let finish,progressCallback,calls=0;
+  const opened=[];
+  const p=new Poller(async provider=>({provider,windows:[],plan:null,source:'fixture'}),()=>{});
+  const c=new Connections({login:async(_id,open,progress)=>{
+    calls++;progressCallback=progress;
+    await open('https://claude.com/cai/oauth/authorize');
+    progress({connecting:true,message:'Connecting'});
+    await new Promise(r=>finish=r);
+  },submitCode(){}},p,async url=>opened.push(url),()=>{},()=>{});
+  await c.reopen('claude');assert.equal(opened.length,0);
+  const job=c.login('claude');
+  await new Promise(setImmediate);
+  await c.login('claude');assert.equal(calls,1);
+  assert.equal(c.states.claude.phase,'connecting');
+  await c.reopen('claude');assert.equal(opened.length,2);
+  finish();await job;
+  progressCallback({codeRequired:true});
+  assert.equal(c.states.claude.phase,'ready');
+  await c.reopen('claude');assert.equal(opened.length,2);
+});
+
+test('login and code-submission failures never reveal unexpected exception details',async()=>{
+  for(const error of [new Error('SECRET'),new ProviderError('auth','授權已取消')]){
+    const p=new Poller(async()=>{throw Error('must not poll')},()=>{});
+    const c=new Connections({login:async()=>{throw error},submitCode(){throw error}},p,async()=>{},()=>{},()=>{});
+    await c.login('claude');
+    assert.equal(c.states.claude.phase,'error');
+    assert.equal(c.states.claude.message,error instanceof ProviderError?'授權已取消':'登入未完成，請重試');
+    c.submitCode('claude','fixture');
+    assert.equal(c.states.claude.message,error instanceof ProviderError?'授權已取消':'授權碼無法送出');
+    c.submitCode('codex','fixture');assert.equal(c.states.codex,undefined);
+  }
 });

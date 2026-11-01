@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile,stat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { homedir } from 'node:os';
 import path from 'node:path';
@@ -10,13 +10,26 @@ import { jsonRequest } from './http';
 import { ClaudeLogin, LoginProgress } from './claude-login';
 import { Antigravity } from './antigravity';
 import { ProviderError, ProviderId, parseClaude, parseCodex, parseGemini, Reading } from './model';
+import {sendClaudeHello} from './hello-command';
 const exec = promisify(execFile);
 export class Providers {
   rpc = new CodexRpc(() => findCli('codex'));
   private claudeLogin = new ClaudeLogin();
   private authJobs = new Map<ProviderId, Promise<void>>();
   private antigravity = new Antigravity();
-  constructor(private gemini: Gemini, private googleSource: () => 'antigravity' | 'code_assist' = () => 'code_assist') {}
+  beginAntigravitySwitch(){this.antigravity.beginSwitch();}
+  cancelAntigravitySwitch(){this.antigravity.cancelSwitch();}
+  get waitingForAntigravityAccount(){return this.antigravity.waitingForAccount;}
+  constructor(private gemini: Gemini, private googleSource: () => 'antigravity' | 'code_assist' = () => 'code_assist', private claudeConfigDir?:string) {
+    if(claudeConfigDir)this.claudeLogin=new ClaudeLogin(()=>this.claudeCommand());
+  }
+  private claudeCommand(){
+    const command=findCli('claude');if(!this.claudeConfigDir)return command;
+    const env={...command.env,CLAUDE_CONFIG_DIR:this.claudeConfigDir};
+    for(const key of ['CLAUDE_CODE_OAUTH_TOKEN','ANTHROPIC_API_KEY','ANTHROPIC_AUTH_TOKEN'])delete (env as NodeJS.ProcessEnv)[key];
+    return {...command,env};
+  }
+  async hello(cwd:string){const dir=this.claudeConfigDir||process.env.CLAUDE_CONFIG_DIR||path.join(homedir(),'.claude');return sendClaudeHello(this.claudeCommand(),dir,cwd);}
   async read(id: ProviderId): Promise<Reading> {
     if (id === 'codex') {
       const account = await this.rpc.call('account/read', { refreshToken: false });
@@ -27,10 +40,10 @@ export class Providers {
     if (id === 'gemini') {
       return this.googleSource() === 'antigravity' ? this.antigravity.read() : this.gemini.read();
     }
-    const dir = process.env.CLAUDE_CONFIG_DIR || path.join(homedir(), '.claude');
+    const dir = this.claudeConfigDir || process.env.CLAUDE_CONFIG_DIR || path.join(homedir(), '.claude');
     let credentials: any;
     try { credentials = JSON.parse(await readFile(path.join(dir, '.credentials.json'), 'utf8')); } catch { /* Keychain fallback below */ }
-    if (!credentials?.claudeAiOauth?.accessToken && process.platform === 'darwin') {
+    if (!this.claudeConfigDir && !credentials?.claudeAiOauth?.accessToken && process.platform === 'darwin') {
       try {
         const { stdout } = await exec('/usr/bin/security', ['find-generic-password', '-s', 'Claude Code-credentials', '-w'], { timeout: 10_000, maxBuffer: 128 * 1024 });
         const text = stdout.trim();
@@ -79,12 +92,25 @@ export class Providers {
       });
       return;
     }
-    await this.claudeLogin.start(info => {
+    const configDir=this.claudeConfigDir||process.env.CLAUDE_CONFIG_DIR||path.join(homedir(),'.claude'),credentialFile=path.join(configDir,'.credentials.json');
+    const before=await stat(credentialFile).then(s=>s.mtimeMs).catch(()=>0);
+    try{await this.claudeLogin.start(info => {
       progress(info);
-      // A piped CLI can print a manual authorization URL without launching it.
-      if (info.browserUrl) void openUrl(info.browserUrl).catch(() => {});
-    });
+      // Official CLI opens the browser. Keep the URL only for explicit Reopen.
+    },300000,async()=>{const stamp=await stat(credentialFile).then(s=>s.mtimeMs).catch(()=>0);if(stamp<=before)return false;const cmd=this.claudeCommand();const r=await exec(cmd.file,[...cmd.args,'auth','status','--json'],{env:cmd.env,windowsHide:true,timeout:10000,maxBuffer:65536});return JSON.parse(r.stdout).loggedIn===true;});}catch(error){const after=await stat(credentialFile).then(s=>s.mtimeMs).catch(()=>0);let verified=false;if(after>before){try{const cmd=this.claudeCommand();const result=await exec(cmd.file,[...cmd.args,'auth','status','--json'],{env:cmd.env,windowsHide:true,timeout:15000,maxBuffer:65536});verified=JSON.parse(result.stdout).loggedIn===true;}catch{}}if(!verified)throw error;}
   }
   submitCode(id: ProviderId, code: unknown) { if (id !== 'claude') throw new ProviderError('auth', '此來源不接受授權碼'); this.claudeLogin.submitCode(code); }
+  cancelLogin(id: ProviderId) { if (id === 'claude') this.claudeLogin.close(); }
+  async logout(id: ProviderId) {
+    if (this.authJobs.has(id)) throw new ProviderError('auth','請先取消或完成目前的登入');
+    if (id === 'codex') { await this.rpc.call('account/logout'); return; }
+    if (id === 'claude') {
+      const command=this.claudeCommand();
+      try { await exec(command.file,[...command.args,'auth','logout'],{env:command.env,windowsHide:true,timeout:15_000,maxBuffer:128*1024}); }
+      catch { throw new ProviderError('auth','登出未完成，請稍後重試'); }
+      return;
+    }
+    throw new ProviderError('auth','請在 Antigravity 或 Google 帳號中管理授權');
+  }
   close() { this.rpc.close(); this.gemini.close(); this.claudeLogin.close(); }
 }

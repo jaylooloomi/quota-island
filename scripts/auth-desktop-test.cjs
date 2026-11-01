@@ -15,6 +15,14 @@ const os = require('node:os');
     // No misleading official-page link before an account has been connected.
     assert.equal(await page.locator('.card.claude .provider-link').isVisible(),false);
     await page.locator('.card.claude .connect-primary').click();
+    await page.locator('.card.claude .continue-claude-login').click();
+    await page.locator('.card.claude .auth-code-form').waitFor({state:'visible'});
+    await page.locator('.card.claude .cancel-login').click();
+    await page.waitForFunction(()=>!document.querySelector('.card.claude .login').disabled);
+    await page.locator('.card.claude .auth-code-form').waitFor({state:'hidden'});
+    assert.equal((await page.evaluate(()=>window.quota.getState())).auth.claude.phase,'error');
+    await page.locator('.card.claude .login').click();
+    await page.locator('.card.claude .continue-claude-login').click();
     await page.locator('.card.claude .auth-code-form').waitFor({state:'visible'});
     await page.locator('.card.claude .auth-code').fill('TEST-AUTH-CODE');
     await page.locator('.card.claude .auth-code-form button').click();
@@ -39,7 +47,41 @@ const os = require('node:os');
     assert.equal(state.providers.gemini.status,'ready'); assert.equal(state.auth.gemini.phase,'ready');
     const bytes=await fs.readFile(path.join(dir,'gemini-session.bin'));
     assert.ok(!bytes.includes(Buffer.from('TEST-GOOGLE-NOT-REAL')));
-    const report={passed:true,checks:['Claude manual authorization code returns through CLI stdin','Google real loopback callback and encrypted vault','wrong OAuth state rejected','auth completion bypasses stale auth backoff','quota cards update without refresh click','app restores and expands after browser authorization','no misleading external sign-in link','authorization code input cleared']};
+    const beforeSwitch=await page.evaluate(()=>window.quota.getState());
+    await page.locator('.card.codex .connection-status').click();
+    assert.match(await page.locator('.card.codex .connection-description').textContent(),/不同帳號/);
+    assert.match(await page.locator('.card.codex .connection-note').textContent(),/本機 Codex CLI/);
+    await page.locator('.card.codex .login').filter({hasText:'切換 Codex 帳號'}).click();
+    for(let i=0;i<100;i++){
+      const opened=await application.evaluate(()=>globalThis.__AUTH_TEST_URLS.some(url=>new URL(url).hostname==='auth.openai.com'));
+      if(opened)break;
+      if(i===99)throw Error('Codex did not open its own OpenAI login');
+      await new Promise(resolve=>setTimeout(resolve,20));
+    }
+    await application.evaluate(()=>globalThis.__AUTH_TEST_CODEX_COMPLETE());
+    await page.locator('.card.codex .quota-number').filter({hasText:'35%'}).waitFor();
+    const afterSwitch=await page.evaluate(()=>window.quota.getState());
+    assert.equal(afterSwitch.auth.codex.phase,'ready');
+    for(const id of ['claude','gemini']){
+      assert.deepEqual(afterSwitch.providers[id],beforeSwitch.providers[id]);
+      assert.deepEqual(afterSwitch.auth[id],beforeSwitch.auth[id]);
+    }
+    await page.locator('#tab-accounts').click();
+    await page.locator('.card.codex .account-logout').click();
+    assert.equal(await page.locator('.card.codex .logout-confirm').isVisible(),true);
+    await page.locator('.card.codex .cancel-logout').click();
+    assert.equal((await page.evaluate(()=>window.quota.getState())).providers.codex.status,'ready');
+    await page.locator('.card.codex .account-logout').click();
+    await page.locator('.card.codex .confirm-logout').click();
+    await page.waitForFunction(async()=> (await window.quota.getState()).providers.codex.status==='signed_out');
+    assert.equal((await page.evaluate(()=>window.quota.getState())).providers.codex.reading,null);
+    await page.locator('.card.claude .account-logout').click();
+    await page.locator('.card.claude .confirm-logout').click();
+    await page.waitForFunction(async()=> (await window.quota.getState()).providers.claude.status==='signed_out');
+    const loggedOut=await page.evaluate(()=>window.quota.getState());
+    assert.deepEqual(loggedOut.providers.gemini,afterSwitch.providers.gemini);
+    assert.equal(await page.locator('.card.gemini .account-logout').isVisible(),false);
+    const report={passed:true,checks:['Codex opens its own OpenAI login and switches quota automatically','Codex account switch preserves Claude and Gemini state','Claude manual authorization code returns through CLI stdin','Google real loopback callback and encrypted vault','wrong OAuth state rejected','auth completion bypasses stale auth backoff','quota cards update without refresh click','app restores and expands after browser authorization','no misleading external sign-in link','authorization code input cleared']};
     await fs.mkdir('test-results',{recursive:true}); await fs.writeFile('test-results/auth-desktop.json',JSON.stringify(report,null,2)); console.log(JSON.stringify(report,null,2));
   } finally {await application.close();await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

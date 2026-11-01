@@ -2,6 +2,7 @@ export const providerIds = ['claude', 'gemini', 'codex'] as const;
 export type ProviderId = typeof providerIds[number];
 export interface QuotaWindow {
   id: string; label: string; usedPercent: number; resetsAt: string | null;
+  group?: string;
 }
 export interface Reading {
   provider: ProviderId; plan: string | null; windows: QuotaWindow[]; source: string;
@@ -10,6 +11,8 @@ export interface ProviderState {
   provider: ProviderId; status: 'loading' | 'ready' | 'unavailable' | 'stale' | 'signed_out';
   reading: Reading | null; updatedAt: string | null; error: string | null;
   nextPollAt: number; enabled: boolean;
+  refreshing?: boolean;
+  errorCode?: 'auth' | 'network' | 'schema' | 'missing_cli' | 'rate_limit';
 }
 export class ProviderError extends Error {
   constructor(public code: 'auth' | 'network' | 'schema' | 'missing_cli' | 'rate_limit', message: string, public retryAfterMs = 0) {
@@ -28,12 +31,25 @@ export function iso(value: unknown): string | null {
 export function parseClaude(data: any, plan: string | null = null): Reading {
   const windows: QuotaWindow[] = [];
   if (!data || typeof data !== 'object') throw new ProviderError('schema', 'Claude 回傳格式無法辨識');
+  const seen=new Set<string>();
+  // Current Claude usage responses expose scoped model limits only in this array.
+  for(const row of Array.isArray(data.limits)?data.limits:[]){
+    const usedPercent=percent(row?.percent);if(usedPercent===null)continue;
+    const model=typeof row.scope?.model?.display_name==='string'?row.scope.model.display_name:null;
+    const surface=typeof row.scope?.surface?.display_name==='string'?row.scope.surface.display_name:null;
+    const kind=typeof row.kind==='string'?row.kind:'limit';
+    const id=kind==='session'?'five_hour':kind==='weekly_all'?'seven_day':kind==='weekly_scoped'?`seven_day_${(model??surface??'scoped').toLowerCase()}${model&&surface?`:${surface}`:''}`:kind;
+    if(seen.has(id))continue;seen.add(id);
+    const label=kind==='session'?'本次工作階段':kind==='weekly_all'?'每週 · 所有模型':kind==='weekly_scoped'?`${[model,surface].filter(Boolean).join(' · ')||'模型專屬'} · 每週`:kind.replaceAll('_',' ');
+    windows.push({id,label,usedPercent,resetsAt:iso(row.resets_at)});
+  }
   for (const [key, value] of Object.entries(data)) {
+    if(!/^(five_hour|seven_day(?:_.*)?)$/.test(key)||seen.has(key))continue;
     if (!value || typeof value !== 'object') continue;
     const row = value as any;
     const usedPercent = percent(row.utilization);
     if (usedPercent === null) continue;
-    const labels: Record<string, string> = { five_hour: '5 小時', seven_day: '每週', seven_day_sonnet: 'Sonnet · 每週', seven_day_opus: 'Opus · 每週' };
+    const labels: Record<string, string> = { five_hour: '本次工作階段', seven_day: '每週 · 所有模型', seven_day_sonnet: 'Sonnet · 每週', seven_day_opus: 'Opus · 每週' };
     windows.push({ id: key, label: labels[key] ?? key.replaceAll('_', ' '), usedPercent, resetsAt: iso(row.resets_at) });
   }
   if (!windows.length) throw new ProviderError('schema', 'Claude 尚未提供可辨識的配額窗口');

@@ -1,0 +1,3 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),{sadPose}=require('../src/ui/pet-animation');
+test('dejected sequence lowers sighs recovers and clamps frame bounds',()=>{assert.equal(sadPose(-30).frame,0);assert.equal(sadPose(500).emotion,'lower');assert.equal(sadPose(1900).emotion,'sigh');assert.equal(sadPose(3500).emotion,'recover');assert.equal(sadPose(99999).frame,5);assert.equal(sadPose(99999).next,5);assert.ok(sadPose(900).mix>0);});
+test('pixel mode never blends while reduced motion stays on a dejected pose',()=>{assert.equal(sadPose(900,false,true).mix,0);assert.deepEqual(sadPose(0,true),sadPose(9000,true));assert.equal(sadPose(0,true).frame,2);});

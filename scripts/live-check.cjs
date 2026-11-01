@@ -26,5 +26,9 @@ const os = require('node:os');
     console.log(JSON.stringify(result, null, 2));
     await page.locator('#toggle').click(); await page.locator('#panel').waitFor({ state: 'visible' });
     await page.screenshot({ path: 'test-results/island-live.png' });
+    if(await page.locator('.card.gemini .quota-details-link').isVisible()){
+      await page.locator('.card.gemini .quota-details-link').click();
+      await page.screenshot({path:'test-results/antigravity-live-details.png'});
+    }
   } finally { await application.close(); await fs.rm(userData, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }); }
 })().catch(e => { console.error(e); process.exitCode = 1; });

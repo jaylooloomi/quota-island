@@ -1,34 +1,45 @@
+import {AutoReconnect} from './auto-reconnect';
 import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray, globalShortcut, powerMonitor, Notification, safeStorage } from 'electron';
 import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'node:fs';
 import path from 'node:path';
+import {syncLoginStartup} from './login-startup';
 import { Poller } from './poller';
 import { Providers } from './providers';
 import { Gemini, GeminiVault } from './gemini';
 import { Connections } from './connections';
 import { CredentialWatch } from './credential-watch';
+import {Accounts} from './accounts';
+import {Diagnostics} from './diagnostics';
+import {MorningHello} from './morning-hello';
+import {fitWindow,snapWindow,Dock,Rect} from './window-position';
 import { homedir } from 'node:os';
-import { ProviderError, ProviderId, providerIds, Reading } from './model';
+import { ProviderError, ProviderId, ProviderState, providerIds, Reading } from './model';
 const demo = process.argv.includes('--demo');
 const testing = process.argv.includes('--test-mode');
+const { translate, normalizeLocale } = require('./ui/i18n');
+const t = (value: string) => translate(value, settings.locale);
+let updateTrayMenu = () => {};
 if (testing) {
   const testData = process.env.QUOTA_TEST_DATA;
   if (!testData) throw new Error('QUOTA_TEST_DATA required');
   app.setPath('userData', testData);
 }
-type Settings = { remaining: boolean; alwaysOnTop: boolean; notifications: boolean; enabled: Record<ProviderId, boolean>; order: ProviderId[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; x?: number; y?: number };
-let settings: Settings = { remaining: true, alwaysOnTop: true, notifications: false, enabled: { claude: true, gemini: true, codex: true }, order: [...providerIds], googleSource:'antigravity', presentationVersion:2 };
-function validOrder(raw: unknown): raw is ProviderId[] {
-  return Array.isArray(raw) && raw.length === providerIds.length && new Set(raw).size === providerIds.length && raw.every(id => providerIds.includes(id));
+const petBackgrounds = ["meteor","meteor-day","cloud-day","cloud-night","sakura-day","sakura-night","coast-day","coast-night","snow-day","snow-night","greenhouse-day","greenhouse-night"] as const;
+type Settings = { petCharacter:'claude'|'codex'|'gemini'|'octopus'|'random'; petPlacement:'stage'|'title'; autoStart:boolean; petBackground:typeof petBackgrounds[number]; petRoam:boolean; petStyle:'smooth'; petIdle:boolean;petAlerts:boolean; morningHelloEnabled:boolean; morningHelloTime:string; locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; pacing: boolean; reserveDefaultsVersion:3; reservePercent: Record<ProviderId, number>; paceWindows: Partial<Record<ProviderId, string>>; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: string[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; dock?:Dock; x?: number; y?: number };
+let settings: Settings = { petCharacter:'claude', petPlacement:'title', autoStart:false, petBackground:'meteor', petRoam:false, petStyle:'smooth', petIdle:!demo,petAlerts:!demo, morningHelloEnabled:true, morningHelloTime:'08:00', locale:'zh-TW', remaining: true, pacing:false, reserveDefaultsVersion:3, reservePercent:{claude:10,codex:10,gemini:10}, paceWindows:{}, alwaysOnTop: true, notifications: false, visible: { claude:true, codex:true, gemini:true }, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
+function validOrder(raw: unknown): raw is string[] {
+  return Array.isArray(raw) && raw.length >= 3 && raw.length <= 23 && new Set(raw).size === raw.length && providerIds.every(id=>raw.includes(id)) && raw.every(id => providerIds.includes(id) || (typeof id === 'string' && /^claude-account-[0-9a-f-]{36}$/.test(id)));
 }
 let win: BrowserWindow;
 let tray: Tray;
+let topTimer:NodeJS.Timeout|undefined;
+function maintainTop(){if(!win||win.isDestroyed()||!win.isVisible()||!settings.alwaysOnTop)return;if(!win.isAlwaysOnTop())win.setAlwaysOnTop(true);win.moveTop();}
 let expanded = false;
 let quitting = false;
 let paused = false;
 let providers: Providers;
 let poller: Poller;
 let interval: NodeJS.Timeout;
-let saveTimer: NodeJS.Timeout;
 let connections: Connections;
 let credentialWatch: CredentialWatch;
 const warned = new Map<string, string>();
@@ -51,37 +62,65 @@ function readSettings() {
   try {
     const s = JSON.parse(readFileSync(path.join(app.getPath('userData'), 'preferences.json'), 'utf8'));
     if (validOrder(s.order)) settings.order = [...s.order];
+    settings.locale=normalizeLocale(s.locale);
+    if(['claude','codex','gemini','octopus','random'].includes(s.petCharacter))settings.petCharacter=s.petCharacter;
+    if(['stage','title'].includes(s.petPlacement))settings.petPlacement=s.petPlacement;
+    if((petBackgrounds as readonly string[]).includes(s.petBackground))settings.petBackground=s.petBackground;
+    settings.petStyle='smooth';
+    if(typeof s.morningHelloEnabled==='boolean')settings.morningHelloEnabled=s.morningHelloEnabled;
+    if(typeof s.morningHelloTime==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(s.morningHelloTime))settings.morningHelloTime=s.morningHelloTime;
+    if(s.dock&&[null,'left','right'].includes(s.dock.horizontal)&&[null,'top','bottom'].includes(s.dock.vertical))settings.dock={horizontal:s.dock.horizontal,vertical:s.dock.vertical};
+    for(const id of providerIds){if(typeof s.reservePercent?.[id]==='number'&&Number.isFinite(s.reservePercent[id])&&s.reservePercent[id]>=0&&s.reservePercent[id]<=100)settings.reservePercent[id]=s.reserveDefaultsVersion===2&&s.reservePercent[id]===5?10:s.reservePercent[id];if(typeof s.paceWindows?.[id]==='string'&&s.paceWindows[id].length<=160)settings.paceWindows[id]=s.paceWindows[id];}
+    for (const id of providerIds) if (typeof s.visible?.[id] === 'boolean') settings.visible[id] = s.visible[id];
     if (s.googleSource === 'antigravity' || s.googleSource === 'code_assist') settings.googleSource=s.googleSource;
-    for (const key of ['remaining', 'alwaysOnTop', 'notifications'] as const) if (typeof s[key] === 'boolean' && (key!=='remaining'||s.presentationVersion===2)) settings[key] = s[key];
+    for (const key of ['autoStart','remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof s[key] === 'boolean' && (key!=='remaining'||s.presentationVersion===2)) settings[key] = s[key];
     for (const id of providerIds) if (typeof s.enabled?.[id] === 'boolean') settings.enabled[id] = s.enabled[id];
     if (Number.isFinite(s.x) && Number.isFinite(s.y)) { settings.x = s.x; settings.y = s.y; }
   } catch { /* First run or invalid preferences: use defaults. */ }
 }
-function snapshot() { return { providers: poller.states, settings, auth: connections?.states ?? {}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
+let accounts:Accounts;
+let autoReconnect:AutoReconnect|undefined;
+let diagnostics:Diagnostics|undefined;
+let morningHello:MorningHello|undefined;
+function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, morningHello:morningHello?.snapshot()??{}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
 function publish() {
   persistRateLimits();
+  if(poller)diagnostics?.observe(snapshot());
   if (!win?.isDestroyed() && !win?.webContents.isDestroyed()) win?.webContents.send('state', snapshot());
   if (settings.notifications && !demo && !testing && Notification.isSupported()) {
-    for (const s of Object.values(poller.states)) {
+    for (const [accountId,s] of Object.entries({...poller.states,...accounts?.snapshot().providers}) as [string,ProviderState][]) {
       if (!s.enabled || s.status !== 'ready') continue;
       for (const w of s.reading?.windows ?? []) {
-        const key = `${s.provider}:${w.id}`;
+        const key = `${accountId}:${w.id}`;
         const reset = w.resetsAt ?? 'unknown';
         if (w.usedPercent < 85) warned.delete(key);
         if (w.usedPercent >= 90 && warned.get(key) !== reset) {
           warned.set(key, reset);
-          new Notification({ title: `${s.provider} 配額即將用完`, body: `${w.label} 已使用 ${Math.round(w.usedPercent)}%` }).show();
+          new Notification({ title: t(`${s.provider} 配額即將用完`), body: t(`${w.label} 已使用 ${Math.round(w.usedPercent)}%`) }).show();
         }
       }
     }
   }
 }
+let panelHeight = 480;
+let petHeight=0;
+let expectedBounds:Rect|undefined;
+let dragTimer:NodeJS.Timeout|undefined;
+let userDragging=false;
+function applyBounds(bounds:Rect){const current=win.getBounds();expectedBounds=bounds;if(['x','y','width','height'].some(key=>current[key as keyof Rect]!==bounds[key as keyof Rect]))win.setBounds(bounds);}
+function settlePosition(){
+  if(!win||win.isDestroyed())return;
+  const bounds=win.getBounds();if(expectedBounds&&bounds.x===expectedBounds.x&&bounds.y===expectedBounds.y)return;
+  const result=snapWindow(bounds,screen.getDisplayMatching(bounds).workArea);settings.dock=result.dock;
+  applyBounds(result.bounds);settings.x=result.bounds.x;settings.y=result.bounds.y;saveSettings();
+}
 function reposition() {
+  if(!win||win.isDestroyed()||userDragging)return;
   const bounds = win.getBounds();
   const area = screen.getDisplayMatching(bounds).workArea;
-  const width = Math.min(expanded ? 584 : 624, area.width);
-  const height = Math.min(expanded ? 744 : 92, area.height);
-  win.setBounds({ width, height, x: Math.max(area.x, Math.min(bounds.x, area.x + area.width - width)), y: Math.max(area.y, Math.min(bounds.y, area.y + area.height - height)) });
+  const width = Math.min(464, area.width);
+  const height = Math.min(expanded ? panelHeight : 76+petHeight, area.height);
+  applyBounds(fitWindow(bounds,area,width,height,settings.dock));
 }
 function setExpanded(value: boolean) { expanded = value; reposition(); publish(); }
 const external: Record<string, string> = {
@@ -110,31 +149,79 @@ function installHandlers() {
   // Only our trusted local renderer may call IPC. No arbitrary URLs, commands or paths.
   for (const [channel, handler] of Object.entries({
     'get-state': () => snapshot(),
+    'pet-height': (_event:any,value:unknown)=>{if(value!==0&&value!==112)return;petHeight=value;reposition();},
     'expand': (_event: any, value: unknown) => { if (typeof value === 'boolean') setExpanded(value); },
-    'refresh': async () => { if (!paused) await poller.tick(true); return snapshot(); },
+    'panel-height': (_event: any, value: unknown) => { if (typeof value === 'number' && Number.isFinite(value)) { const height = Math.max(480, Math.min(1200, Math.ceil(value))); if (height !== panelHeight) { panelHeight = height; reposition(); } } },
+    'refresh': async () => { if (!paused) await Promise.all([poller.tick(true),accounts.tick(true)]); return snapshot(); },
+    'account-add': (_event:any,label:unknown)=>{try{return {ok:true,id:accounts.add(label)};}catch(e){return {ok:false,message:e instanceof ProviderError?e.message:'無法新增帳號'};}},
+    'account-remove': async (_event:any,id:unknown)=>{try{await accounts.remove(id);return {ok:true};}catch{return {ok:false,message:'無法移除帳號'};}},
+    'account-rename': (_event:any,id:unknown,label:unknown)=>{try{accounts.rename(id,label);return {ok:true};}catch(e){return {ok:false,message:e instanceof ProviderError?e.message:'無法重新命名'};}},
     'hide': () => win.hide(),
     'quit': () => { quitting = true; app.quit(); },
     'open-provider': async (_event: any, id: unknown) => { if (typeof id === 'string' && external[id]) await shell.openExternal(external[id]!); },
     'settings': (_event: any, patch: any) => {
       if (!patch || typeof patch !== 'object') return;
-      if (validOrder(patch.order)) settings.order = [...patch.order];
+      if(typeof patch.autoStart==='boolean')patch={...patch,autoStart:syncLoginStartup(app,patch.autoStart,{platform:process.platform,packaged:app.isPackaged,demo,testing,executable:process.execPath})};
+      if(typeof patch.morningHelloEnabled==='boolean')settings.morningHelloEnabled=patch.morningHelloEnabled;
+      if(typeof patch.morningHelloTime==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(patch.morningHelloTime))settings.morningHelloTime=patch.morningHelloTime;
+      if(['claude','codex','gemini','octopus','random'].includes(patch.petCharacter))settings.petCharacter=patch.petCharacter;
+      if(['stage','title'].includes(patch.petPlacement))settings.petPlacement=patch.petPlacement;
+      if((petBackgrounds as readonly string[]).includes(patch.petBackground))settings.petBackground=patch.petBackground;
+      settings.petStyle='smooth';
+      accounts.patch(patch);
+      for(const id of providerIds){if(typeof patch.reservePercent?.[id]==='number'&&Number.isFinite(patch.reservePercent[id])&&patch.reservePercent[id]>=0&&patch.reservePercent[id]<=100)settings.reservePercent[id]=patch.reservePercent[id];if(typeof patch.paceWindows?.[id]==='string'&&patch.paceWindows[id].length<=160)settings.paceWindows[id]=patch.paceWindows[id];}
+      for (const id of providerIds) if (typeof patch.visible?.[id] === 'boolean') settings.visible[id] = patch.visible[id];
+      if (['zh-TW','en','ja','ko'].includes(patch.locale)) { settings.locale=patch.locale; updateTrayMenu(); }
+      if (validOrder(patch.order)&&patch.order.every((id:string)=>providerIds.includes(id as ProviderId)||accounts.has(id))) settings.order = [...patch.order];
       const sourceChanged = !connections.states.gemini?.pending && (patch.googleSource === 'antigravity' || patch.googleSource === 'code_assist') && patch.googleSource !== settings.googleSource;
       if (sourceChanged) { settings.googleSource=patch.googleSource; delete connections.states.gemini; }
-      for (const key of ['remaining', 'alwaysOnTop', 'notifications'] as const) if (typeof patch[key] === 'boolean') settings[key] = patch[key];
+      for (const key of ['autoStart','remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof patch[key] === 'boolean') settings[key] = patch[key];
       if (patch.enabled && typeof patch.enabled === 'object') for (const id of providerIds) if (typeof patch.enabled[id] === 'boolean') {
+        if(settings.enabled[id]!==patch.enabled[id])diagnostics?.sourceToggle(id,patch.enabled[id]);
         settings.enabled[id] = patch.enabled[id]; poller.setEnabled(id, patch.enabled[id]);
       }
-      win.setAlwaysOnTop(settings.alwaysOnTop, 'floating'); saveSettings(); publish();
+      win.setAlwaysOnTop(settings.alwaysOnTop);maintainTop(); saveSettings(); publish();
       if (sourceChanged) void poller.authenticated('gemini');
       if (!paused) void poller.tick();
     },
     'login': (_event: any, raw: unknown) => {
+      if(accounts.has(raw)){if(!demo)void accounts.prepareLogin(raw);return;}
       const id = validateId(raw);
       if (demo) { connections.states[id] = { pending: false, phase: 'error', message: '展示模式不會啟動登入；正常啟動即可連接帳號' }; publish(); return; }
-      void connections.login(id);
+      if(id==='claude')void connections.prepareClaude();else void connections.login(id);
     },
-    'reopen-login': (_event: any, raw: unknown) => connections.reopen(validateId(raw)),
-    'submit-code': (_event: any, raw: unknown, code: unknown) => connections.submitCode(validateId(raw), code),
+    'continue-claude-login': (_event:any,raw:unknown)=>{if(demo)return;if(accounts.has(raw))void accounts.continueLogin(raw);else if(raw==='claude')void connections.continueClaude();},
+    'reopen-login': (_event: any, raw: unknown) => accounts.has(raw)?accounts.reopen(raw):connections.reopen(validateId(raw)),
+    'cancel-login': (_event: any, raw: unknown) => accounts.has(raw)?accounts.cancel(raw):(raw==='claude'&&connections.cancelPreparation()?undefined:providers.cancelLogin(validateId(raw))),
+    'logout': async (_event: any, raw: unknown) => {
+      if(accounts.has(raw)){if(demo)return {ok:false,message:'展示模式不會登出帳號'};try{await accounts.logout(raw);return {ok:true};}catch(e){return {ok:false,message:e instanceof ProviderError?e.message:'登出未完成，請稍後重試'};}}
+      const id=validateId(raw);
+      if (demo) return {ok:false,message:'展示模式不會登出帳號'};
+      if (connections.states[id]?.pending) return {ok:false,message:'請先取消或完成目前的登入'};
+      try {
+        await providers.logout(id);await poller.signedOut(id);delete connections.states[id];publish();return {ok:true};
+      } catch(e) { return {ok:false,message:e instanceof ProviderError?e.message:'登出未完成，請稍後重試'}; }
+    },
+    'open-antigravity': async () => {
+      if (demo) return {ok:false,message:'展示模式不會開啟外部應用'};
+      const file=process.platform==='win32'?path.join(homedir(),'AppData/Local/Programs/Antigravity/Antigravity.exe'):process.platform==='darwin'?'/Applications/Antigravity.app':null;
+      if (!file) return {ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'};
+      const error=await shell.openPath(file);
+      return error?{ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'}:{ok:true};
+    },
+    'antigravity-account': async (_event:any,action:unknown) => {
+      if(settings.googleSource!=='antigravity'||!['disconnect','switch'].includes(String(action)))return {ok:false};
+      if(action==='disconnect'){
+        providers.cancelAntigravitySwitch();
+        settings.enabled.gemini=false;poller.setEnabled('gemini',false);await poller.signedOut('gemini');delete connections.states.gemini;saveSettings();publish();return {ok:true};
+      }
+      if(demo)return {ok:false,message:'展示模式不會開啟外部應用'};
+      const file=process.platform==='win32'?path.join(homedir(),'AppData/Local/Programs/Antigravity/Antigravity.exe'):process.platform==='darwin'?'/Applications/Antigravity.app':null;
+      if(!file)return {ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'};
+      const error=await shell.openPath(file);if(error)return {ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'};
+      providers.beginAntigravitySwitch();settings.enabled.gemini=true;poller.setEnabled('gemini',true);saveSettings();await poller.signedOut('gemini');void poller.authenticated('gemini');publish();return {ok:true};
+    },
+    'submit-code': (_event: any, raw: unknown, code: unknown) => accounts.has(raw)?accounts.submit(raw,code):connections.submitCode(validateId(raw), code),
   })) {
     ipcMain.handle(channel, (event, ...args) => {
       if (event.sender !== win.webContents || event.senderFrame !== win.webContents.mainFrame) throw new Error('Untrusted sender');
@@ -150,27 +237,42 @@ function makeTray() {
     if (inside) { pixels[offset] = 221; pixels[offset + 1] = 210; pixels[offset + 2] = 130; pixels[offset + 3] = 255; }
   }
   tray = new Tray(nativeImage.createFromBitmap(pixels, { width: 32, height: 32 }));
-  tray.setToolTip('Quota Island · Claude / Gemini / Codex');
+  tray.setToolTip('Quota Pebble · Claude / Gemini / Codex');
   const updateMenu = () => tray.setContextMenu(Menu.buildFromTemplate([
-    { label: '顯示動態島', click: () => { win.show(); win.focus(); } },
-    { label: '展開配額面板', click: () => { setExpanded(true); win.show(); win.focus(); } },
-    { label: paused ? '繼續更新' : '暫停更新', click: () => { paused = !paused; updateMenu(); publish(); if (!paused) void poller.tick(); } },
-    { type: 'separator' }, { label: '結束 Quota Island', click: () => { quitting = true; app.quit(); } }
+    { label: t('顯示動態島'), click: () => { win.show(); win.focus(); } },
+    { label: t('展開配額面板'), click: () => { setExpanded(true); win.show(); win.focus(); } },
+    { label: t(paused ? '繼續更新' : '暫停更新'), click: () => { paused = !paused; updateMenu(); publish(); if (!paused) void poller.tick(); } },
+    { type: 'separator' }, { label: t('結束 Quota Pebble'), click: () => { quitting = true; app.quit(); } }
   ]));
+  updateTrayMenu=updateMenu;
   updateMenu(); tray.on('click', () => { win.show(); win.focus(); });
 }
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { if (win) { win.show(); win.focus(); } });
   app.whenReady().then(async () => {
-    readSettings(); providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource);
-    poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish);
+    readSettings();
+    if(!demo&&!testing){if(process.argv.includes('--enable-autostart'))settings.autoStart=true;try{settings.autoStart=syncLoginStartup(app,settings.autoStart,{platform:process.platform,packaged:app.isPackaged,demo,testing,executable:process.execPath});saveSettings();}catch{settings.autoStart=false;}}
+    diagnostics=new Diagnostics(path.join(app.getPath('userData'),demo?'demo-logs':'logs'));diagnostics.startup(app.getVersion(),settings.enabled);
+    providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource);
+    poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish);if(!demo)poller.setMinimumInterval('claude',600000);
     if(!demo){try{poller.restoreRateLimits(JSON.parse(readFileSync(path.join(app.getPath('userData'),'provider-cooldowns.json'),'utf8')));}catch{/* No prior cooldowns. */}}
     connections = new Connections(providers, poller, openAuthUrl, publish, () => {
       if (!quitting && win && !win.isDestroyed()) { setExpanded(true); win.show(); win.focus(); }
     });
+    accounts=new Accounts(path.join(app.getPath('userData'),demo?'demo-claude-accounts':'claude-accounts'),directory=>{
+      const service=new Providers(new Gemini(new GeminiVault(app.getPath('userData'),safeStorage)),()=>settings.googleSource,directory);
+      if(demo)service.read=async()=>demoReading('claude');
+      return service;
+    },openAuthUrl,publish,()=>{if(!quitting&&win&&!win.isDestroyed()){setExpanded(true);win.show();win.focus();}});
+    morningHello=new MorningHello(path.join(app.getPath('userData'),demo?'demo-morning-hello.json':'morning-hello.json'),async id=>{
+      if(demo)throw new ProviderError('auth','展示模式不會送出 Hello');
+      if(!settings.morningHelloEnabled||paused||(id==='claude'&&(!poller.states.claude.enabled||connections.states.claude?.pending)))throw new ProviderError('auth','Hello 已停用或帳號正在連接');
+      const cwd=path.join(app.getPath('userData'),'hello-workspace');
+      if(id==='claude')await providers.hello(cwd);else await accounts.hello(id,cwd);
+      const timer=setTimeout(()=>{if(!quitting){if(id==='claude')void poller.refresh('claude',true);else void accounts.refreshAccount(id);}},5500);timer.unref();
+    },publish);
     credentialWatch = new CredentialWatch({
-      claude: [path.join(process.env.CLAUDE_CONFIG_DIR || path.join(homedir(), '.claude'), '.credentials.json')],
       gemini: [path.join(app.getPath('userData'), 'gemini-session.bin'), path.join(homedir(), '.gemini', 'oauth_creds.json')],
     }, async (id, modifiedAt) => {
       if (!poller.states[id].enabled || connections.states[id]?.pending) return;
@@ -181,9 +283,9 @@ else {
     });
     for (const id of providerIds) poller.states[id].enabled = settings.enabled[id];
     const area = screen.getPrimaryDisplay().workArea;
-    win = new BrowserWindow({ width: 624, height: 92, x: settings.x ?? Math.round(area.x + (area.width - 624) / 2), y: settings.y ?? area.y + 12,
+    win = new BrowserWindow({ width: 464, height: 76, x: settings.x ?? Math.round(area.x + (area.width - 464) / 2), y: settings.y ?? area.y + 12,
       frame: false, transparent: true, resizable: false, maximizable: false, fullscreenable: false, hasShadow: false,
-      alwaysOnTop: settings.alwaysOnTop, skipTaskbar: true, show: false, title: 'Quota Island',
+      alwaysOnTop: settings.alwaysOnTop, skipTaskbar: true, show: false, title: 'Quota Pebble',
       webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true }
     });
     win.setMenu(null); reposition();
@@ -191,7 +293,18 @@ else {
     win.webContents.on('will-navigate', event => event.preventDefault());
     win.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
     win.on('close', event => { if (!quitting) { event.preventDefault(); win.hide(); } });
-    win.on('moved', () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { const b = win.getBounds(); settings.x = b.x; settings.y = b.y; saveSettings(); }, 500); });
+    win.on('will-move',()=>{win.webContents.send('pet-suspend','drag');expectedBounds=undefined;settings.dock=undefined;userDragging=true;});
+    win.on('hide',()=>win.webContents.send('pet-suspend','hide'));
+    win.on('show',()=>{maintainTop();win.webContents.send('pet-suspend','resume');});
+    win.on('blur',()=>{setTimeout(maintainTop,100);});
+    win.on('restore',maintainTop);
+    topTimer=setInterval(maintainTop,2000);
+    win.on('move',()=>{
+      const b=win.getBounds();if(expectedBounds&&b.x===expectedBounds.x&&b.y===expectedBounds.y)return;
+      if(process.platform==='win32'&&userDragging)return;
+      clearTimeout(dragTimer);dragTimer=setTimeout(()=>{userDragging=false;settlePosition();reposition();win.webContents.send('pet-suspend','resume');},180);
+    });
+    win.on('moved',()=>{if(process.platform==='win32'){clearTimeout(dragTimer);userDragging=false;settlePosition();reposition();}win.webContents.send('pet-suspend','resume');});
     screen.on('display-metrics-changed', reposition);
     screen.on('display-removed', reposition);
     installHandlers(); makeTray();
@@ -202,8 +315,12 @@ else {
     win.show();
     if (!demo) await credentialWatch.scan();
     void poller.tick();
-    interval = setInterval(() => { if (!paused) { if (!demo) void credentialWatch.scan(); void poller.tick(); } }, 5000);
+    void accounts.tick();
+    if(!demo&&!testing)autoReconnect=new AutoReconnect(path.join(app.getPath('userData'),'auto-reconnect.json'),id=>id==='claude'?connections.prepareClaude():accounts.prepareLogin(id));
+    interval = setInterval(() => { if(!paused&&autoReconnect){const current=snapshot();void autoReconnect.check(current.providers as any,Object.values(current.auth).some((a:any)=>a?.pending)).catch(()=>{});} if (!paused) { if (!demo) void credentialWatch.scan(); if(!demo&&settings.enabled.gemini&&settings.googleSource==='antigravity'&&providers.waitingForAntigravityAccount)void poller.authenticated('gemini'); void poller.tick();void accounts.tick(); }
+      if(!demo&&morningHello){const current:any=snapshot();void morningHello.tick(settings.morningHelloEnabled,settings.morningHelloTime,['claude',...current.accounts.map((a:any)=>a.id)].map((id:string)=>({id,state:current.providers[id],pending:current.auth[id]?.pending})),paused);}
+    }, 5000);
   });
-  app.on('before-quit', () => { quitting = true; clearInterval(interval); clearTimeout(saveTimer); providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
+  app.on('before-quit', () => { quitting = true; clearInterval(interval);clearInterval(topTimer); clearTimeout(dragTimer); accounts?.close();providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
   app.on('window-all-closed', () => { if (quitting) app.quit(); });
 }
