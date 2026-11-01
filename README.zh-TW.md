@@ -3,14 +3,14 @@
 <!-- project-badges -->
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-3b82f6?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/releases/tag/v1.16.5"><img alt="Released version v1.16.5" src="https://img.shields.io/badge/release-v1.16.5-8b87de?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/releases/latest"><img alt="Windows x64 portable release" src="https://img.shields.io/badge/platform-Windows%20x64%20portable-64748b?style=flat"></a>
+  <a href="https://github.com/jaylooloomi/quota-island/releases/tag/v1.16.10"><img alt="Released version v1.16.10" src="https://img.shields.io/badge/release-v1.16.10-8b87de?style=flat"></a>
+  <a href="https://github.com/jaylooloomi/quota-island/releases/latest"><img alt="Windows and macOS releases" src="https://img.shields.io/badge/platform-Windows%20%2B%20macOS-64748b?style=flat"></a>
   <a href="#從原始碼執行"><img alt="Built with Electron and TypeScript" src="https://img.shields.io/badge/built%20with-Electron%20%2B%20TypeScript-487fa8?style=flat"></a>
   <a href="#桌面操作"><img alt="Interface languages: Traditional Chinese, English, Japanese, Korean" src="https://img.shields.io/badge/UI-%E7%B9%81%E4%B8%AD%20%2F%20EN%20%2F%20%E6%97%A5%E6%9C%AC%E8%AA%9E%20%2F%20%ED%95%9C%EA%B5%AD%EC%96%B4-637e64?style=flat"></a>
   <a href="https://github.com/jaylooloomi/quota-island/actions/workflows/build.yml"><img alt="View actual GitHub Actions results" src="https://img.shields.io/badge/CI-view%20runs-64748b?style=flat"></a>
 </p>
 <!-- /project-badges -->
-<p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">下載 Windows 版</a> · <a href="README.md">English</a> · <a href="LICENSE">MIT</a></p>
+<p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">下載 Windows / macOS</a> · <a href="README.md">English</a> · <a href="LICENSE">MIT</a></p>
 
 <p align="center"><img src="docs/readme-v1.16.5/stage-zh-TW.png" alt="上面掌握額度，下面有個小夥伴。" width="464"><br><b>上面掌握額度，下面有個小夥伴。</b><br><sub>App 實際截圖 · 展示資料</sub></p>
 
@@ -63,7 +63,7 @@
 
 ## 三步開始
 
-1. **下載**：[Releases](https://github.com/jaylooloomi/quota-island/releases/latest) 提供 Windows x64 免安裝執行檔，直接執行即可，也可使用 `SHA256SUMS.txt` 驗證。現階段 Windows 成品未簽章。
+1. **下載**：[Releases](https://github.com/jaylooloomi/quota-island/releases/latest) 提供 Windows x64 免安裝 EXE、macOS Apple Silicon（`arm64`）及 Intel（`x64`）ZIP，可使用 `SHA256SUMS.txt` 驗證。Windows 直接執行；Mac 解壓縮後將 `Quota Pebble.app` 移至「應用程式」。Windows 未簽章；Mac 為 ad-hoc 簽署，尚無 Developer ID 與 Apple 公證。首次開啟限制請依 [Apple 官方說明](https://support.apple.com/102445) 操作。
 2. **連接帳號**：依下表完成各來源設定。
 3. **選擇顯示方式**：配額／帳號、剩餘／已用／配速、服務顯示、語言與寵物位置。
 
@@ -106,7 +106,7 @@ npm run build
 npm start
 ```
 
-建議 Node.js 24。使用 Electron、TypeScript 與 HTML/CSS/JavaScript。Windows 為本機實測平台；專案有 macOS／Linux 打包目標及 CI 設定，但目前 Release 僅提供 Windows 成品。
+建議 Node.js 24。使用 Electron、TypeScript 與 HTML/CSS/JavaScript。Windows 為本機實測平台。macOS 15 Apple Silicon 與 Intel 已通過原生 CI 單元測試、打包 App 啟動、四語系介面、寵物預覽／套用及背景保存測試；Mac 測試使用展示資料，尚未在 Mac 驗證真實服務登入與配額讀取。Linux 有打包目標，本次 Release 未提供成品。
 
 ```sh
 npm test

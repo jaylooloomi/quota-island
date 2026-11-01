@@ -3,14 +3,14 @@
 <!-- project-badges -->
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-3b82f6?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/releases/tag/v1.16.5"><img alt="Released version v1.16.5" src="https://img.shields.io/badge/release-v1.16.5-8b87de?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/releases/latest"><img alt="Windows x64 portable release" src="https://img.shields.io/badge/platform-Windows%20x64%20portable-64748b?style=flat"></a>
+  <a href="https://github.com/jaylooloomi/quota-island/releases/tag/v1.16.10"><img alt="Released version v1.16.10" src="https://img.shields.io/badge/release-v1.16.10-8b87de?style=flat"></a>
+  <a href="https://github.com/jaylooloomi/quota-island/releases/latest"><img alt="Windows and macOS releases" src="https://img.shields.io/badge/platform-Windows%20%2B%20macOS-64748b?style=flat"></a>
   <a href="#run-from-source"><img alt="Built with Electron and TypeScript" src="https://img.shields.io/badge/built%20with-Electron%20%2B%20TypeScript-487fa8?style=flat"></a>
   <a href="#desktop-controls"><img alt="Interface languages: Traditional Chinese, English, Japanese, Korean" src="https://img.shields.io/badge/UI-%E7%B9%81%E4%B8%AD%20%2F%20EN%20%2F%20%E6%97%A5%E6%9C%AC%E8%AA%9E%20%2F%20%ED%95%9C%EA%B5%AD%EC%96%B4-637e64?style=flat"></a>
   <a href="https://github.com/jaylooloomi/quota-island/actions/workflows/build.yml"><img alt="View actual GitHub Actions results" src="https://img.shields.io/badge/CI-view%20runs-64748b?style=flat"></a>
 </p>
 <!-- /project-badges -->
-<p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">Download for Windows</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="LICENSE">MIT</a></p>
+<p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">Download Windows / macOS</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="LICENSE">MIT</a></p>
 
 <p align="center"><img src="docs/readme-v1.16.5/stage-en.png" alt="Your quotas above. A little companion below." width="464"><br><b>Your quotas above. A little companion below.</b><br><sub>Actual app screenshot · demo data</sub></p>
 
@@ -63,7 +63,7 @@ Pet growth and token-based XP are not implemented.
 
 ## Get started
 
-1. **Download** the Windows x64 portable executable from [Releases](https://github.com/jaylooloomi/quota-island/releases/latest). Extracting an installer is unnecessary; run the executable. Verify it with the release's `SHA256SUMS.txt` if desired. Windows builds are currently unsigned.
+1. **Download** from [Releases](https://github.com/jaylooloomi/quota-island/releases/latest): Windows x64 portable EXE, macOS Apple Silicon (`arm64`) ZIP, or macOS Intel (`x64`) ZIP. Verify downloads with `SHA256SUMS.txt`. Run the EXE on Windows; on Mac, unzip and move `Quota Pebble.app` to Applications. Windows is unsigned; Mac builds are ad-hoc signed, without Developer ID or Apple notarization. For first-launch restrictions, follow [Apple’s instructions](https://support.apple.com/102445).
 2. **Connect** the provider accounts you want to monitor, using the table below.
 3. **Choose your view**: quotas or accounts, Remaining / Used / Pacing, visible services, language and pet position.
 
@@ -106,7 +106,7 @@ npm run build
 npm start
 ```
 
-Node.js 24 is recommended. Electron + TypeScript; the UI is HTML/CSS/JavaScript. Windows is the locally tested platform. macOS/Linux package targets and CI configuration exist, but the current release provides only a Windows binary.
+Node.js 24 is recommended. Electron + TypeScript; the UI is HTML/CSS/JavaScript. Windows is tested locally. macOS 15 Apple Silicon and Intel builds pass native CI unit tests, packaged-app launch, four-language UI, pet preview/apply and background persistence tests. Mac tests use demo data; live provider login and quota retrieval have not been validated on Mac. Linux has a package target but no binary in this release.
 
 ```sh
 npm test
