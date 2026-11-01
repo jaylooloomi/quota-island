@@ -22,9 +22,7 @@
 
 中文介紹動畫 · AI 生成宣傳素材，非 App 實際操作錄影。GIF 為無聲動畫。
 
-<p align="center"><img src="docs/videos/intro-01-zh-TW.gif" alt="01 · 告別額度突然見底" width="480"><br><b>01 · 告別額度突然見底</b></p>
-
-<p align="center"><img src="docs/videos/intro-02-zh-TW.gif" alt="02 · 額度、配速與桌面小夥伴" width="480"><br><b>02 · 額度、配速與桌面小夥伴</b></p>
+<p align="center"><img src="docs/videos/intro-01-zh-TW.gif" alt="01 · 告別額度突然見底" width="800"><br><b>01 · 告別額度突然見底</b></p>
 
 ## 使用情境
 
@@ -62,6 +60,8 @@
 支援新增獨立 Claude 帳號。Claude、Codex 提供切換帳號與登出；Antigravity 使用本機帳號，提供切換與中斷連接。中斷 Quota Pebble 連接不等於將 Antigravity 本身登出。
 
 ### 寵物常駐上方，也能在下方陪伴
+
+<p align="center"><img src="docs/videos/intro-02-zh-TW.gif" alt="02 · 額度、配速與桌面小夥伴" width="800"><br><b>02 · 額度、配速與桌面小夥伴</b><br><sub>AI 生成介紹動畫 · 中文字幕 · 無聲 GIF</sub></p>
 
 <img src="docs/readme-v1.16.10/pet-zh-TW.png" alt="上方區域中實際顯示的橘色章魚寵物" width="464">
 
