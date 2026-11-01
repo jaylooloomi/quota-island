@@ -9,7 +9,7 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
   const directory=await fs.mkdtemp(path.join(os.tmpdir(),'quota-languages-'));
   const env={...process.env,QUOTA_TEST_DATA:directory};delete env.ELECTRON_RUN_AS_NODE;
   const executablePath=process.env.QUOTA_PACKAGED_EXE;
-  const launch=()=>electron.launch({...(executablePath?{executablePath}:{}),args:[...(executablePath?[]:['.']),'--demo','--test-mode'],env});
+  const launch=()=>electron.launch({...(executablePath?{executablePath}:{}),args:[...(executablePath?[]:['.']),'--demo','--test-mode',...(process.env.QUOTA_TEST_SCALE?['--force-device-scale-factor='+process.env.QUOTA_TEST_SCALE]:[])],env});
   let app=await launch();
   try{
     let page=await app.firstWindow();await page.locator('#mini-codex').filter({hasText:'12%'}).waitFor();
