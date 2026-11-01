@@ -1,0 +1,501 @@
+{
+  "capture": "Actual packaged app v1.16.10; isolated demo data; CDP renderer screencast; no computer-use",
+  "frames": 5388,
+  "wallSeconds": 186.5,
+  "scenes": [
+    {
+      "role": "claude",
+      "label": "Claude 太空貓",
+      "action": "walk",
+      "title": "出發巡邏 · 左右走動",
+      "start": 0.034,
+      "end": 10.097,
+      "evidence": {
+        "actions": [
+          "walk"
+        ],
+        "faces": [
+          "scaleX(1)",
+          "scaleX(-1)"
+        ],
+        "uniqueFrames": 12
+      }
+    },
+    {
+      "role": "claude",
+      "label": "Claude 太空貓",
+      "action": "hello",
+      "title": "遇見夥伴 · 打招呼",
+      "start": 10.397,
+      "end": 14.491,
+      "evidence": {
+        "actions": [
+          "hello",
+          "walk"
+        ],
+        "faces": [
+          "scaleX(-1)"
+        ],
+        "uniqueFrames": 12
+      }
+    },
+    {
+      "role": "claude",
+      "label": "Claude 太空貓",
+      "action": "sad",
+      "title": "工作累了 · 垂頭喪氣",
+      "start": 14.795,
+      "end": 18.836,
+      "evidence": {
+        "actions": [
+          "sad"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 5
+      }
+    },
+    {
+      "role": "claude",
+      "label": "Claude 太空貓",
+      "action": "sleep",
+      "title": "充電小睡 · 睡覺",
+      "start": 19.119,
+      "end": 25.121,
+      "evidence": {
+        "actions": [
+          "sleep"
+        ],
+        "faces": [
+          "scaleX(-1)"
+        ],
+        "uniqueFrames": 1
+      }
+    },
+    {
+      "role": "claude",
+      "label": "Claude 太空貓",
+      "action": "drink",
+      "title": "記得補水 · 喝水提醒",
+      "start": 25.447,
+      "end": 31.526,
+      "evidence": {
+        "actions": [
+          "drink"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 6
+      }
+    },
+    {
+      "role": "claude",
+      "label": "Claude 太空貓",
+      "action": "recharge",
+      "title": "補滿能量 · 補充電力",
+      "start": 31.86,
+      "end": 37.92,
+      "evidence": {
+        "actions": [
+          "recharge"
+        ],
+        "faces": [
+          "scaleX(-1)"
+        ],
+        "uniqueFrames": 5
+      }
+    },
+    {
+      "role": "claude",
+      "label": "Claude 太空貓",
+      "action": "feed",
+      "title": "點心時間 · 追食與進食",
+      "start": 38.3,
+      "end": 46.393,
+      "evidence": {
+        "actions": [
+          "seek",
+          "eat",
+          "walk"
+        ],
+        "faces": [
+          "scaleX(1)",
+          "scaleX(-1)"
+        ],
+        "uniqueFrames": 12
+      }
+    },
+    {
+      "role": "codex",
+      "label": "Codex 維修機器人",
+      "action": "walk",
+      "title": "出發巡邏 · 左右走動",
+      "start": 46.714,
+      "end": 56.806,
+      "evidence": {
+        "actions": [
+          "walk"
+        ],
+        "faces": [
+          "scaleX(1)",
+          "scaleX(-1)"
+        ],
+        "uniqueFrames": 12
+      }
+    },
+    {
+      "role": "codex",
+      "label": "Codex 維修機器人",
+      "action": "hello",
+      "title": "遇見夥伴 · 打招呼",
+      "start": 57.106,
+      "end": 61.122,
+      "evidence": {
+        "actions": [
+          "hello"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 12
+      }
+    },
+    {
+      "role": "codex",
+      "label": "Codex 維修機器人",
+      "action": "sad",
+      "title": "工作累了 · 垂頭喪氣",
+      "start": 61.42,
+      "end": 65.529,
+      "evidence": {
+        "actions": [
+          "sad",
+          "walk"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 5
+      }
+    },
+    {
+      "role": "codex",
+      "label": "Codex 維修機器人",
+      "action": "sleep",
+      "title": "充電小睡 · 睡覺",
+      "start": 65.824,
+      "end": 71.863,
+      "evidence": {
+        "actions": [
+          "sleep"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 1
+      }
+    },
+    {
+      "role": "codex",
+      "label": "Codex 維修機器人",
+      "action": "drink",
+      "title": "記得補水 · 喝水提醒",
+      "start": 72.178,
+      "end": 78.243,
+      "evidence": {
+        "actions": [
+          "drink"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 6
+      }
+    },
+    {
+      "role": "codex",
+      "label": "Codex 維修機器人",
+      "action": "recharge",
+      "title": "補滿能量 · 補充電力",
+      "start": 78.555,
+      "end": 84.622,
+      "evidence": {
+        "actions": [
+          "recharge"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 5
+      }
+    },
+    {
+      "role": "codex",
+      "label": "Codex 維修機器人",
+      "action": "feed",
+      "title": "點心時間 · 追食與進食",
+      "start": 85,
+      "end": 93.1,
+      "evidence": {
+        "actions": [
+          "seek",
+          "eat",
+          "walk"
+        ],
+        "faces": [
+          "scaleX(1)",
+          "scaleX(-1)"
+        ],
+        "uniqueFrames": 12
+      }
+    },
+    {
+      "role": "gemini",
+      "label": "Antigravity 星兔",
+      "action": "walk",
+      "title": "出發巡邏 · 左右走動",
+      "start": 93.418,
+      "end": 103.454,
+      "evidence": {
+        "actions": [
+          "walk"
+        ],
+        "faces": [
+          "scaleX(-1)",
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 12
+      }
+    },
+    {
+      "role": "gemini",
+      "label": "Antigravity 星兔",
+      "action": "hello",
+      "title": "遇見夥伴 · 打招呼",
+      "start": 103.773,
+      "end": 107.832,
+      "evidence": {
+        "actions": [
+          "hello"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 6
+      }
+    },
+    {
+      "role": "gemini",
+      "label": "Antigravity 星兔",
+      "action": "sad",
+      "title": "工作累了 · 垂頭喪氣",
+      "start": 108.132,
+      "end": 112.15,
+      "evidence": {
+        "actions": [
+          "sad"
+        ],
+        "faces": [
+          "scaleX(-1)"
+        ],
+        "uniqueFrames": 5
+      }
+    },
+    {
+      "role": "gemini",
+      "label": "Antigravity 星兔",
+      "action": "sleep",
+      "title": "充電小睡 · 睡覺",
+      "start": 112.416,
+      "end": 118.472,
+      "evidence": {
+        "actions": [
+          "sleep"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 1
+      }
+    },
+    {
+      "role": "gemini",
+      "label": "Antigravity 星兔",
+      "action": "drink",
+      "title": "記得補水 · 喝水提醒",
+      "start": 118.807,
+      "end": 124.838,
+      "evidence": {
+        "actions": [
+          "drink"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 6
+      }
+    },
+    {
+      "role": "gemini",
+      "label": "Antigravity 星兔",
+      "action": "recharge",
+      "title": "補滿能量 · 補充電力",
+      "start": 125.149,
+      "end": 131.201,
+      "evidence": {
+        "actions": [
+          "recharge"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 5
+      }
+    },
+    {
+      "role": "gemini",
+      "label": "Antigravity 星兔",
+      "action": "feed",
+      "title": "點心時間 · 追食與進食",
+      "start": 131.597,
+      "end": 139.656,
+      "evidence": {
+        "actions": [
+          "seek",
+          "eat",
+          "walk"
+        ],
+        "faces": [
+          "scaleX(1)",
+          "scaleX(-1)"
+        ],
+        "uniqueFrames": 12
+      }
+    },
+    {
+      "role": "octopus",
+      "label": "小章魚",
+      "action": "walk",
+      "title": "出發巡邏 · 左右走動",
+      "start": 139.978,
+      "end": 150.006,
+      "evidence": {
+        "actions": [
+          "walk"
+        ],
+        "faces": [
+          "scaleX(-1)",
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 12
+      }
+    },
+    {
+      "role": "octopus",
+      "label": "小章魚",
+      "action": "hello",
+      "title": "遇見夥伴 · 打招呼",
+      "start": 150.295,
+      "end": 154.311,
+      "evidence": {
+        "actions": [
+          "hello"
+        ],
+        "faces": [
+          "scaleX(-1)"
+        ],
+        "uniqueFrames": 12
+      }
+    },
+    {
+      "role": "octopus",
+      "label": "小章魚",
+      "action": "sad",
+      "title": "工作累了 · 垂頭喪氣",
+      "start": 154.573,
+      "end": 158.575,
+      "evidence": {
+        "actions": [
+          "sad"
+        ],
+        "faces": [
+          "scaleX(-1)"
+        ],
+        "uniqueFrames": 5
+      }
+    },
+    {
+      "role": "octopus",
+      "label": "小章魚",
+      "action": "sleep",
+      "title": "充電小睡 · 睡覺",
+      "start": 158.866,
+      "end": 164.92,
+      "evidence": {
+        "actions": [
+          "sleep"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 6
+      }
+    },
+    {
+      "role": "octopus",
+      "label": "小章魚",
+      "action": "drink",
+      "title": "記得補水 · 喝水提醒",
+      "start": 165.205,
+      "end": 171.246,
+      "evidence": {
+        "actions": [
+          "drink"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 6
+      }
+    },
+    {
+      "role": "octopus",
+      "label": "小章魚",
+      "action": "recharge",
+      "title": "補滿能量 · 補充電力",
+      "start": 171.524,
+      "end": 177.591,
+      "evidence": {
+        "actions": [
+          "recharge"
+        ],
+        "faces": [
+          "scaleX(1)"
+        ],
+        "uniqueFrames": 5
+      }
+    },
+    {
+      "role": "octopus",
+      "label": "小章魚",
+      "action": "feed",
+      "title": "點心時間 · 追食與進食",
+      "start": 178.029,
+      "end": 186.039,
+      "evidence": {
+        "actions": [
+          "seek",
+          "eat",
+          "walk"
+        ],
+        "faces": [
+          "scaleX(1)",
+          "scaleX(-1)"
+        ],
+        "uniqueFrames": 12
+      }
+    }
+  ]
+}
