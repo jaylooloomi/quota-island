@@ -1,0 +1,55 @@
+name: macOS release packages
+on:
+  push:
+    branches: [design/original-dark-00]
+    paths: [.github/workflows/release-macos.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Build native macOS ZIP with ad-hoc signing
+        run: npx electron-builder --mac zip --${{ matrix.arch }} --publish never --config.mac.identity=- --config.mac.notarize=false '--config.mac.artifactName=Quota.Pebble.${version}.macOS.${arch}.${ext}'
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify and launch the packaged app
+        run: |
+          export QUOTA_PACKAGED_EXE="$(find "$PWD/release" -path '*/Quota Pebble.app/Contents/MacOS/Quota Pebble' -type f | head -1)"
+          test -n "$QUOTA_PACKAGED_EXE"
+          file "$QUOTA_PACKAGED_EXE"
+          codesign --verify --deep --strict "$(dirname "$(dirname "$QUOTA_PACKAGED_EXE")")"
+          node scripts/mac-package-smoke.cjs
+          node scripts/pet-preview-apply-test.cjs
+          node scripts/stage-backgrounds-test.cjs
+      - name: Checksums
+        run: cd release && shasum -a 256 *.zip > SHA256SUMS-macOS-${{ matrix.arch }}.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macOS-${{ matrix.arch }}
+          path: |
+            release/*.zip
+            release/SHA256SUMS-macOS-*.txt
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macOS-evidence-${{ matrix.arch }}
+          path: test-results/**/*.png
