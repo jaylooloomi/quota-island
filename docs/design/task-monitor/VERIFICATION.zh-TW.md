@@ -2,6 +2,14 @@
 
 版本：Quota Pebble 1.18.0。日期：2026-11-02。
 
+### 1.18.2 修正（2026-11-03）
+
+後續檢查確認桌面工具有 2 個 active 聊天，但接收器沒有收到這兩個聊天的事件。此時官方 daemon 已可連線，先前的 proxy client 卻把原始 socket 當成 JSONL，漏掉 WebSocket HTTP Upgrade，造成反覆逾時。已修正 transport 並以真正 HTTP Upgrade／WebSocket frame 的獨立 fixture 測試。
+
+修正後，正式 daemon 的 `initialize`、`thread/list`、`thread/loaded/list` 均成功回覆，但 loaded 清單仍是空的，目前桌面聊天在此來源仍為 notLoaded。這證明傳輸錯誤與跨實例能見度是兩個不同問題；修正握手**不代表已完成桌面聊天監控**。
+
+UI 在沒有近期有效 Hook 或 loaded Runtime 時，改顯示「— 執行中／— 等待確認」和「即時來源未接上」，不再用 0 暗示目前沒有工作。仍保留歷史清單，不以歷史更新時間、程序存在或其他猜測冒充 active。官方文件亦說明雲端協調模式不支援本機 command hooks；本機工具可用並不足以證明本機 hooks 會執行。
+
 ## 採用方案
 
 新增「配額／帳號／任務」分頁。任務監控與配額 Poller 分離，不增加訂閱配額查詢，不替使用者開始、繼續、批准或中止既有任務。

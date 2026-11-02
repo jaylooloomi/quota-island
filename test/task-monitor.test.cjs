@@ -47,7 +47,7 @@ test('monitor reads only documented list methods, deduplicates and drops runtime
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pebble-monitor-'));let time=now,fail=false,closed=0;const calls=[];
   const client={async call(method){calls.push(method);if(fail)throw Error('offline');return method==='thread/list'?{data:[thread]}:{data:[id]};},close(){closed++;}};
   const m=new TaskMonitor(dir,client,client,()=>{},()=>time);try{
-    await Promise.all([m.start(),m.start()]);assert.equal(m.snapshot().counts.running,1);assert.ok(calls.every(c=>['thread/list','thread/loaded/list'].includes(c)));
-    time+=46000;assert.equal(m.snapshot().counts.running,0);fail=true;await m.tick();assert.equal(m.snapshot().rows[0].status,'unknown');assert.equal(m.snapshot().connection,'unavailable');
+    await Promise.all([m.start(),m.start()]);assert.equal(m.snapshot().counts.running,1);assert.equal(m.snapshot().liveCoverage,true);assert.ok(calls.every(c=>['thread/list','thread/loaded/list'].includes(c)));
+    time+=46000;assert.equal(m.snapshot().counts.running,0);assert.equal(m.snapshot().liveCoverage,false);fail=true;await m.tick();assert.equal(m.snapshot().rows[0].status,'unknown');assert.equal(m.snapshot().connection,'unavailable');
   }finally{m.close();assert.equal(closed,3);fs.rmSync(dir,{recursive:true,force:true});}
 });

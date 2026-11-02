@@ -54,7 +54,8 @@ export class TaskMonitor{
   constructor(private directory:string,private rpc:{call(method:string,params?:any):Promise<any>;close():void},private proxy:{call(method:string,params?:any):Promise<any>;close():void},private changed:()=>void,private now=Date.now){}
   snapshot(){const now=this.now();if(this.enabled&&now-this.eventReadAt>=1000){this.eventCache=readTaskEvents(this.directory,now);this.eventReadAt=now;}
     const rows=this.enabled?taskRows(this.threads,this.loaded,this.runtime&&now-this.confirmed<=TASK_FRESH_MS,this.eventCache,now):[];
-    return {enabled:this.enabled,connection:this.connection,checkedAt:this.confirmed||null,rows:this.enabled?rows:[],counts:Object.fromEntries(['running','waiting','idle','unknown'].map(k=>[k,rows.filter(r=>r.status===k).length])),scope:'local',limit:100};}
+    const liveCoverage=this.enabled&&(this.runtime&&this.loaded.size>0&&now-this.confirmed<=TASK_FRESH_MS||rows.some(r=>r.source==='hook'&&r.confirmedAt!==null&&now-r.confirmedAt<=TASK_FRESH_MS&&r.event!=='Stop'&&r.event!=='SessionEnd'));
+    return {enabled:this.enabled,connection:this.connection,liveCoverage,checkedAt:this.confirmed||null,rows:this.enabled?rows:[],counts:Object.fromEntries(['running','waiting','idle','unknown'].map(k=>[k,rows.filter(r=>r.status===k).length])),scope:'local',limit:100};}
   async start(){if(this.closed)return;const first=!this.enabled;if(first){this.enabled=true;this.timer=setInterval(()=>{void this.tick();this.changed();},2000);this.timer.unref();}await this.tick(first);}
   async tick(force=false){const now=this.now();if(this.closed||!this.enabled||this.busy||!force&&now-this.lastAttempt<30000)return;this.busy=true;this.lastAttempt=now;this.connection='checking';this.changed();
     try{
