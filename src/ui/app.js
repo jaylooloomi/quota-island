@@ -443,7 +443,7 @@ function render(next){
   window.QuotaI18n.localizeDocument(document,state.settings.locale);
   window.TaskPanel.update(state,currentView==='tasks'&&!settingsOpen&&!quotaDetailsOpen);
   document.querySelector('.panel-header .segmented')?.classList.toggle('tasks-mode-hidden',currentView==='tasks');
-  window.QuotaPets.update(state.settings.compactTaskSummary?{...state,settings:{...state.settings,petIdle:false,petRoam:state.settings.petPlacement==='title'?false:state.settings.petRoam}}:state);
+  window.QuotaPets.update(state);
   if(state.settings.locale==='en')$('compact-mode').textContent=state.settings.remaining?'Left':'Used';
   requestAnimationFrame(()=>{
     if(state.expanded&&!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider){

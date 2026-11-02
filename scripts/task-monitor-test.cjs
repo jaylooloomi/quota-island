@@ -43,6 +43,14 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     await page.locator('#collapse').click();await page.waitForTimeout(100);await page.locator('#roam-pet').waitFor({state:'visible',timeout:20000});assert.equal((await page.evaluate(()=>quota.getState())).settings.petRoam,true,'stage companion preference preserved');const compact=await compactGeometry();assert.equal(await page.locator('.compact-task-summary').isVisible(),true);
     for(const locale of ['zh-TW','en','ja','ko']){await page.evaluate(locale=>quota.settings({locale}),locale);const clipped=await page.locator('.compact-task-summary').evaluate(e=>{const r=e.getBoundingClientRect();return [...e.children].some(n=>{const b=n.getBoundingClientRect();return b.top<r.top-1||b.bottom>r.bottom+1||b.left<r.left-1||b.right>r.right+1;});});assert.equal(clipped,false,'summary text fully visible '+locale);}
     await page.screenshot({path:output+'/compact-summary.png'});
+    await page.evaluate(()=>quota.settings({petPlacement:'title',petCharacter:'claude'}));
+    await page.locator('.compact-brand.pet-idle .brand-pet').waitFor({state:'visible',timeout:20000});
+    assert.equal(await page.locator('.compact-task-summary').isVisible(),false,'title pet hides task text');
+    assert.equal(await page.locator('.compact-name').isVisible(),false,'title pet hides name');
+    const withPet=await compactGeometry();for(let i=0;i<compact.length;i++)for(const k of ['x','y','w','h'])assert.ok(Math.abs(compact[i][k]-withPet[i][k])<1,'title pet fixed '+k);
+    await page.screenshot({path:output+'/compact-title-pet.png'});
+    await page.evaluate(()=>quota.settings({petPlacement:'stage'}));
+    await page.locator('.compact-task-summary').waitFor({state:'visible'});
     await page.locator('#toggle').click();await page.locator('.task-summary-setting input').uncheck();await page.locator('#collapse').click();await page.waitForTimeout(100);const original=await compactGeometry();for(let i=0;i<compact.length;i++)for(const k of ['x','y','w','h'])assert.ok(Math.abs(compact[i][k]-original[i][k])<1,'compact summary fixed '+k);
     assert.deepEqual(errors,[]);console.log('PASS task UI: real Electron, local event fixtures, four locales, XSS, keyboard, fixed geometry and no quota calls');
   }finally{if(app)await app.close();await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}

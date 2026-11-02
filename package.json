@@ -1,6 +1,6 @@
 {
   "name": "quota-island",
-  "version": "1.19.0",
+  "version": "1.19.1",
   "private": true,
   "description": "A local-first desktop island for Claude, Gemini CLI and Codex quotas",
   "author": "Quota Island",
