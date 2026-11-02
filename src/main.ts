@@ -261,7 +261,6 @@ else {
     if(!demo&&!testing){if(process.argv.includes('--enable-autostart'))settings.autoStart=true;try{settings.autoStart=syncLoginStartup(app,settings.autoStart,{platform:process.platform,packaged:app.isPackaged,demo,testing,executable:process.execPath});saveSettings();}catch{settings.autoStart=false;}}
     usageHistory=new UsageHistory(path.join(app.getPath('userData'),demo?'demo-usage-history':'usage-history'));
     taskMonitor=new TaskMonitor(path.join(testing?(process.env.QUOTA_TASK_BRIDGE_HOME||app.getPath('userData')):homedir(),'.quota-pebble','task-events'),new CodexRpc(()=>{if(demo)throw new Error('demo');return findCli('codex');}),new CodexRpc(()=>{if(demo)throw new Error('demo');return findCli('codex');},'proxy'),publish);
-    if(settings.compactTaskSummary&&!demo)void taskMonitor.start();
     diagnostics=new Diagnostics(path.join(app.getPath('userData'),demo?'demo-logs':'logs'));diagnostics.startup(app.getVersion(),settings.enabled);
     providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource);
     poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish,Date.now,(id,reading,time)=>usageHistory.record(id,reading,time,id==='claude'?600000:120000));if(!demo)poller.setMinimumInterval('claude',600000);
@@ -321,6 +320,7 @@ else {
     powerMonitor.on('suspend', () => { paused = true; publish(); });
     powerMonitor.on('resume', () => { paused = false; publish(); void poller.tick(); });
     await win.loadFile(path.join(__dirname, 'ui/index.html'));
+    if(settings.compactTaskSummary&&!demo)void taskMonitor.start();
     win.show();
     if (!demo) await credentialWatch.scan();
     void poller.tick();

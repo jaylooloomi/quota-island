@@ -13,3 +13,6 @@
 /* Three complete rows; only the list scrolls. */
 .task-list{display:grid;grid-auto-rows:82px;gap:7px;max-height:260px;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:#59616e #171b20;overscroll-behavior:contain}
 .task-list .task-row{height:82px;margin-bottom:0;overflow:hidden}.task-row h4{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.task-list::-webkit-scrollbar{display:block;width:7px}.task-list::-webkit-scrollbar-track{background:#171b20;border-radius:8px}.task-list::-webkit-scrollbar-thumb{background:#59616e;border-radius:8px;border:1px solid #171b20}.task-list::-webkit-scrollbar-thumb:hover{background:#7b8798}
+
+/* Reserve both text lines; inset padding previously clipped the short brand box. */
+.compact-brand.tasks-summary{height:34px;min-height:34px}.compact-brand.tasks-summary>.compact-task-summary{display:flex;inset:0;flex-direction:column;align-items:center;justify-content:center;gap:1px}.compact-task-summary strong{font-size:10px;line-height:14px}.compact-task-summary small{font-size:8px;line-height:11px}
