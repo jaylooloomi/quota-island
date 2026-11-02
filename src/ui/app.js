@@ -38,7 +38,7 @@ function renderCompactClaude(){
 const quotaCardHeights={};
 function closeFooterPopover(focus=false){const trigger=footerPopover==='language'?'language-shortcut':'sync-shortcut';footerPopover=null;render(state);if(focus)$(trigger).focus();}
 function openFooterPopover(kind){footerPopover=footerPopover===kind?null:kind;settingsOpen=false;render(state);if(footerPopover==='language')$('language-popover').querySelector('[aria-checked="true"]').focus();else if(footerPopover==='sync')$('sync-popover').focus();}
-function setView(view){currentView=view;settingsOpen=false;activeDetail=null;confirmLogout=null;footerPopover=null;quotaDetailsOpen=false;paceDetailsProvider=null;render(state);}
+function setView(view){if(view==='tasks')void api.tasksStart();currentView=view;settingsOpen=false;activeDetail=null;confirmLogout=null;footerPopover=null;quotaDetailsOpen=false;paceDetailsProvider=null;render(state);}
 function renderFooter(){
   const enabled=ids.map(id=>state.providers[id]).filter(s=>s.enabled);
   const busy=syncBusy||enabled.some(s=>s.status==='loading'||s.refreshing);
@@ -404,7 +404,7 @@ function render(next){
   $('settings').hidden=!settingsOpen;
   $('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));
   $('cards').hidden=settingsOpen;
-  $('cards').hidden=settingsOpen||quotaDetailsOpen;
+  $('cards').hidden=settingsOpen||quotaDetailsOpen||currentView==='tasks';
   $('quota-details').hidden=!quotaDetailsOpen||settingsOpen;
   $('pace-details').hidden=!paceDetailsProvider||settingsOpen;
   for(const id of ids){
@@ -414,7 +414,7 @@ function render(next){
   }
   if(paceDetailsProvider)cardNodes[paceDetailsProvider].append($('pace-details'));
   else if($('pace-details').parentElement!==document.querySelector('.panel-body'))document.querySelector('.panel-body').append($('pace-details'));
-  for(const view of ['quota','accounts']){$(`tab-${view}`).setAttribute('aria-selected',String(view===currentView));$(`tab-${view}`).tabIndex=view===currentView?0:-1;}
+  for(const view of ['quota','accounts','tasks']){$(`tab-${view}`).setAttribute('aria-selected',String(view===currentView));$(`tab-${view}`).tabIndex=view===currentView?0:-1;}
   $('cards').setAttribute('role','tabpanel');$('cards').setAttribute('aria-labelledby',`tab-${currentView}`);
   const healthy=!state.paused&&ids.some(id=>ready(state.providers[id]));$('live-dot').classList.toggle('off',!healthy);
   document.querySelector('.footer-dot').classList.toggle('off',!healthy);$('footer-status').textContent=state.paused?'已暫停同步':'自動同步';
@@ -433,14 +433,16 @@ function render(next){
   const extraSettings=$('extra-account-settings');extraSettings.replaceChildren();
   for(const account of state.accounts??[]){const label=document.createElement('label'),name=document.createElement('span');name.textContent=account.label;name.setAttribute('data-localized-text','');const input=document.createElement('input');input.type='checkbox';input.setAttribute('role','switch');input.checked=state.settings.visible[account.id]!==false;input.addEventListener('change',()=>api.settings({visible:{[account.id]:input.checked}}));label.append(name,input);extraSettings.append(label);}
   renderCompactClaude();
-  $('add-account-area').hidden=settingsOpen||quotaDetailsOpen;
+  $('add-account-area').hidden=settingsOpen||quotaDetailsOpen||currentView==='tasks';
   for(const input of document.querySelectorAll('[data-visible]'))input.checked=state.settings.visible?.[input.dataset.visible]!==false;
-  $('no-visible-providers').hidden=settingsOpen||quotaDetailsOpen||ids.some(id=>state.settings.visible?.[id]!==false);
+  $('no-visible-providers').hidden=settingsOpen||quotaDetailsOpen||currentView==='tasks'||ids.some(id=>state.settings.visible?.[id]!==false);
   renderPaceDetails();
   renderQuotaDetails();
   renderFooter();
   $('language').value=state.settings.locale??'zh-TW';
   window.QuotaI18n.localizeDocument(document,state.settings.locale);
+  window.TaskPanel.update(state,currentView==='tasks'&&!settingsOpen&&!quotaDetailsOpen);
+  document.querySelector('.panel-header .segmented')?.classList.toggle('tasks-mode-hidden',currentView==='tasks');
   window.QuotaPets.update(state);
   if(state.settings.locale==='en')$('compact-mode').textContent=state.settings.remaining?'Left':'Used';
   requestAnimationFrame(()=>{
@@ -463,11 +465,11 @@ function render(next){
         card.style.minHeight=`${quotaCardHeights[id]??98}px`;
       }
     }
-    const content=(settingsOpen?$('settings'):quotaDetailsOpen?$('quota-details'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height+(!settingsOpen&&!quotaDetailsOpen?$('add-account-area').getBoundingClientRect().height:0);
+    const content=(settingsOpen?$('settings'):quotaDetailsOpen?$('quota-details'):currentView==='tasks'?$('task-panel'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height+(!settingsOpen&&!quotaDetailsOpen?$('add-account-area').getBoundingClientRect().height:0);
     const chrome=document.querySelector('.panel-header').getBoundingClientRect().height+document.querySelector('footer').getBoundingClientRect().height+18;
     const height=Math.max(480,Math.ceil(content+chrome+(settingsOpen?24:12)));
     if(!window.UsageTrends.active&&!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider&&currentView==='quota')quotaPanelHeight=height;
-    api.panelHeight(!window.UsageTrends.active&&!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider?quotaPanelHeight:height);
+    api.panelHeight(currentView!=='tasks'&&!window.UsageTrends.active&&!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider?quotaPanelHeight:height);
   });
 }
 makeCards();
@@ -499,8 +501,8 @@ $('pace-reserve').addEventListener('input',event=>{$('pace-reserve-value').textC
 $('pace-reserve').addEventListener('change',event=>{if(paceDetailsProvider)api.settings({reservePercent:{[paceDetailsProvider]:Number(event.target.value)}});});
 $('hide').addEventListener('click',()=>api.hide());$('quit').addEventListener('click',()=>api.quit());
 $('google-source').addEventListener('change',event=>api.settings({googleSource:event.target.value}));
-for(const view of ['quota','accounts'])$(`tab-${view}`).addEventListener('click',()=>setView(view));
-document.querySelector('.view-tabs').addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();const view=event.key==='Home'?'quota':event.key==='End'?'accounts':currentView==='quota'?'accounts':'quota';setView(view);$(`tab-${view}`).focus();}});
+for(const view of ['quota','accounts','tasks'])$(`tab-${view}`).addEventListener('click',()=>setView(view));
+document.querySelector('.view-tabs').addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();const views=['quota','accounts','tasks'];const view=event.key==='Home'?'quota':event.key==='End'?'tasks':views[(views.indexOf(currentView)+(event.key==='ArrowRight'?1:2))%3];setView(view);$(`tab-${view}`).focus();}});
 $('language-shortcut').addEventListener('click',()=>openFooterPopover('language'));
 $('sync-shortcut').addEventListener('click',()=>openFooterPopover('sync'));
 for(const button of $('language-popover').querySelectorAll('[data-locale]'))button.addEventListener('click',async()=>{await api.settings({locale:button.dataset.locale});closeFooterPopover(true);});
@@ -524,4 +526,5 @@ $('morningHelloEnabled').addEventListener('change',event=>api.settings({morningH
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
 for(const input of document.querySelectorAll('[data-visible]'))input.addEventListener('change',()=>api.settings({visible:{[input.dataset.visible]:input.checked}}));
 document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(footerPopover){closeFooterPopover(true);event.preventDefault();}else if(window.UsageTrends.active){window.UsageTrends.close();render(state);}else if(paceDetailsProvider){paceDetailsProvider=null;render(state);}else if(quotaDetailsOpen){quotaDetailsOpen=false;render(state);}else if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
+window.addEventListener('task-layout-change',()=>{if(state&&currentView==='tasks')render(state);});
 api.subscribe(render);api.getState().then(render);setInterval(()=>{if(state)render(state);},15000);

@@ -38,7 +38,15 @@ and encrypted credential storage using `google-auth-library` and Electron
 - Electron: MIT; Chromium and other notices are included in the distribution's
   `LICENSE` and `LICENSES.chromium.html`.
 - google-auth-library: Apache-2.0; https://github.com/googleapis/google-auth-library-nodejs
+- ws: MIT; Copyright Einar Otto Stangvik, Arnout Kazemier and contributors,
+  Luigi Pinca and contributors. The dependency and its LICENSE are bundled.
+  https://github.com/websockets/ws
 - Dependency versions and transitive dependencies are recorded in `package-lock.json`.
 
 QuotaDeck, AI Quota Deck and QuotaPulse were researched as references. Their
 implementation code and assets are not included in this application.
+
+Ocelin (https://github.com/m-sanchez/ocelin, MIT) was studied as a design
+reference for bounded local-session reads and lifecycle reconciliation. The
+Quota Pebble metadata-only collector is independently implemented; Ocelin's
+runtime, UI, conversation preview and assets are not bundled.

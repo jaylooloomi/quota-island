@@ -18,6 +18,10 @@
 
 *Illustrated overview updated using actual v1.16.10 screenshots. All pictured percentages are demo data.*
 
+### Local Codex tasks
+
+The **Tasks** tab reads existing local Codex Desktop session events directly: no CLI process, inference or Hook setup. Running/waiting status is explicitly **inferred**; stale or insufficient evidence remains Unknown. Clear terminal events mark the last turn idle. Cloud-only sessions may be missing. The three-row scrollable list and optional compact summary preserve the island layout. [Design, tested scope and limits](docs/design/task-monitor/LOCAL-SESSIONS.zh-TW.md).
+
 ## A quick introduction
 
 AI-generated promotional videos, not recordings of the running app. Video 01 is in English; video 02 temporarily uses Chinese captions. GIF animations are silent.
