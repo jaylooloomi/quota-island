@@ -10,7 +10,7 @@ const {_electron}=require('playwright'),fs=require('node:fs/promises'),os=requir
     let state;for(let i=0;i<100;i++){state=await page.evaluate(()=>quota.getState());if(state.tasks.connection==='local'&&state.tasks.rows.length>0)break;await page.waitForTimeout(200);}
     const tasks=state.tasks;assert.equal(tasks.connection,'local');assert.ok(tasks.rows.length>0);
     if(process.env.QUOTA_EXPECT_SESSION){const row=tasks.rows.find(r=>r.id===process.env.QUOTA_EXPECT_SESSION);assert.equal(row?.status,'running');assert.equal(row?.source,'rollout');assert.equal(row?.evidence,'inferred');}
-    await page.locator('.task-filters button').nth(1).click();await page.screenshot({path:output+'/local-running.png'});
+    await page.locator('[data-task-filter=running]').click();await page.screenshot({path:output+'/local-running.png'});
     const proof={version:state.version,source:tasks.connection,cliStarted:false,hooksUsed:false,quotaData:'demo',counts:tasks.counts,active:tasks.rows.filter(r=>r.status==='running').map(({id,status,evidence})=>({id,status,evidence}))};await fs.writeFile(output+'/local-proof.json',JSON.stringify(proof,null,2));console.log(proof);
   }finally{if(app)await app.close();await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
 })().catch(e=>{console.error(e.message);process.exitCode=1;});
