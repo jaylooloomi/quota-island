@@ -87,7 +87,7 @@ let morningHello:MorningHello|undefined;
 function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, morningHello:morningHello?.snapshot()??{}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
 function publish() {
   persistRateLimits();
-  if(poller){const snap=snapshot();diagnostics?.observe(snap);for(const [id,s] of Object.entries(snap.providers) as [string,ProviderState][])if(snap.paused||(snap.auth as any)?.[id]?.pending||!s.enabled||['stale','unavailable','signed_out'].includes(s.status))usageHistory?.gap(id);}
+  if(poller){const snap=snapshot();diagnostics?.observe(snap);for(const [id,s] of Object.entries(snap.providers) as [string,ProviderState][])if(snap.paused||((snap.auth as any)?.[id]?.pending&&(snap.auth as any)[id].phase!=='syncing')||!s.enabled||['stale','unavailable','signed_out'].includes(s.status))usageHistory?.gap(id);}
   if (!win?.isDestroyed() && !win?.webContents.isDestroyed()) win?.webContents.send('state', snapshot());
   if (settings.notifications && !demo && !testing && Notification.isSupported()) {
     for (const [accountId,s] of Object.entries({...poller.states,...accounts?.snapshot().providers}) as [string,ProviderState][]) {
