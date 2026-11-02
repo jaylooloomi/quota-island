@@ -87,7 +87,7 @@ let morningHello:MorningHello|undefined;
 function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, morningHello:morningHello?.snapshot()??{}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
 function publish() {
   persistRateLimits();
-  if(poller){const snap=snapshot();diagnostics?.observe(snap);for(const [id,s] of Object.entries(snap.providers) as [string,ProviderState][])if(snap.paused||!s.enabled||['stale','unavailable','signed_out'].includes(s.status))usageHistory?.gap(id);}
+  if(poller){const snap=snapshot();diagnostics?.observe(snap);for(const [id,s] of Object.entries(snap.providers) as [string,ProviderState][])if(snap.paused||(snap.auth as any)?.[id]?.pending||!s.enabled||['stale','unavailable','signed_out'].includes(s.status))usageHistory?.gap(id);}
   if (!win?.isDestroyed() && !win?.webContents.isDestroyed()) win?.webContents.send('state', snapshot());
   if (settings.notifications && !demo && !testing && Notification.isSupported()) {
     for (const [accountId,s] of Object.entries({...poller.states,...accounts?.snapshot().providers}) as [string,ProviderState][]) {
@@ -189,10 +189,10 @@ function installHandlers() {
       if (!paused) void poller.tick();
     },
     'login': (_event: any, raw: unknown) => {
-      if(accounts.has(raw)){if(!demo){usageHistory.boundary(raw);void accounts.prepareLogin(raw);}return;}
+      if(accounts.has(raw)){if(!demo){usageHistory.gap(raw,'auth');void accounts.prepareLogin(raw);}return;}
       const id = validateId(raw);
       if (demo) { connections.states[id] = { pending: false, phase: 'error', message: '展示模式不會啟動登入；正常啟動即可連接帳號' }; publish(); return; }
-      poller.identityChanged(id);usageHistory.boundary(id);if(id==='claude')void connections.prepareClaude();else void connections.login(id);
+      poller.identityChanged(id);usageHistory.gap(id,'auth');if(id==='claude')void connections.prepareClaude();else void connections.login(id);
     },
     'continue-claude-login': (_event:any,raw:unknown)=>{if(demo)return;if(accounts.has(raw))void accounts.continueLogin(raw);else if(raw==='claude')void connections.continueClaude();},
     'reopen-login': (_event: any, raw: unknown) => accounts.has(raw)?accounts.reopen(raw):connections.reopen(validateId(raw)),
@@ -316,7 +316,7 @@ else {
     if (!demo) await credentialWatch.scan();
     void poller.tick();
     void accounts.tick();
-    if(!demo&&!testing)autoReconnect=new AutoReconnect(path.join(app.getPath('userData'),'auto-reconnect.json'),id=>id==='claude'?connections.prepareClaude():accounts.prepareLogin(id));
+    if(!demo&&!testing)autoReconnect=new AutoReconnect(path.join(app.getPath('userData'),'auto-reconnect.json'),id=>{if(id==='claude'){poller.identityChanged('claude');usageHistory.gap('claude','auth');return connections.prepareClaude();}return accounts.prepareLogin(id);});
     interval = setInterval(() => { if(!paused&&autoReconnect){const current=snapshot();void autoReconnect.check(current.providers as any,Object.values(current.auth).some((a:any)=>a?.pending)).catch(()=>{});} if (!paused) { if (!demo) void credentialWatch.scan(); if(!demo&&settings.enabled.gemini&&settings.googleSource==='antigravity'&&providers.waitingForAntigravityAccount)void poller.authenticated('gemini'); void poller.tick();void accounts.tick(); }
       if(!demo&&morningHello){const current:any=snapshot();void morningHello.tick(settings.morningHelloEnabled,settings.morningHelloTime,['claude',...current.accounts.map((a:any)=>a.id)].map((id:string)=>({id,state:current.providers[id],pending:current.auth[id]?.pending})),paused);}
     }, 5000);
