@@ -29,3 +29,5 @@
 .task-row-heading{align-items:center;min-height:22px}.task-row h4{font-size:15px;line-height:22px;font-weight:650}.task-project{margin:6px 0 9px;font-size:10px;line-height:14px}.task-meta{line-height:13px}
 
 .compact-task-summary strong{font-size:9px;line-height:16px;letter-spacing:-.15px;font-variant-numeric:tabular-nums}.compact-task-summary.dense strong{font-size:8px}
+
+.compact-task-summary strong{font-size:9px;line-height:13px}.compact-task-summary small{font-size:7px;line-height:11px;white-space:nowrap;letter-spacing:-.2px;font-variant-numeric:tabular-nums}.compact-task-summary.dense small{font-size:6.5px}

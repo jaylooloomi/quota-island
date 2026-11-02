@@ -1,8 +1,8 @@
 (function(root){
-  const order=['running','today','threeDays','fiveDays','idle','waiting','unknown','all'];
+  const order=['running','today','threeDays','fiveDays','week','idle','waiting','unknown','all'];
   function matches(row,filter,now=Date.now()){
     if(filter==='all')return true;
-    const days={today:1,threeDays:3,fiveDays:5}[filter];
+    const days={today:1,threeDays:3,fiveDays:5,week:7}[filter];
     if(!days)return row.status===filter;
     const time=row.confirmedAt;
     if(typeof time!=='number'||!Number.isFinite(time)||time<=0||time>now)return false;
