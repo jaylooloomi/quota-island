@@ -18,6 +18,7 @@ const {record}=require('../src/ui/task-hook.cjs');
     assert.equal(await page.locator('#task-panel img').count(),0);assert.equal(await page.evaluate(()=>window.HACKED),undefined);
     for(const locale of ['zh-TW','en','ja','ko']){
       data.settings.locale=locale;await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);await page.waitForTimeout(100);
+      assert.equal(await page.locator('#tab-tasks svg use').getAttribute('href'),'#i-tasks',locale+' task icon survives translation');
       assert.equal(await page.locator('#task-panel').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,locale+' panel fits');
       const header=await rect();assert.ok(Math.abs(header.width-before.width)<1);assert.ok(Math.abs(header.height-before.height)<1);await page.screenshot({path:output+'/'+locale+'.png'});
     }

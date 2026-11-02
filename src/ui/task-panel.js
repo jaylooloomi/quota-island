@@ -10,7 +10,7 @@
   function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
   function update(state,visible){
     host=document.getElementById('task-panel');host.hidden=!visible;latest=state;const w=words[state.settings.locale]||words['zh-TW'];
-    const tab=document.getElementById('tab-tasks');tab.textContent=w.tab;
+    const tab=document.getElementById('tab-tasks');tab.querySelector('.task-tab-label').textContent=w.tab;
     const brand=document.querySelector('.compact-brand');let summary=brand.querySelector('.compact-task-summary');if(!summary){summary=el('span',undefined,'compact-task-summary');summary.setAttribute('data-localized-text','');brand.append(summary);}brand.classList.toggle('tasks-summary',!!state.settings.compactTaskSummary);summary.replaceChildren(el('strong',w.compact+' '+(state.tasks?.counts.running||0)),el('small',w.sub+' '+(state.tasks?.counts.waiting||0)+' · ? '+(state.tasks?.counts.unknown||0)));summary.title=w.note;
     if(!visible)return;document.getElementById('mode-label').textContent=w.tab;
     const data=state.tasks||{rows:[],counts:{},connection:'idle'};
