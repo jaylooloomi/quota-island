@@ -115,6 +115,6 @@ export class CodexSessionReader{
   rows():TaskRow[]{const now=this.now();return [...this.files.values()].flatMap(c=>{
     const s=c.state;if(s.parent||!s.project)return[];
     const fresh=now-s.time<=SESSION_FRESH_MS;
-    return[{id:s.id,title:this.names.get(s.id)||'Codex session',project:s.project,status:c.size-c.offset>CHUNK?'unknown':s.status==='idle'?'idle':fresh?s.status:'unknown',source:'rollout',confirmedAt:s.time||null,event:s.reason,evidence:'inferred'} as TaskRow];
+    return[{provider:'codex',id:s.id,title:this.names.get(s.id)||'Codex session',project:s.project,status:c.size-c.offset>CHUNK?'unknown':s.status==='idle'?'idle':fresh?s.status:'unknown',source:'rollout',confirmedAt:s.time||null,event:s.reason,evidence:'inferred'} as TaskRow];
   });}
 }

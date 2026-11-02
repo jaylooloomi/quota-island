@@ -18,3 +18,5 @@
 .compact-brand.tasks-summary{height:34px;min-height:34px}.compact-brand.tasks-summary>.compact-task-summary{display:flex;inset:0;flex-direction:column;align-items:center;justify-content:center;gap:1px}.compact-task-summary strong{font-size:10px;line-height:14px}.compact-task-summary small{font-size:8px;line-height:11px}
 .compact-brand.tasks-summary.pet-idle{height:52px;min-height:52px}
 .compact-brand.pet-idle>.compact-task-summary{display:none}
+
+.task-row-indicators{display:flex;align-items:center;gap:7px;flex-shrink:0}.task-provider-icon{display:block;width:20px;height:20px;object-fit:contain;flex-shrink:0}

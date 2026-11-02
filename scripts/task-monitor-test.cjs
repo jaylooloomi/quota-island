@@ -15,15 +15,18 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     await app.evaluate(({BrowserWindow})=>{const web=BrowserWindow.getAllWindows()[0].webContents;global.taskFixtureSend=web.send.bind(web);web.send=(channel,...args)=>{if(channel==='state'&&!args[0]?.__taskFixture)return;return global.taskFixtureSend(channel,...args);};});
     const data=await page.evaluate(()=>quota.getState());data.__taskFixture=true;data.tasks.rows.push({id:'unsafe',title:'<img src=x onerror="window.HACKED=1">',project:'D:/'+('long project ').repeat(35),status:'unknown',source:'history',confirmedAt:null});
     await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);
-    assert.equal(await page.locator('#task-panel img').count(),0);assert.equal(await page.evaluate(()=>window.HACKED),undefined);
+    assert.equal(await page.locator('#task-panel img:not(.task-provider-icon)').count(),0);assert.equal(await page.evaluate(()=>window.HACKED),undefined);
     for(const locale of ['zh-TW','en','ja','ko']){
       data.settings.locale=locale;await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);await page.waitForTimeout(100);
       assert.equal(await page.locator('#tab-tasks svg use').getAttribute('href'),'#i-tasks',locale+' task icon survives translation');
       assert.equal(await page.locator('#task-panel').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,locale+' panel fits');
       const header=await rect();assert.ok(Math.abs(header.width-before.width)<1);assert.ok(Math.abs(header.height-before.height)<1);await page.screenshot({path:output+'/'+locale+'.png'});
     }
-    data.tasks.rows=Array.from({length:7},(_,i)=>({id:'scroll-'+i,title:'Task '+(i+1)+' '+('long title '.repeat(8)),project:'D:/projects/demo',status:i===0?'running':i===1?'waiting':'unknown',source:'history',confirmedAt:null}));
+    data.tasks.rows=Array.from({length:7},(_,i)=>({provider:['codex','claude','antigravity'][i%3],id:'scroll-'+i,title:'Task '+(i+1)+' '+('long title '.repeat(8)),project:'D:/projects/demo',status:i===0?'running':i===1?'waiting':'unknown',source:'history',confirmedAt:null}));
     await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);
+    assert.deepEqual(await page.locator('.task-provider-icon').evaluateAll(nodes=>nodes.slice(0,3).map(n=>n.alt)),['Codex','Claude','Antigravity']);
+    assert.ok(await page.locator('.task-provider-icon').evaluateAll(nodes=>nodes.every(n=>n.complete&&n.naturalWidth>0)));
+    await page.screenshot({path:output+'/provider-icons.png'});
     const scrolling=await page.locator('.task-list').evaluate(e=>{const r=e.getBoundingClientRect(),rows=[...e.querySelectorAll('.task-row')].map(n=>n.getBoundingClientRect());return{height:r.height,overflows:e.scrollHeight>e.clientHeight,thirdBottom:rows[2].bottom,bottom:r.bottom,fourthTop:rows[3].top,overflowY:getComputedStyle(e).overflowY};});
     assert.ok(Math.abs(scrolling.height-260)<1);assert.ok(scrolling.overflows);assert.ok(scrolling.thirdBottom<=scrolling.bottom+1);assert.ok(scrolling.fourthTop>=scrolling.bottom);assert.equal(scrolling.overflowY,'auto');
     await page.locator('.task-list').evaluate(e=>e.scrollTop=e.scrollHeight);assert.ok(await page.locator('.task-list').evaluate(e=>e.lastElementChild.getBoundingClientRect().bottom<=e.getBoundingClientRect().bottom+1));
