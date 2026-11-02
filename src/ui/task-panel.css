@@ -9,3 +9,7 @@
 .task-summary-setting{display:flex;align-items:center;gap:6px;font-size:11px;color:#b6bfcd;margin-top:10px}.task-summary-setting input{accent-color:#a0ace4}.compact-task-summary{display:none;max-width:100%;overflow:hidden;text-align:center}.compact-task-summary strong{display:block;font-size:9px;white-space:nowrap}.compact-task-summary small{display:block;font-size:7px;white-space:nowrap;color:#a5aebd}.compact-brand.tasks-summary>.compact-name,.compact-brand.tasks-summary>#compact-version{visibility:hidden}.compact-brand.tasks-summary>.compact-task-summary{display:block;position:absolute;inset:10px 0;align-content:center}.compact-brand.tasks-summary{position:relative}
 
 .task-summary-setting{justify-content:space-between;border:1px solid #30343b;border-radius:8px;padding:8px 10px;background:#171a1e}
+
+/* Three complete rows; only the list scrolls. */
+.task-list{display:grid;grid-auto-rows:82px;gap:7px;max-height:260px;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:#59616e #171b20;overscroll-behavior:contain}
+.task-list .task-row{height:82px;margin-bottom:0;overflow:hidden}.task-row h4{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.task-list::-webkit-scrollbar{display:block;width:7px}.task-list::-webkit-scrollbar-track{background:#171b20;border-radius:8px}.task-list::-webkit-scrollbar-thumb{background:#59616e;border-radius:8px;border:1px solid #171b20}.task-list::-webkit-scrollbar-thumb:hover{background:#7b8798}

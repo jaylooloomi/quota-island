@@ -8,14 +8,14 @@
   Object.assign(words['zh-TW'],{summary:'收合時顯示任務摘要',compact:'執行中',sub:'等待'});Object.assign(words.en,{summary:'Show task summary when collapsed',compact:'Running',sub:'Wait'});Object.assign(words.ja,{summary:'折りたたみ時にタスク概要を表示',compact:'実行中',sub:'確認待ち'});Object.assign(words.ko,{summary:'접었을 때 작업 요약 표시',compact:'실행 중',sub:'대기'});
   for(const [locale,text] of Object.entries({'zh-TW':'即時來源未接上，無法判定桌面聊天的執行狀態。歷史紀錄不代表目前狀態。',en:'Live source not connected. Desktop task status cannot be determined from history.',ja:'リアルタイム情報は未接続です。履歴からデスクトップの実行状態は判断できません。',ko:'실시간 소스가 연결되지 않았습니다. 기록으로 데스크톱 작업 상태를 판단할 수 없습니다.'}))words[locale].unconnected=text;
   let filter='all',last='',installMessage='',busy=false,host,latest;
-  function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
+  function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined){n.textContent=text;if(tag==='h4')n.title=text;}if(cls)n.className=cls;return n;}
   function update(state,visible){
     host=document.getElementById('task-panel');host.hidden=!visible;latest=state;const w=words[state.settings.locale]||words['zh-TW'];
     const tab=document.getElementById('tab-tasks');tab.querySelector('.task-tab-label').textContent=w.tab;
     const brand=document.querySelector('.compact-brand');let summary=brand.querySelector('.compact-task-summary');if(!summary){summary=el('span',undefined,'compact-task-summary');summary.setAttribute('data-localized-text','');brand.append(summary);}brand.classList.toggle('tasks-summary',!!state.settings.compactTaskSummary);summary.replaceChildren(el('strong',w.compact+' '+(state.tasks?.liveCoverage?state.tasks.counts.running:'—')),el('small',w.sub+' '+(state.tasks?.liveCoverage?state.tasks.counts.waiting:'—')+' · ? '+(state.tasks?.counts.unknown||0)));summary.title=w.note;
     if(!visible)return;document.getElementById('mode-label').textContent=w.tab;
     const data=state.tasks||{rows:[],counts:{},connection:'idle'};
-    const key=JSON.stringify([data,state.settings.locale,state.settings.compactTaskSummary,filter,installMessage,busy]);if(key===last)return;last=key;host.replaceChildren();
+    const key=JSON.stringify([data,state.settings.locale,state.settings.compactTaskSummary,filter,installMessage,busy]);if(key===last)return;last=key;const scrollTop=host.querySelector('.task-list')?.scrollTop||0;host.replaceChildren();
     const title=el('div',undefined,'task-heading');title.append(el('h3',w.heading),el('span',w.scope));host.append(title);
     const counts=el('div',undefined,'task-counts');for(const status of ['running','waiting','unknown']){const c=el('div');c.append(el('strong',status!=='unknown'&&!data.liveCoverage?'—':String(data.counts[status]||0)),el('span',w[status]));counts.append(c);}host.append(counts);
     const hasHook=data.rows.some(r=>r.source==='hook'&&r.confirmedAt&&Date.now()-r.confirmedAt<=45000);
@@ -25,12 +25,12 @@
     refresh.onclick=async()=>{busy=true;update(latest,true);try{await quota.tasksStart();}finally{busy=false;update(latest,true);}};controls.append(install,refresh);host.append(controls);
     const summarySetting=el('label',undefined,'task-summary-setting'),summarySwitch=el('input');summarySwitch.type='checkbox';summarySwitch.setAttribute('role','switch');summarySwitch.checked=!!state.settings.compactTaskSummary;summarySwitch.onchange=()=>quota.settings({compactTaskSummary:summarySwitch.checked});summarySetting.append(el('span',w.summary),summarySwitch);host.append(summarySetting);
     if(installMessage){const msg=el('p',w[installMessage],'task-notice');msg.setAttribute('role','status');host.append(msg);}
-    const filters=el('div',undefined,'task-filters');filters.setAttribute('aria-label',w.heading);for(const f of ['all','running','waiting','idle','unknown']){const b=el('button',w[f]);b.setAttribute('aria-pressed',String(f===filter));b.onclick=()=>{filter=f;update(latest,true);};filters.append(b);}host.append(filters);
+    const filters=el('div',undefined,'task-filters');filters.setAttribute('aria-label',w.heading);for(const f of ['all','running','waiting','idle','unknown']){const b=el('button',w[f]);b.setAttribute('aria-pressed',String(f===filter));b.onclick=()=>{filter=f;const list=host.querySelector('.task-list');if(list)list.scrollTop=0;update(latest,true);};filters.append(b);}host.append(filters);
     const list=el('div',undefined,'task-list');for(const row of data.rows.filter(r=>filter==='all'||r.status===filter)){
       const card=el('article',undefined,'task-row');card.dataset.status=row.status;card.dataset.sessionId=row.id;const h=el('div',undefined,'task-row-heading');h.append(el('h4',row.title==='Codex session'?w.session+' · '+row.id.slice(0,8):row.title),el('span',w[row.status],'task-status '+row.status));card.append(h);
       const project=el('p',row.project||'—','task-project');project.title=row.project;card.append(project);
       const meta=el('div',undefined,'task-meta');meta.append(el('span',w.source+': '+w[row.source==='hook'?'hook':row.source==='runtime'?'runtimeSource':'historySource']),el('span',w.last+': '+(row.confirmedAt?new Date(row.confirmedAt).toLocaleTimeString(state.settings.locale,{hour:'2-digit',minute:'2-digit',second:'2-digit'}):w.never)));card.append(meta);list.append(card);
-    }if(!list.children.length)list.append(el('p',!data.liveCoverage&&['running','waiting'].includes(filter)?w.unconnected:w.empty,'task-empty'));host.append(list,el('p',w.note,'task-footnote'));
+    }if(!list.children.length)list.append(el('p',!data.liveCoverage&&['running','waiting'].includes(filter)?w.unconnected:w.empty,'task-empty'));host.append(list,el('p',w.note,'task-footnote'));list.scrollTop=scrollTop;
   }
   window.TaskPanel={update};
 })();
