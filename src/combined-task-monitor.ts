@@ -1,6 +1,7 @@
 import {LocalTaskMonitor} from './local-task-monitor';
 import {RemoteTaskMonitor} from './remote-task-monitor';
 import path from 'node:path';
+import {hostname} from 'node:os';
 export class CombinedTaskMonitor {
   private local:LocalTaskMonitor;private remote?:RemoteTaskMonitor;
   constructor(sessionsRoot:string,private changed:()=>void,remoteEnabled:boolean){
@@ -8,7 +9,7 @@ export class CombinedTaskMonitor {
     if(remoteEnabled&&process.platform==='win32')this.remote=new RemoteTaskMonitor(path.dirname(sessionsRoot),changed);
   }
   snapshot(){
-    const local=this.local.snapshot(),remote=this.remote?.snapshot();
+    const original=this.local.snapshot(),local={...original,rows:original.rows.map(r=>({...r,host:hostname()}))},remote=this.remote?.snapshot();
     if(!remote)return local;
     const rank={waiting:0,running:1,idle:2,unknown:3};
     const rows=[...local.rows,...remote.rows].sort((a,b)=>rank[a.status]-rank[b.status]||(b.confirmedAt??0)-(a.confirmedAt??0)).slice(0,100);

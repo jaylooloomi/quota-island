@@ -25,7 +25,7 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
       const send=web.send.bind(web);web.send=(channel,...args)=>{if(channel==='state'&&!args[0]?.tasks?.__liveRemote)return;return send(channel,...args);};web.send('state',state);
     });
     await page.locator('[data-task-filter=all]').click();await page.waitForTimeout(200);
-    assert.equal(await page.locator('.task-meta').first().innerText().then(s=>s.includes('遠端')),true);
+    assert.equal(await page.locator('.task-host-badge').first().getAttribute('title').then(s=>s.includes('遠端')),true);
     await fs.mkdir('test-results/remote-task-live',{recursive:true});await page.screenshot({path:'test-results/remote-task-live/remote-tasks.png'});
     await fs.writeFile('test-results/remote-task-live/proof.json',JSON.stringify(proof,null,2));console.log(proof);
   }finally{if(app){await app.evaluate(()=>global.pebbleRemoteTest?.close()).catch(()=>{});await app.close();}await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}

@@ -13,7 +13,7 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     await page.locator('#tab-tasks').click();await page.waitForFunction(()=>document.querySelectorAll('.task-row').length===1);assert.equal(await page.locator('[data-task-filter=running]').getAttribute('aria-pressed'),'true','defaults to running');await page.locator('[data-task-filter=all]').click();await page.waitForFunction(()=>document.querySelectorAll('.task-row').length===2);assert.equal(await page.locator('.task-row[data-status="running"]').count(),1);assert.equal(await page.locator('.task-row[data-status="waiting"]').count(),1);assert.equal(await page.locator('#cards').isVisible(),false);
     await page.screenshot({path:output+'/overview.png'});
     await app.evaluate(({BrowserWindow})=>{const web=BrowserWindow.getAllWindows()[0].webContents;global.taskFixtureSend=web.send.bind(web);web.send=(channel,...args)=>{if(channel==='state'&&!args[0]?.__taskFixture)return;return global.taskFixtureSend(channel,...args);};});
-    const data=await page.evaluate(()=>quota.getState());data.__taskFixture=true;data.tasks.rows.push({id:'unsafe',title:'<img src=x onerror="window.HACKED=1">',project:'D:/'+('long project ').repeat(35),status:'unknown',source:'history',confirmedAt:null});
+    const data=await page.evaluate(()=>quota.getState());data.__taskFixture=true;data.tasks.rows.push({id:'unsafe',title:'<img src=x onerror="window.HACKED=1">',project:'D:/'+('long project ').repeat(35),status:'unknown',source:'remote',host:'<img src=x onerror=alert(1)> Very long remote host '.repeat(15),confirmedAt:null});
     await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);
     assert.equal(await page.locator('#task-panel img:not(.task-provider-icon)').count(),0);assert.equal(await page.evaluate(()=>window.HACKED),undefined);
     for(const locale of ['zh-TW','en','ja','ko']){
@@ -21,6 +21,8 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
       assert.equal(await page.locator('#tab-tasks svg use').getAttribute('href'),'#i-tasks',locale+' task icon survives translation');
       assert.equal(await page.locator('#task-panel').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,locale+' panel fits');
       const toolbar=await page.locator('.task-controls').evaluate(e=>{const a=e.querySelector('button').getBoundingClientRect(),b=e.querySelector('.task-summary-setting').getBoundingClientRect();return Math.abs(a.top-b.top)<1&&Math.abs(a.height-b.height)<1&&e.scrollWidth<=e.clientWidth+1;});assert.equal(toolbar,true,locale+' task controls share one row');
+      assert.equal(await page.locator('.task-host-badge').count(),3);assert.equal(await page.locator('.task-host-badge').last().getAttribute('title').then(t=>t.includes('Very long remote host')),true);
+      assert.equal(await page.locator('.task-meta').evaluateAll(ns=>ns.every(n=>n.scrollWidth<=n.clientWidth+1)),true,locale+' host badges and timestamps fit');
       const header=await rect();assert.ok(Math.abs(header.width-before.width)<1);assert.ok(Math.abs(header.height-before.height)<1);await page.screenshot({path:output+'/'+locale+'.png'});
     }
     data.tasks.rows=Array.from({length:7},(_,i)=>({provider:['codex','claude','antigravity'][i%3],id:'scroll-'+i,title:'Task '+(i+1)+' '+('long title '.repeat(8)),project:'D:/projects/demo',status:i===0?'running':i===1?'waiting':'unknown',source:'history',confirmedAt:null}));

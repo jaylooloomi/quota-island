@@ -33,3 +33,5 @@
 .compact-task-summary strong{font-size:9px;line-height:13px}.compact-task-summary small{font-size:7px;line-height:11px;white-space:nowrap;letter-spacing:-.2px;font-variant-numeric:tabular-nums}.compact-task-summary.dense small{font-size:6.5px}
 
 .task-controls{align-items:stretch;flex-wrap:nowrap}.task-controls>button{flex:0 0 auto}.task-controls>.task-summary-setting{flex:1;min-width:0;margin-top:0;min-height:30px;box-sizing:border-box;padding:5px 8px;font-size:10px}.task-summary-setting input{flex:0 0 auto}
+
+.task-row .task-meta{flex-wrap:nowrap;align-items:center;min-width:0}.task-source{display:flex;align-items:center;gap:4px;min-width:0;flex:1}.task-source>span:first-child{flex-shrink:0}.task-host-badge{display:block;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 5px;border:1px solid hsl(var(--host-hue) 55% 65% / .35);border-radius:4px;background:hsl(var(--host-hue) 55% 55% / .14);color:hsl(var(--host-hue) 65% 78%);font-size:9px;font-weight:650;line-height:13px;box-sizing:border-box}.task-meta>span:last-child{flex:0 0 auto;white-space:nowrap}
