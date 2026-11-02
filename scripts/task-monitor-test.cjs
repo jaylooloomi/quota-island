@@ -26,8 +26,9 @@ const {record}=require('../src/ui/task-hook.cjs');
     const after=await page.locator('.card[data-provider="claude"]').boundingBox();for(const key of ['x','y','width','height'])assert.ok(Math.abs(after[key]-quotaPosition[key])<=1,'quota geometry '+key);
     assert.equal((await page.evaluate(()=>quota.getState())).providers.codex.updatedAt,quotaTime,'task monitor never refreshes quota');
     await page.locator('#tab-tasks').click();await page.locator('.task-summary-setting input').check();
+    await page.evaluate(()=>quota.settings({petRoam:true,petPlacement:'stage'}));
     const compactGeometry=()=>page.locator('.compact-provider').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height}}));
-    await page.locator('#collapse').click();await page.waitForTimeout(100);const compact=await compactGeometry();assert.equal(await page.locator('.compact-task-summary').isVisible(),true);
+    await page.locator('#collapse').click();await page.waitForTimeout(100);await page.locator('#roam-pet').waitFor({state:'visible',timeout:20000});assert.equal((await page.evaluate(()=>quota.getState())).settings.petRoam,true,'stage companion preference preserved');const compact=await compactGeometry();assert.equal(await page.locator('.compact-task-summary').isVisible(),true);
     await page.locator('#toggle').click();await page.locator('.task-summary-setting input').uncheck();await page.locator('#collapse').click();await page.waitForTimeout(100);const original=await compactGeometry();for(let i=0;i<compact.length;i++)for(const k of ['x','y','w','h'])assert.ok(Math.abs(compact[i][k]-original[i][k])<1,'compact summary fixed '+k);
     assert.deepEqual(errors,[]);console.log('PASS task UI: real Electron, hook fixtures, four locales, XSS, keyboard, fixed geometry and no quota calls');
   }finally{if(app)await app.close();await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
