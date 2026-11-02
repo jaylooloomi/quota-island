@@ -19,7 +19,7 @@
     const title=el('div',undefined,'task-heading');title.append(el('h3',w.heading),el('span',w.scope));host.append(title);
     const counts=el('div',undefined,'task-counts');for(const status of ['running','waiting','unknown']){const c=el('div');c.append(el('strong',status!=='unknown'&&!data.liveCoverage?'—':String(data.counts[status]||0)),el('span',w[status]));counts.append(c);}host.append(counts);
     const hasHook=data.rows.some(r=>r.source==='hook'&&r.confirmedAt&&Date.now()-r.confirmedAt<=45000);
-    host.append(el('p',data.connection==='checking'?w.checking:!data.liveCoverage?w.unconnected:data.connection==='runtime'?w.runtime:hasHook?w.bridge:w.history,'task-notice'));
+    host.append(el('p',data.connection==='checking'?w.checking:!data.liveCoverage?w.unconnected:hasHook?w.bridge:data.connection==='runtime'?w.runtime:w.history,'task-notice'));
     const controls=el('div',undefined,'task-controls');const install=el('button',w.install),refresh=el('button',w.refresh);install.disabled=refresh.disabled=busy;
     install.onclick=async()=>{busy=true;update(latest,true);try{const r=await quota.tasksInstall();installMessage=r.ok?'installed':r.demo?'demo':'failed';}catch{installMessage='failed';}finally{busy=false;update(latest,true);}};
     refresh.onclick=async()=>{busy=true;update(latest,true);try{await quota.tasksStart();}finally{busy=false;update(latest,true);}};controls.append(install,refresh);host.append(controls);
