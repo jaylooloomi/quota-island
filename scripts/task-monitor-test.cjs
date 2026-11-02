@@ -20,6 +20,7 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
       data.settings.locale=locale;await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);await page.waitForTimeout(100);
       assert.equal(await page.locator('#tab-tasks svg use').getAttribute('href'),'#i-tasks',locale+' task icon survives translation');
       assert.equal(await page.locator('#task-panel').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,locale+' panel fits');
+      const toolbar=await page.locator('.task-controls').evaluate(e=>{const a=e.querySelector('button').getBoundingClientRect(),b=e.querySelector('.task-summary-setting').getBoundingClientRect();return Math.abs(a.top-b.top)<1&&Math.abs(a.height-b.height)<1&&e.scrollWidth<=e.clientWidth+1;});assert.equal(toolbar,true,locale+' task controls share one row');
       const header=await rect();assert.ok(Math.abs(header.width-before.width)<1);assert.ok(Math.abs(header.height-before.height)<1);await page.screenshot({path:output+'/'+locale+'.png'});
     }
     data.tasks.rows=Array.from({length:7},(_,i)=>({provider:['codex','claude','antigravity'][i%3],id:'scroll-'+i,title:'Task '+(i+1)+' '+('long title '.repeat(8)),project:'D:/projects/demo',status:i===0?'running':i===1?'waiting':'unknown',source:'history',confirmedAt:null}));
