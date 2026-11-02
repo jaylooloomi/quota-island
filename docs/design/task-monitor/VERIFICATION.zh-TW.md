@@ -1,0 +1,69 @@
+# Codex 任務監控：實作與能力驗證
+
+版本：Quota Pebble 1.18.0。日期：2026-11-02。
+
+## 採用方案
+
+新增「配額／帳號／任務」分頁。任務監控與配額 Poller 分離，不增加訂閱配額查詢，不替使用者開始、繼續、批准或中止既有任務。
+
+優先以官方 `app-server proxy` 查詢來源的 loaded threads 與狀態；無可用控制 socket 時，獨立 app-server 只提供最近 100 筆歷史名稱與專案。歷史資料一律是未知，不能計為執行中。
+
+即時狀態補充使用 Codex 官方生命週期 Hooks。接收器只保存 session ID、turn ID、事件名稱、專案路徑與接收時間；不保存提示詞、工具參數、輸出、逐字稿、Cookie 或 Token。事件最多 4,000 筆、讀取最近一天，保存在 `~/.quota-pebble/task-events`。這不是可信執行證明或安全稽核服務；同一作業系統帳號仍可修改本機檔案。
+
+## 實測結果與限制
+
+| 來源 | 本機實測 | 結論 |
+|---|---|---|
+| 獨立 Codex app-server 0.164.0 | 列到 80 筆歷史；本聊天在桌面工具顯示 active，但此來源顯示 notLoaded，loaded 為 0 | 不可用來推斷桌面聊天正在執行 |
+| 官方 proxy | 已知控制 socket connection refused；桌面 App 0.166.0-alpha.5.1 使用另一個 stdio 實例 | 此機目前無共享 Runtime 可讀；不攔截 stdio、不探測私人連接埠 |
+| 官方 CLI + 使用者信任的 Hooks | 真實、極短測試回合收到 SessionStart、UserPromptSubmit、Stop、SessionEnd；跨程序 TaskMonitor 以相同 session ID 觀察到 running，再變為 idle | 已驗證新的本機 CLI 回合，不是 fixture |
+| 已經開啟的桌面聊天 | 尚未觀察到此聊天的新 Hook 事件 | **不能宣稱所有桌面聊天或其他裝置都已接上**；需要該來源載入並執行 Hooks |
+
+橋接只觀察啟用之後實際送出的事件，不回填舊聊天為即時狀態。CLI / Desktop 版本、企業政策及雲端協調模式可能影響 Hooks 能否執行；安裝成功不代表每個來源已連接。
+
+## 狀態規則
+
+- 新近 UserPromptSubmit／PreToolUse／PostToolUse：執行中；PermissionRequest：等待確認。
+- SessionStart／Interrupt／SessionEnd：當下閒置；不表示整個專案已完成。
+- Stop：未知。其他 Stop Hook 可能要求繼續，不能當作回合完成的唯一證據。
+- 45 秒未收到有效確認：未知；不靠程序存在、檔案修改時間或心跳維持舊 active。
+- 以 session ID 去重，忽略 subagent 事件；舊 turn 的延遲結束不能覆蓋新的 turn。
+- 共享 Runtime 若可讀，只信任 loaded 清單中且 status 有效的項目；失去來源立即降級未知。
+
+本機 Hook 每約 2 秒反映到畫面；官方清單每 30 秒重新查詢。長時間思考或執行單一工具、沒有新事件時，45 秒後可能顯示未知，這是刻意保守的行為。
+
+## 安裝與日常使用
+
+1. 開啟「任務」分頁，按「安裝狀態橋接」。需要 Node.js 22+。
+2. 既有 `~/.codex/hooks.json` 保留，寫入前建立具時間戳記的備份；不寫入信任紀錄。
+3. 在 Codex CLI `/hooks` 審閱並信任八個 `Quota Pebble: local task status` 項目。只信任這些項目，不必信任其他外掛。官方要求對確切定義進行審閱；命令變更後需重新信任。
+4. 從新回合確認有收到本機 Hook。來源仍顯示歷史時，不代表目前沒有任何任務在執行。
+
+Windows 接收器使用 `cmd.exe /d /c call` 搭配 Node 絕對路徑，避免空白路徑／Shell 呼叫方式造成接收器沒有執行。安裝不會啟動可見命令視窗。
+
+可選「收合時顯示任務摘要」：在原名稱區顯示執行／等待／未知數，固定島的大小與供應商位置。開啟期間暫停名稱區寵物，不改寫原寵物偏好；關閉即可恢復。原始配額、帳號與配速布局維持。
+
+## 驗證指令
+
+```sh
+npm run test:coverage
+npm run test:tasks
+npm run test:desktop
+npm run test:design
+npm run test:i18n
+npm run test:trends
+npm run check:tasks
+```
+
+`check:tasks` 預設唯讀，不會送出推理。以下兩個指令是明確選擇的實機驗證，會各送出一輪極短 Codex 訊息，使用少量訂閱額度；不放入 CI：
+
+```sh
+node scripts/check-task-monitor.cjs --probe-turn
+node scripts/task-monitor-live-ui.cjs --probe-turn
+```
+
+自動化重點：history/notLoaded 不誤報、載入範圍、等待狀態、過期、舊 turn 事件、重複啟動、斷線、隱私欄位、無效檔案、安裝保留原設定、四語系長路徑與 XSS、鍵盤、收合摘要與卡片位置固定。
+
+實測也發現 proxy 提早結束時可能觸發 stdin EPIPE，已加錯誤處理與回歸測試，避免來源連不上時整個 App 結束。
+
+官方參考：[App Server](https://developers.openai.com/codex/app-server/)、[Hooks](https://developers.openai.com/codex/hooks/)。

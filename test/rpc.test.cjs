@@ -14,3 +14,9 @@ test('missing Codex process rejects pending requests without crashing', async ()
   const rpc = new CodexRpc(() => ({ file: 'nonexistent-quota-island-cli-123', args: [] }));
   await assert.rejects(rpc.call('account/read'), { code: 'missing_cli' }); rpc.close();
 });
+test('a proxy exiting before the handshake does not crash on a broken stdin pipe',async()=>{
+  for(let i=0;i<8;i++){
+    const rpc=new CodexRpc(()=>({file:process.execPath,args:['-e','process.exit(0)']}),'proxy');
+    try{await assert.rejects(rpc.call('thread/list'));}finally{rpc.close();}
+  }
+});

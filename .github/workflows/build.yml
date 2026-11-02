@@ -29,6 +29,8 @@ jobs:
         with:
           name: coverage-${{ runner.os }}
           path: test-results/coverage.txt
+      - if: runner.os == 'Windows'
+        run: npm run test:tasks
       - run: npm audit --omit=dev
       - if: runner.os == 'Linux'
         run: xvfb-run -a npm run test:desktop

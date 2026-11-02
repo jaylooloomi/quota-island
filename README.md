@@ -18,6 +18,10 @@
 
 *Illustrated overview updated using actual v1.16.10 screenshots. All pictured percentages are demo data.*
 
+### Local Codex tasks
+
+The **Tasks** tab shows local session status separately from subscription quotas. The optional Codex Hooks bridge observes new CLI turns; historical sessions and expired signals remain **Unknown**, never counted as running. Existing desktop chats and other devices are not guaranteed to be covered. Review the eight bridge handlers in Codex /hooks before use. The optional collapsed summary preserves island dimensions and pet preferences. [Setup and tested limitations](docs/design/task-monitor/VERIFICATION.zh-TW.md).
+
 ## A quick introduction
 
 AI-generated promotional videos, not recordings of the running app. Video 01 is in English; video 02 temporarily uses Chinese captions. GIF animations are silent.

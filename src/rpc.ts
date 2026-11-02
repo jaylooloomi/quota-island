@@ -7,7 +7,7 @@ export class CodexRpc {
   private pending = new Map<number, { resolve: (v: any) => void; reject: (e: Error) => void; timer: NodeJS.Timeout }>();
   private starting: Promise<void> | null = null;
   onNotification: (method: string, params: any) => void = () => {};
-  constructor(private command: () => { file: string; args: string[]; env?: NodeJS.ProcessEnv }) {}
+  constructor(private command: () => { file: string; args: string[]; env?: NodeJS.ProcessEnv }, private transport:'standalone'|'proxy'='standalone') {}
   private async ensure() {
     if (this.starting) return this.starting;
     if (this.child) return;
@@ -16,7 +16,7 @@ export class CodexRpc {
   }
   private async start() {
     const cmd = this.command();
-    const child = spawn(cmd.file, [...cmd.args, 'app-server'], { windowsHide: true, stdio: 'pipe', env: cmd.env ?? process.env });
+    const child = spawn(cmd.file, [...cmd.args, 'app-server', ...(this.transport==='proxy'?['proxy']:[])], { windowsHide: true, stdio: 'pipe', env: cmd.env ?? process.env });
     this.child = child;
     const rl = createInterface({ input: child.stdout });
     rl.on('line', line => {
@@ -31,6 +31,7 @@ export class CodexRpc {
       }
     });
     child.stderr.resume(); // Drain diagnostics without persisting credentials or raw provider output.
+    child.stdin.on('error', () => this.disconnected(child)); // A rejected proxy may close before initialize is written (EPIPE).
     child.on('error', () => this.disconnected(child));
     child.on('exit', () => { rl.close(); this.disconnected(child); });
     try {
