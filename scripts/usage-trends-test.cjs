@@ -8,7 +8,7 @@ const {UsageHistory}=require('../dist/usage-history');
   const env={...process.env,QUOTA_TEST_DATA:dir};delete env.ELECTRON_RUN_AS_NODE;
   let app;
   try{
-    app=await _electron.launch({...(process.env.QUOTA_PACKAGED_EXE?{executablePath:process.env.QUOTA_PACKAGED_EXE}:{}),args:[...(process.env.QUOTA_PACKAGED_EXE?[]:['.']),'--demo','--test-mode'],env});if(process.env.QUOTA_TRENDS_SMALL_SCREEN==='1')await app.evaluate(({screen})=>{const original=screen.getDisplayMatching;screen.getDisplayMatching=rect=>{const display=original(rect);return {...display,workArea:{...display.workArea,height:720}};};});
+    app=await _electron.launch({...(process.env.QUOTA_PACKAGED_EXE?{executablePath:process.env.QUOTA_PACKAGED_EXE}:{}),args:[...(process.env.QUOTA_PACKAGED_EXE?[]:['.']),'--demo','--test-mode'],env});if(process.env.QUOTA_TRENDS_SMALL_SCREEN==='1')await app.evaluate(({screen})=>{const original=screen.getDisplayMatching;screen.getDisplayMatching=rect=>{const display=original(rect);return {...display,workArea:{...display.workArea,height:Math.min(720,display.workArea.height)}};};});
     const p=await app.firstWindow(),errors=[];p.on('pageerror',e=>errors.push(e.message));
     await p.waitForFunction(()=>window.quota&&document.querySelector('.trend-link'));
     await p.evaluate(async()=>{await quota.addAccount('Claude 個人');await quota.refresh();});

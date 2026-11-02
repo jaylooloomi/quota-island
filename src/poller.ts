@@ -3,6 +3,8 @@ type Fetcher = (id: ProviderId) => Promise<Reading>;
 export class Poller {
   states: Record<ProviderId, ProviderState>;
   private minimum=new Map<ProviderId,number>();
+  private observationEpoch=new Map<ProviderId,number>();
+  identityChanged(id:ProviderId){this.observationEpoch.set(id,(this.observationEpoch.get(id)??0)+1);}
   setMinimumInterval(id:ProviderId,ms:number){this.minimum.set(id,ms);}
   private inFlight = new Map<ProviderId, Promise<void>>();
   private failures = new Map<ProviderId, number>();
@@ -39,6 +41,7 @@ export class Poller {
   }
   private async run(id: ProviderId) {
     const s = this.states[id];
+    const epoch=this.observationEpoch.get(id)??0;
     if (!s.reading) s.status = 'loading';
     s.refreshing = true;
     this.changed();
@@ -46,7 +49,7 @@ export class Poller {
       const reading = await this.fetcher(id);
       if (!s.enabled) return;
       s.reading = reading; s.status = 'ready'; s.updatedAt = new Date(this.now()).toISOString(); s.error = null;
-      try{this.observed?.(id,reading,s.updatedAt);}catch{/* History must never break quota polling. */}
+      try{if(epoch===(this.observationEpoch.get(id)??0))this.observed?.(id,reading,s.updatedAt);}catch{/* History must never break quota polling. */}
       delete s.errorCode;
       this.failures.delete(id); s.nextPollAt = this.now() + Math.max(120_000,this.minimum.get(id)??0);
       this.rateLimitUntil.delete(id);

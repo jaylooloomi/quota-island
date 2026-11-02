@@ -53,10 +53,10 @@ export class Providers {
     }
     const oauth = credentials?.claudeAiOauth;
     if (!oauth?.accessToken) throw new ProviderError('auth', '請先登入 Claude Code，以讀取訂閱配額');
+    let identity=oauth.accessToken;try{const config=JSON.parse(await readFile(this.claudeConfigDir||process.env.CLAUDE_CONFIG_DIR?path.join(dir,'.claude.json'):path.join(homedir(),'.claude.json'),'utf8'));identity=config.oauthAccount?.accountUuid||identity;}catch{}
     const data = await jsonRequest('https://api.anthropic.com/api/oauth/usage', {
       Authorization: `Bearer ${oauth.accessToken}`, Accept: 'application/json', 'anthropic-beta': 'oauth-2025-04-20', 'User-Agent': 'quota-island/0.1.0'
     });
-    let identity=oauth.accessToken;try{const config=JSON.parse(await readFile(this.claudeConfigDir||process.env.CLAUDE_CONFIG_DIR?path.join(dir,'.claude.json'):path.join(homedir(),'.claude.json'),'utf8'));identity=config.oauthAccount?.accountUuid||identity;}catch{}
     return {...parseClaude(data, typeof oauth.subscriptionType === 'string' ? oauth.subscriptionType : null),identityKey:createHash('sha256').update(identity).digest('hex')};
   }
   async login(id: ProviderId, openUrl: (url: string) => Promise<void>, progress: (value: LoginProgress) => void = () => {}) {

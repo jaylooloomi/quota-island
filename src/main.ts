@@ -185,14 +185,14 @@ function installHandlers() {
         settings.enabled[id] = patch.enabled[id]; poller.setEnabled(id, patch.enabled[id]);
       }
       win.setAlwaysOnTop(settings.alwaysOnTop);maintainTop(); saveSettings(); publish();
-      if (sourceChanged) {usageHistory.boundary('gemini','source');void poller.authenticated('gemini');}
+      if (sourceChanged) {poller.identityChanged('gemini');usageHistory.boundary('gemini','source');void poller.authenticated('gemini');}
       if (!paused) void poller.tick();
     },
     'login': (_event: any, raw: unknown) => {
       if(accounts.has(raw)){if(!demo){usageHistory.boundary(raw);void accounts.prepareLogin(raw);}return;}
       const id = validateId(raw);
       if (demo) { connections.states[id] = { pending: false, phase: 'error', message: '展示模式不會啟動登入；正常啟動即可連接帳號' }; publish(); return; }
-      usageHistory.boundary(id);if(id==='claude')void connections.prepareClaude();else void connections.login(id);
+      poller.identityChanged(id);usageHistory.boundary(id);if(id==='claude')void connections.prepareClaude();else void connections.login(id);
     },
     'continue-claude-login': (_event:any,raw:unknown)=>{if(demo)return;if(accounts.has(raw))void accounts.continueLogin(raw);else if(raw==='claude')void connections.continueClaude();},
     'reopen-login': (_event: any, raw: unknown) => accounts.has(raw)?accounts.reopen(raw):connections.reopen(validateId(raw)),
@@ -223,7 +223,7 @@ function installHandlers() {
       const file=process.platform==='win32'?path.join(homedir(),'AppData/Local/Programs/Antigravity/Antigravity.exe'):process.platform==='darwin'?'/Applications/Antigravity.app':null;
       if(!file)return {ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'};
       const error=await shell.openPath(file);if(error)return {ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'};
-      usageHistory.boundary('gemini');providers.beginAntigravitySwitch();settings.enabled.gemini=true;poller.setEnabled('gemini',true);saveSettings();await poller.signedOut('gemini');void poller.authenticated('gemini');publish();return {ok:true};
+      poller.identityChanged('gemini');usageHistory.boundary('gemini');providers.beginAntigravitySwitch();settings.enabled.gemini=true;poller.setEnabled('gemini',true);saveSettings();await poller.signedOut('gemini');void poller.authenticated('gemini');publish();return {ok:true};
     },
     'submit-code': (_event: any, raw: unknown, code: unknown) => accounts.has(raw)?accounts.submit(raw,code):connections.submitCode(validateId(raw), code),
   })) {

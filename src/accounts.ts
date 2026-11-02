@@ -61,7 +61,7 @@ export class Accounts {
   async tick(manual=false){await Promise.all([...this.entries.values()].map(e=>e.poller.refresh('claude',manual)));}
   async hello(id:string,cwd:string){const e=this.entry(id);if(!e.profile.enabled||e.connections.states.claude?.pending||!e.service.hello)throw new ProviderError('auth','此帳號暫時無法執行 Hello');await e.service.hello(cwd);}
   refreshAccount(id:string){if(this.has(id))return this.entry(id).poller.refresh('claude',true);}
-  prepareLogin(id:unknown){return this.entry(id).connections.prepareClaude();}
+  prepareLogin(id:unknown){const e=this.entry(id);e.poller.identityChanged('claude');return e.connections.prepareClaude();}
   continueLogin(id:unknown){const e=this.entry(id);if(e.connections.states.claude?.phase!=='web_login')return;e.profile.enabled=true;e.poller.setEnabled('claude',true);this.save();return e.connections.continueClaude();}
   login(id:unknown){const e=this.entry(id);e.profile.enabled=true;e.poller.setEnabled('claude',true);this.save();return e.connections.login('claude');}
   submit(id:unknown,code:unknown){this.entry(id).connections.submitCode('claude',code);}
