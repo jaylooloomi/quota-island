@@ -19,3 +19,5 @@ test('status filters stay independent from age and date filters include every st
     assert.equal(matches({status},status==='running'?'waiting':'running',now),false);
   }
 });
+
+test('eight-hour summary uses a rolling window, not calendar midnight',()=>{const now=new Date(2026,10,3,3).getTime(),start=now-8*3600000;assert.equal(matches({confirmedAt:start},'eightHours',now),true);assert.equal(matches({confirmedAt:start-1},'eightHours',now),false);assert.equal(matches({confirmedAt:now},'eightHours',now),true);for(const t of [null,NaN,Infinity,0,now+1])assert.equal(matches({confirmedAt:t},'eightHours',now),false);});

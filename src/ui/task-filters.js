@@ -2,6 +2,7 @@
   const order=['running','today','threeDays','fiveDays','week','idle','waiting','unknown','all'];
   function matches(row,filter,now=Date.now()){
     if(filter==='all')return true;
+    if(filter==='eightHours'){const t=row.confirmedAt;return typeof t==='number'&&Number.isFinite(t)&&t>0&&t<=now&&t>=now-8*60*60*1000;}
     const days={today:1,threeDays:3,fiveDays:5,week:7}[filter];
     if(!days)return row.status===filter;
     const time=row.confirmedAt;
