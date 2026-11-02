@@ -55,7 +55,11 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     await page.evaluate(()=>quota.settings({petRoam:true,petPlacement:'stage'}));
     const compactGeometry=()=>page.locator('.compact-provider').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height}}));
     await page.locator('#collapse').click();await page.waitForTimeout(100);await page.locator('#roam-pet').waitFor({state:'visible',timeout:20000});assert.equal((await page.evaluate(()=>quota.getState())).settings.petRoam,true,'stage companion preference preserved');const compact=await compactGeometry();assert.equal(await page.locator('.compact-task-summary').isVisible(),true);
-    for(const locale of ['zh-TW','en','ja','ko']){await page.evaluate(locale=>quota.settings({locale}),locale);const clipped=await page.locator('.compact-task-summary').evaluate(e=>{const r=e.getBoundingClientRect();return [...e.children].some(n=>{const b=n.getBoundingClientRect();return b.top<r.top-1||b.bottom>r.bottom+1||b.left<r.left-1||b.right>r.right+1;});});assert.equal(clipped,false,'summary text fully visible '+locale);}
+    for(const locale of ['zh-TW','en','ja','ko']){await page.evaluate(locale=>quota.settings({locale}),locale);
+    await page.evaluate(async()=>{const s=await quota.getState(),now=Date.now(),yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);yesterday.setHours(0,0,0,0);TaskPanel.update({...s,tasks:{...s.tasks,liveCoverage:true,inferred:true,counts:{running:100,waiting:1,unknown:2},rows:Array.from({length:100},(_,i)=>({status:'running',confirmedAt:i<98?now:i===98?yesterday.getTime():null}))}},false);});
+    assert.ok((await page.locator('.compact-task-summary').innerText()).endsWith('100* / 98'),'running / today counts');assert.equal(await page.locator('.compact-task-summary small').count(),0);
+    const clipped=await page.locator('.compact-task-summary').evaluate(e=>{const r=e.getBoundingClientRect();return [...e.children].some(n=>{const b=n.getBoundingClientRect();return n.scrollWidth>n.clientWidth+1||b.top<r.top-1||b.bottom>r.bottom+1||b.left<r.left-1||b.right>r.right+1;});});assert.equal(clipped,false,'summary text fully visible '+locale);}
+    await page.evaluate(async()=>TaskPanel.update(await quota.getState(),false));
     await page.screenshot({path:output+'/compact-summary.png'});
     await page.evaluate(()=>quota.settings({petPlacement:'title',petCharacter:'claude'}));
     await page.locator('.compact-brand.pet-idle .brand-pet').waitFor({state:'visible',timeout:20000});
