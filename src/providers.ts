@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import { readFile,stat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { homedir } from 'node:os';
@@ -35,7 +36,7 @@ export class Providers {
       const account = await this.rpc.call('account/read', { refreshToken: false });
       if (account?.account?.type !== 'chatgpt') throw new ProviderError('auth', '請使用 ChatGPT 帳號登入 Codex；API Key 無訂閱配額');
       const data = await this.rpc.call('account/rateLimits/read');
-      return parseCodex(data, account.account.planType ?? null);
+      return {...parseCodex(data, account.account.planType ?? null),identityKey:createHash('sha256').update(String(account.account.id??account.account.email??'codex-local')).digest('hex')};
     }
     if (id === 'gemini') {
       return this.googleSource() === 'antigravity' ? this.antigravity.read() : this.gemini.read();
@@ -52,10 +53,11 @@ export class Providers {
     }
     const oauth = credentials?.claudeAiOauth;
     if (!oauth?.accessToken) throw new ProviderError('auth', '請先登入 Claude Code，以讀取訂閱配額');
+    let identity=oauth.accessToken;try{const config=JSON.parse(await readFile(this.claudeConfigDir||process.env.CLAUDE_CONFIG_DIR?path.join(dir,'.claude.json'):path.join(homedir(),'.claude.json'),'utf8'));identity=config.oauthAccount?.accountUuid||identity;}catch{}
     const data = await jsonRequest('https://api.anthropic.com/api/oauth/usage', {
       Authorization: `Bearer ${oauth.accessToken}`, Accept: 'application/json', 'anthropic-beta': 'oauth-2025-04-20', 'User-Agent': 'quota-island/0.1.0'
     });
-    return parseClaude(data, typeof oauth.subscriptionType === 'string' ? oauth.subscriptionType : null);
+    return {...parseClaude(data, typeof oauth.subscriptionType === 'string' ? oauth.subscriptionType : null),identityKey:createHash('sha256').update(identity).digest('hex')};
   }
   async login(id: ProviderId, openUrl: (url: string) => Promise<void>, progress: (value: LoginProgress) => void = () => {}) {
     if (this.authJobs.has(id)) return this.authJobs.get(id)!;

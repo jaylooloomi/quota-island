@@ -160,8 +160,8 @@ function makeCards(){
       card.querySelector('.connect-primary').addEventListener('click',()=>{const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
     card.querySelector('.continue-claude-login').addEventListener('click',()=>api.continueClaudeLogin(id));
     card.querySelector('.login').addEventListener('click',()=>startLogin(id));
-    card.querySelector('.quota-details-link').addEventListener('click',()=>{quotaDetailsProvider=id;quotaDetailsOpen=true;activeDetail=null;settingsOpen=false;footerPopover=null;render(state);});
-    card.querySelector('.pace-link').addEventListener('click',()=>{paceDetailsProvider=paceDetailsProvider===id?null:id;quotaDetailsOpen=false;activeDetail=null;footerPopover=null;render(state);});
+    card.querySelector('.quota-details-link').addEventListener('click',()=>{window.UsageTrends.close();quotaDetailsProvider=id;quotaDetailsOpen=true;activeDetail=null;settingsOpen=false;footerPopover=null;render(state);});
+    card.querySelector('.pace-link').addEventListener('click',()=>{window.UsageTrends.close();paceDetailsProvider=paceDetailsProvider===id?null:id;quotaDetailsOpen=false;activeDetail=null;footerPopover=null;render(state);});
     card.querySelector('.account-switch').addEventListener('click',async()=>{
       if(id==='gemini'&&state.settings.googleSource==='antigravity'){
         activeDetail=id;render(state);const result=await api.antigravityAccount('switch');
@@ -428,6 +428,7 @@ function render(next){
   $('google-source').value=state.settings.googleSource;$('google-source').disabled=!!state.auth.gemini?.pending;
   for(const input of document.querySelectorAll('[data-enable]'))input.checked=state.settings.enabled[input.dataset.enable];
   ids.forEach(renderCard);
+  window.UsageTrends.update(state,cardNodes,{visible:!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&currentView==='quota',open:()=>{paceDetailsProvider=null;quotaDetailsOpen=false;activeDetail=null;render(state);},resize:()=>render(state)});
   for(const id of ids){const visible=state.settings.visible?.[id]!==false;cardNodes[id].hidden=!visible;const compact=document.querySelector(`.compact-provider[data-provider="${id}"]`);if(compact)compact.hidden=!visible;}
   const extraSettings=$('extra-account-settings');extraSettings.replaceChildren();
   for(const account of state.accounts??[]){const label=document.createElement('label'),name=document.createElement('span');name.textContent=account.label;name.setAttribute('data-localized-text','');const input=document.createElement('input');input.type='checkbox';input.setAttribute('role','switch');input.checked=state.settings.visible[account.id]!==false;input.addEventListener('change',()=>api.settings({visible:{[account.id]:input.checked}}));label.append(name,input);extraSettings.append(label);}
@@ -446,6 +447,7 @@ function render(next){
     if(state.expanded&&!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider){
       for(const id of ids){
         const card=cardNodes[id];if(card.hidden)continue;
+        if(card.classList.contains('trend-expanded'))continue;
         if(currentView==='quota'){
           card.style.minHeight='';
           const quota=card.querySelector('.quota-windows'),pace=card.querySelector('.pacing-content');
@@ -464,8 +466,8 @@ function render(next){
     const content=(settingsOpen?$('settings'):quotaDetailsOpen?$('quota-details'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height+(!settingsOpen&&!quotaDetailsOpen?$('add-account-area').getBoundingClientRect().height:0);
     const chrome=document.querySelector('.panel-header').getBoundingClientRect().height+document.querySelector('footer').getBoundingClientRect().height+18;
     const height=Math.max(480,Math.ceil(content+chrome+(settingsOpen?24:12)));
-    if(!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider&&currentView==='quota')quotaPanelHeight=height;
-    api.panelHeight(!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider?quotaPanelHeight:height);
+    if(!window.UsageTrends.active&&!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider&&currentView==='quota')quotaPanelHeight=height;
+    api.panelHeight(!window.UsageTrends.active&&!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider?quotaPanelHeight:height);
   });
 }
 makeCards();
@@ -521,5 +523,5 @@ $('pet-action-apply').addEventListener('click',()=>runPetChoice(true));
 $('morningHelloEnabled').addEventListener('change',event=>api.settings({morningHelloEnabled:event.target.checked}));
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
 for(const input of document.querySelectorAll('[data-visible]'))input.addEventListener('change',()=>api.settings({visible:{[input.dataset.visible]:input.checked}}));
-document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(footerPopover){closeFooterPopover(true);event.preventDefault();}else if(paceDetailsProvider){paceDetailsProvider=null;render(state);}else if(quotaDetailsOpen){quotaDetailsOpen=false;render(state);}else if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
+document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(footerPopover){closeFooterPopover(true);event.preventDefault();}else if(window.UsageTrends.active){window.UsageTrends.close();render(state);}else if(paceDetailsProvider){paceDetailsProvider=null;render(state);}else if(quotaDetailsOpen){quotaDetailsOpen=false;render(state);}else if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
 api.subscribe(render);api.getState().then(render);setInterval(()=>{if(state)render(state);},15000);

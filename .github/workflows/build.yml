@@ -35,6 +35,10 @@ jobs:
       - if: runner.os == 'Windows'
         run: npm run test:desktop
       - if: runner.os == 'Windows'
+        run: node scripts/usage-trends-test.cjs
+        env:
+          QUOTA_TRENDS_SMALL_SCREEN: '1'
+      - if: runner.os == 'Windows'
         run: node scripts/fresh-install-defaults-test.cjs
       - if: runner.os == 'Windows'
         run: npm run test:auth
@@ -47,6 +51,7 @@ jobs:
         env:
           # Hosted Windows displays can be 768px tall; keep the full settings view testable.
           QUOTA_TEST_SCALE: '0.75'
+          QUOTA_TEST_WORKAREA_HEIGHT: '900'
       - run: npm run ${{ matrix.command }} -- --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'

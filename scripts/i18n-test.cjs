@@ -9,7 +9,7 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
   const directory=await fs.mkdtemp(path.join(os.tmpdir(),'quota-languages-'));
   const env={...process.env,QUOTA_TEST_DATA:directory};delete env.ELECTRON_RUN_AS_NODE;
   const executablePath=process.env.QUOTA_PACKAGED_EXE;
-  const launch=()=>electron.launch({...(executablePath?{executablePath}:{}),args:[...(executablePath?[]:['.']),'--demo','--test-mode',...(process.env.QUOTA_TEST_SCALE?['--force-device-scale-factor='+process.env.QUOTA_TEST_SCALE]:[])],env});
+  const launch=async()=>{const instance=await electron.launch({...(executablePath?{executablePath}:{}),args:[...(executablePath?[]:['.']),'--demo','--test-mode',...(process.env.QUOTA_TEST_SCALE?['--force-device-scale-factor='+process.env.QUOTA_TEST_SCALE]:[])],env});if(process.env.QUOTA_TEST_WORKAREA_HEIGHT)await instance.evaluate(({screen},height)=>{const original=screen.getDisplayMatching;screen.getDisplayMatching=rect=>{const display=original(rect);return {...display,workArea:{...display.workArea,height:Math.min(height,display.workArea.height)}};};},Number(process.env.QUOTA_TEST_WORKAREA_HEIGHT));return instance;};
   let app=await launch();
   try{
     let page=await app.firstWindow();await page.locator('#mini-codex').filter({hasText:'12%'}).waitFor();
@@ -50,7 +50,7 @@ const {parseAntigravitySummary}=require('../dist/antigravity');
       const helloFixture=await page.evaluate(()=>window.quota.getState());helloFixture.morningHello={claude:{day:'2026-10-31',status:'active',at:'2026-10-31T00:00:00Z'}};
       await app.evaluate(({BrowserWindow},s)=>BrowserWindow.getAllWindows()[0].webContents.send('state',s),helloFixture);
       assert.equal(await page.locator('#morning-hello-status').count(),0);
-      await page.waitForFunction(()=>{const body=document.querySelector('.panel-body');return window.innerHeight>520&&body.scrollHeight<=body.clientHeight+1;});
+      await page.waitForFunction(()=>{const body=document.querySelector('.panel-body');return window.innerHeight>520&&body.scrollHeight<=body.clientHeight+1;},null,{timeout:process.env.QUOTA_TEST_WORKAREA_HEIGHT?3000:30000}).catch(async error=>{console.log(await page.evaluate(()=>({height:innerHeight,body:document.querySelector('.panel-body').clientHeight,scroll:document.querySelector('.panel-body').scrollHeight,settings:document.getElementById('settings').getBoundingClientRect().height,history:document.querySelector('.history-settings').getBoundingClientRect().height,parts:[...document.querySelector('.history-settings').children].map(e=>({name:e.tagName,h:e.getBoundingClientRect().height,text:e.textContent.slice(0,45)}))})));await page.screenshot({path:'test-results/settings-small-failure.png'});throw error;});
       assert.equal(await page.locator('#quit').evaluate(el=>el.getBoundingClientRect().bottom<=document.querySelector('footer').getBoundingClientRect().top),true,`${locale}: settings actions must be visible without scrolling`);
       await audit(`${locale} settings`);
       await page.locator('#settings').screenshot({path:`test-results/language-${locale}-settings.png`});

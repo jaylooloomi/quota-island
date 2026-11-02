@@ -5,7 +5,7 @@ export interface QuotaWindow {
   group?: string;
 }
 export interface Reading {
-  provider: ProviderId; plan: string | null; windows: QuotaWindow[]; source: string;
+  identityKey?:string; provider: ProviderId; plan: string | null; windows: QuotaWindow[]; source: string;
 }
 export interface ProviderState {
   provider: ProviderId; status: 'loading' | 'ready' | 'unavailable' | 'stale' | 'signed_out';

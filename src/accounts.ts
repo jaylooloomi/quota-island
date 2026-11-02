@@ -4,7 +4,7 @@ import {randomUUID} from 'node:crypto';
 import {Poller} from './poller';
 import {Connections} from './connections';
 import {Providers} from './providers';
-import {ProviderError} from './model';
+import {ProviderError,Reading} from './model';
 type Profile={id:string;label:string;enabled:boolean;visible:boolean;reserve:number;window:string;limits?:unknown};
 type Service=Pick<Providers,'read'|'login'|'submitCode'|'cancelLogin'|'logout'|'close'>&Partial<Pick<Providers,'hello'>>;
 type Entry={profile:Profile;service:Service;poller:Poller;connections:Connections;removed:boolean};
@@ -12,7 +12,7 @@ const validId=(id:unknown):id is string=>typeof id==='string'&&/^claude-account-
 export class Accounts {
   private entries=new Map<string,Entry>();
   private file:string;
-  constructor(private root:string,private factory:(directory:string)=>Service,private open:(url:string)=>Promise<void>,private changed:()=>void,private focus:()=>void){
+  constructor(private root:string,private factory:(directory:string)=>Service,private open:(url:string)=>Promise<void>,private changed:()=>void,private focus:()=>void,private observed?:(id:string,reading:Reading,time:string)=>void){
     mkdirSync(root,{recursive:true,mode:0o700});this.file=path.join(root,'accounts.json');
     let saved:any=[];try{saved=JSON.parse(readFileSync(this.file,'utf8'));}catch{}
     if(Array.isArray(saved))for(const raw of saved.slice(0,20)){
@@ -24,7 +24,7 @@ export class Accounts {
   private attach(profile:Profile){
     const dir=this.directory(profile.id);mkdirSync(dir,{recursive:true,mode:0o700});
     const service=this.factory(dir);
-    const poller=new Poller(id=>service.read(id),()=>{if(this.entries.has(profile.id)){this.save();this.changed();}});
+    const poller=new Poller(id=>service.read(id),()=>{if(this.entries.has(profile.id)){this.save();this.changed();}},Date.now,(_id,reading,time)=>this.observed?.(profile.id,reading,time));
     if(service instanceof Providers)poller.setMinimumInterval('claude',600000);
     poller.states.codex.enabled=false;poller.states.gemini.enabled=false;poller.states.claude.enabled=profile.enabled;
     poller.restoreRateLimits(profile.limits);
@@ -61,7 +61,7 @@ export class Accounts {
   async tick(manual=false){await Promise.all([...this.entries.values()].map(e=>e.poller.refresh('claude',manual)));}
   async hello(id:string,cwd:string){const e=this.entry(id);if(!e.profile.enabled||e.connections.states.claude?.pending||!e.service.hello)throw new ProviderError('auth','此帳號暫時無法執行 Hello');await e.service.hello(cwd);}
   refreshAccount(id:string){if(this.has(id))return this.entry(id).poller.refresh('claude',true);}
-  prepareLogin(id:unknown){return this.entry(id).connections.prepareClaude();}
+  prepareLogin(id:unknown){const e=this.entry(id);e.poller.identityChanged('claude');return e.connections.prepareClaude();}
   continueLogin(id:unknown){const e=this.entry(id);if(e.connections.states.claude?.phase!=='web_login')return;e.profile.enabled=true;e.poller.setEnabled('claude',true);this.save();return e.connections.continueClaude();}
   login(id:unknown){const e=this.entry(id);e.profile.enabled=true;e.poller.setEnabled('claude',true);this.save();return e.connections.login('claude');}
   submit(id:unknown,code:unknown){this.entry(id).connections.submitCode('claude',code);}
