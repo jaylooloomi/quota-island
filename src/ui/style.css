@@ -505,3 +505,37 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 .island[data-pet-background=meteor-day] #pet-stage{background:linear-gradient(#04102018,#04102008),url('pets/backgrounds/meteor-day.png') center 55%/cover no-repeat}
 .island[data-pet-background=meteor-day] .pet-sky{display:none}
 .island[data-pet-background=meteor-day] #pet-stage .pet-ground{background:linear-gradient(#8395a8,#566b80);border-top-color:#c0ccd5;box-shadow:0 -2px 0 #43556888}
+
+/* Usage trends: a second grid row, keeping the existing quota row unchanged. */
+.trend-link{position:absolute;right:7px;bottom:2px;padding:1px 0;font-size:9px;line-height:12px;white-space:nowrap;color:#b8bbf6}
+.has-trend-link>.quota-details-link{right:85px}
+.has-trend-link .pace-link{right:85px}
+.card.trend-expanded{min-height:0!important;grid-template-rows:calc(var(--trend-base,98px) - 26px) auto;row-gap:12px}
+.card.trend-expanded>.card-heading{grid-row:1;grid-column:1}
+.card.trend-expanded>.quota-windows,.card.trend-expanded>.pacing-content{grid-row:1;grid-column:2}
+.card.trend-expanded>.usage-trend{grid-row:2;grid-column:1/-1;min-width:0;border-top:1px solid #34383e;padding:10px 5px 0}
+.card.trend-expanded>.card-grip{top:calc(var(--trend-base,98px)/2)}
+.card.trend-expanded>.trend-link,.card.trend-expanded>.quota-details-link,.card.trend-expanded .pace-link{top:calc(var(--trend-base,98px) - 16px);bottom:auto}
+.usage-trend{--trend-color:#b5a2ff;color:#dce0e7}
+.claude>.usage-trend{--trend-color:#ffaf8e}.codex>.usage-trend{--trend-color:#eeeef0}
+.trend-heading{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.trend-heading h3{font-size:13px;margin:0}.trend-badge{font-size:9px;border:1px solid #ffffff25;border-radius:8px;padding:2px 6px;color:var(--trend-color)}
+.trend-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.trend-window{min-width:0;width:100%;height:29px;padding:3px 6px;font-size:10px}
+.trend-ranges{display:flex;border:1px solid #3c424e;background:#171a20;border-radius:8px;padding:2px;gap:2px}
+.trend-ranges button{padding:4px 6px;border-radius:6px;font-size:10px;white-space:nowrap}
+.trend-ranges button[aria-pressed=true]{background:#3a3e4b;box-shadow:inset 0 0 0 1px #777d91}
+.trend-chart{position:relative;margin-top:8px;min-width:0}.trend-chart svg{display:block;width:100%;height:auto;max-height:180px;overflow:visible;outline-offset:2px}
+.trend-grid{stroke:#ffffff24;stroke-width:.65;stroke-dasharray:3 3}.trend-axis{font-size:10px;fill:#abb2c0}
+.trend-line{fill:none;stroke:var(--trend-color);stroke-width:2;stroke-linejoin:round}.trend-point{fill:var(--trend-color)}
+.trend-boundary{stroke:#d3d9e3;stroke-width:1;stroke-dasharray:4 4}.trend-gap{fill:#8d99b71a}
+.trend-tooltip{position:absolute;top:8px;z-index:3;padding:7px 9px;border:1px solid #505969;border-radius:7px;background:#1c222bf5;font-size:10px;line-height:1.7;pointer-events:none;max-width:90%;box-shadow:0 4px 12px #0006}
+.trend-summary{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:10px;margin-top:5px}.trend-summary strong{color:var(--trend-color);font-size:13px}
+.trend-note{color:#9da5b3;font-size:9px;line-height:1.5;margin:6px 0 0}.trend-warning{font-size:10px;line-height:1.5;color:#edbc9d;margin:6px 0}.trend-empty{font-size:11px;color:#a9b1bf;padding:30px 8px;text-align:center}
+.history-settings{margin-top:14px;padding-top:8px;border-top:1px solid #ffffff16}.history-settings h3{font-size:12px;margin:3px 0}.history-settings button{border:1px solid #464e5c;background:#252a32;padding:6px 10px;border-radius:7px;font-size:11px;margin-right:6px}
+@media(max-width:420px){.trend-controls{grid-template-columns:1fr}.trend-ranges button{flex:1}.trend-heading{flex-wrap:wrap}}
+.has-trend-link>.quota-details-link,.has-trend-link .pace-link{max-width:calc(100% - 170px);overflow:hidden;text-overflow:ellipsis}
+
+.trend-chart svg{stroke:none}.trend-gap{stroke:none}.trend-axis{stroke:none}.trend-tooltip{user-select:text}
+
+.trend-window{border:1px solid #3c424e;border-radius:7px;background:#20252b;color:#dce0e7}.trend-window option{background:#20252b}

@@ -1,3 +1,4 @@
+import {UsageHistory} from './usage-history';
 import {AutoReconnect} from './auto-reconnect';
 import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray, globalShortcut, powerMonitor, Notification, safeStorage } from 'electron';
 import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'node:fs';
@@ -39,6 +40,7 @@ let quitting = false;
 let paused = false;
 let providers: Providers;
 let poller: Poller;
+let usageHistory:UsageHistory;
 let interval: NodeJS.Timeout;
 let connections: Connections;
 let credentialWatch: CredentialWatch;
@@ -85,7 +87,7 @@ let morningHello:MorningHello|undefined;
 function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, morningHello:morningHello?.snapshot()??{}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
 function publish() {
   persistRateLimits();
-  if(poller)diagnostics?.observe(snapshot());
+  if(poller){const snap=snapshot();diagnostics?.observe(snap);for(const [id,s] of Object.entries(snap.providers) as [string,ProviderState][])if(snap.paused||!s.enabled||['stale','unavailable','signed_out'].includes(s.status))usageHistory?.gap(id);}
   if (!win?.isDestroyed() && !win?.webContents.isDestroyed()) win?.webContents.send('state', snapshot());
   if (settings.notifications && !demo && !testing && Notification.isSupported()) {
     for (const [accountId,s] of Object.entries({...poller.states,...accounts?.snapshot().providers}) as [string,ProviderState][]) {
@@ -149,12 +151,14 @@ function installHandlers() {
   // Only our trusted local renderer may call IPC. No arbitrary URLs, commands or paths.
   for (const [channel, handler] of Object.entries({
     'get-state': () => snapshot(),
+    'history-query': (_event:any,id:unknown,window:unknown,days:unknown)=>{if(typeof id!=='string'||!providerIds.includes(id as ProviderId)&&!accounts.has(id))throw new Error('Unknown account');return usageHistory.query(id,window,days);},
+    'history-clear':()=>({ok:usageHistory.clear()}),
     'pet-height': (_event:any,value:unknown)=>{if(value!==0&&value!==112)return;petHeight=value;reposition();},
     'expand': (_event: any, value: unknown) => { if (typeof value === 'boolean') setExpanded(value); },
     'panel-height': (_event: any, value: unknown) => { if (typeof value === 'number' && Number.isFinite(value)) { const height = Math.max(480, Math.min(1200, Math.ceil(value))); if (height !== panelHeight) { panelHeight = height; reposition(); } } },
     'refresh': async () => { if (!paused) await Promise.all([poller.tick(true),accounts.tick(true)]); return snapshot(); },
     'account-add': (_event:any,label:unknown)=>{try{return {ok:true,id:accounts.add(label)};}catch(e){return {ok:false,message:e instanceof ProviderError?e.message:'無法新增帳號'};}},
-    'account-remove': async (_event:any,id:unknown)=>{try{await accounts.remove(id);return {ok:true};}catch{return {ok:false,message:'無法移除帳號'};}},
+    'account-remove': async (_event:any,id:unknown)=>{try{await accounts.remove(id);usageHistory.clear(String(id));return {ok:true};}catch{return {ok:false,message:'無法移除帳號'};}},
     'account-rename': (_event:any,id:unknown,label:unknown)=>{try{accounts.rename(id,label);return {ok:true};}catch(e){return {ok:false,message:e instanceof ProviderError?e.message:'無法重新命名'};}},
     'hide': () => win.hide(),
     'quit': () => { quitting = true; app.quit(); },
@@ -181,25 +185,25 @@ function installHandlers() {
         settings.enabled[id] = patch.enabled[id]; poller.setEnabled(id, patch.enabled[id]);
       }
       win.setAlwaysOnTop(settings.alwaysOnTop);maintainTop(); saveSettings(); publish();
-      if (sourceChanged) void poller.authenticated('gemini');
+      if (sourceChanged) {usageHistory.boundary('gemini','source');void poller.authenticated('gemini');}
       if (!paused) void poller.tick();
     },
     'login': (_event: any, raw: unknown) => {
-      if(accounts.has(raw)){if(!demo)void accounts.prepareLogin(raw);return;}
+      if(accounts.has(raw)){if(!demo){usageHistory.boundary(raw);void accounts.prepareLogin(raw);}return;}
       const id = validateId(raw);
       if (demo) { connections.states[id] = { pending: false, phase: 'error', message: '展示模式不會啟動登入；正常啟動即可連接帳號' }; publish(); return; }
-      if(id==='claude')void connections.prepareClaude();else void connections.login(id);
+      usageHistory.boundary(id);if(id==='claude')void connections.prepareClaude();else void connections.login(id);
     },
     'continue-claude-login': (_event:any,raw:unknown)=>{if(demo)return;if(accounts.has(raw))void accounts.continueLogin(raw);else if(raw==='claude')void connections.continueClaude();},
     'reopen-login': (_event: any, raw: unknown) => accounts.has(raw)?accounts.reopen(raw):connections.reopen(validateId(raw)),
     'cancel-login': (_event: any, raw: unknown) => accounts.has(raw)?accounts.cancel(raw):(raw==='claude'&&connections.cancelPreparation()?undefined:providers.cancelLogin(validateId(raw))),
     'logout': async (_event: any, raw: unknown) => {
-      if(accounts.has(raw)){if(demo)return {ok:false,message:'展示模式不會登出帳號'};try{await accounts.logout(raw);return {ok:true};}catch(e){return {ok:false,message:e instanceof ProviderError?e.message:'登出未完成，請稍後重試'};}}
+      if(accounts.has(raw)){if(demo)return {ok:false,message:'展示模式不會登出帳號'};try{await accounts.logout(raw);usageHistory.gap(raw);return {ok:true};}catch(e){return {ok:false,message:e instanceof ProviderError?e.message:'登出未完成，請稍後重試'};}}
       const id=validateId(raw);
       if (demo) return {ok:false,message:'展示模式不會登出帳號'};
       if (connections.states[id]?.pending) return {ok:false,message:'請先取消或完成目前的登入'};
       try {
-        await providers.logout(id);await poller.signedOut(id);delete connections.states[id];publish();return {ok:true};
+        await providers.logout(id);usageHistory.gap(id);await poller.signedOut(id);delete connections.states[id];publish();return {ok:true};
       } catch(e) { return {ok:false,message:e instanceof ProviderError?e.message:'登出未完成，請稍後重試'}; }
     },
     'open-antigravity': async () => {
@@ -219,7 +223,7 @@ function installHandlers() {
       const file=process.platform==='win32'?path.join(homedir(),'AppData/Local/Programs/Antigravity/Antigravity.exe'):process.platform==='darwin'?'/Applications/Antigravity.app':null;
       if(!file)return {ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'};
       const error=await shell.openPath(file);if(error)return {ok:false,message:'請自行開啟 Antigravity，在其中登出並切換 Google 帳號'};
-      providers.beginAntigravitySwitch();settings.enabled.gemini=true;poller.setEnabled('gemini',true);saveSettings();await poller.signedOut('gemini');void poller.authenticated('gemini');publish();return {ok:true};
+      usageHistory.boundary('gemini');providers.beginAntigravitySwitch();settings.enabled.gemini=true;poller.setEnabled('gemini',true);saveSettings();await poller.signedOut('gemini');void poller.authenticated('gemini');publish();return {ok:true};
     },
     'submit-code': (_event: any, raw: unknown, code: unknown) => accounts.has(raw)?accounts.submit(raw,code):connections.submitCode(validateId(raw), code),
   })) {
@@ -248,9 +252,10 @@ else {
   app.whenReady().then(async () => {
     readSettings();
     if(!demo&&!testing){if(process.argv.includes('--enable-autostart'))settings.autoStart=true;try{settings.autoStart=syncLoginStartup(app,settings.autoStart,{platform:process.platform,packaged:app.isPackaged,demo,testing,executable:process.execPath});saveSettings();}catch{settings.autoStart=false;}}
+    usageHistory=new UsageHistory(path.join(app.getPath('userData'),demo?'demo-usage-history':'usage-history'));
     diagnostics=new Diagnostics(path.join(app.getPath('userData'),demo?'demo-logs':'logs'));diagnostics.startup(app.getVersion(),settings.enabled);
     providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource);
-    poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish);if(!demo)poller.setMinimumInterval('claude',600000);
+    poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish,Date.now,(id,reading,time)=>usageHistory.record(id,reading,time,id==='claude'?600000:120000));if(!demo)poller.setMinimumInterval('claude',600000);
     if(!demo){try{poller.restoreRateLimits(JSON.parse(readFileSync(path.join(app.getPath('userData'),'provider-cooldowns.json'),'utf8')));}catch{/* No prior cooldowns. */}}
     connections = new Connections(providers, poller, openAuthUrl, publish, () => {
       if (!quitting && win && !win.isDestroyed()) { setExpanded(true); win.show(); win.focus(); }
@@ -259,7 +264,7 @@ else {
       const service=new Providers(new Gemini(new GeminiVault(app.getPath('userData'),safeStorage)),()=>settings.googleSource,directory);
       if(demo)service.read=async()=>demoReading('claude');
       return service;
-    },openAuthUrl,publish,()=>{if(!quitting&&win&&!win.isDestroyed()){setExpanded(true);win.show();win.focus();}});
+    },openAuthUrl,publish,()=>{if(!quitting&&win&&!win.isDestroyed()){setExpanded(true);win.show();win.focus();}},(id,reading,time)=>usageHistory.record(id,reading,time,600000));
     morningHello=new MorningHello(path.join(app.getPath('userData'),demo?'demo-morning-hello.json':'morning-hello.json'),async id=>{
       if(demo)throw new ProviderError('auth','展示模式不會送出 Hello');
       if(!settings.morningHelloEnabled||paused||(id==='claude'&&(!poller.states.claude.enabled||connections.states.claude?.pending)))throw new ProviderError('auth','Hello 已停用或帳號正在連接');

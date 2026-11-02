@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import { execFile, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import { existsSync } from 'node:fs';
@@ -130,13 +131,13 @@ export class Antigravity {
           const identity=metadata?.userStatus?.email;
           if(fallbackIdentity&&(typeof identity!=='string'||identity.trim().toLowerCase()!==fallbackIdentity))continue;
           const plan=metadata?.userStatus?.planStatus?.planInfo?.planName;if(typeof plan==='string')reading.plan=plan;
-          this.acceptIdentity(identity);return reading;
+          this.acceptIdentity(identity);if(this.identity)reading.identityKey=createHash('sha256').update(this.identity).digest('hex');return reading;
         }catch(e){if(e instanceof ProviderError&&e.code==='auth'&&this.switching)throw e;/* Older local services may not implement grouped summaries. */}
       }
       try{const metadata=await this.status(candidate,port);const reading=parseAntigravity(metadata);if(!fallback){fallback=reading;const identity=metadata?.userStatus?.email;if(typeof identity==='string')fallbackIdentity=identity.trim().toLowerCase();}}
       catch(e){if(e instanceof ProviderError)error=e;}
     }
-    if(fallback){this.acceptIdentity(fallbackIdentity);return fallback;}
+    if(fallback){this.acceptIdentity(fallbackIdentity);if(this.identity)fallback.identityKey=createHash('sha256').update(this.identity).digest('hex');return fallback;}
     throw error??new ProviderError('network','Antigravity 配額服務尚未就緒，稍後會自動重試');
   }
   async connect(){

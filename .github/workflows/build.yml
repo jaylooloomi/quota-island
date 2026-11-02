@@ -35,6 +35,8 @@ jobs:
       - if: runner.os == 'Windows'
         run: npm run test:desktop
       - if: runner.os == 'Windows'
+        run: node scripts/usage-trends-test.cjs
+      - if: runner.os == 'Windows'
         run: node scripts/fresh-install-defaults-test.cjs
       - if: runner.os == 'Windows'
         run: npm run test:auth

@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('quota', {
+  historyQuery:(id:string,window:string,days:number)=>ipcRenderer.invoke('history-query',id,window,days),
+  historyClear:()=>ipcRenderer.invoke('history-clear'),
   getState: () => ipcRenderer.invoke('get-state'),
   addAccount: (label:string) => ipcRenderer.invoke('account-add',label),
   renameAccount: (id:string,label:string) => ipcRenderer.invoke('account-rename',id,label),

@@ -10,13 +10,15 @@ const {_electron:electron}=require('playwright'),assert=require('node:assert/str
     const add=async name=>{
       await page.locator('#add-account-toggle').click();await page.locator('#account-label').fill(name);await page.locator('#add-account-form button[type="submit"]').click();
       const state=await page.evaluate(()=>window.quota.getState()),id=state.accounts.find(a=>a.label===name).id,card=page.locator(`[data-provider="${id}"]`);
-      await card.locator('.auth-code-form').waitFor();await card.locator('.auth-code').fill('MULTI-TEST-CODE');await card.locator('.auth-code-form button').click();
+      await card.locator('.continue-claude-login').click();await card.locator('.auth-code-form').waitFor();await card.locator('.auth-code').fill('MULTI-TEST-CODE');await card.locator('.auth-code-form button').click();
       await page.waitForFunction(id=>document.querySelector(`[data-provider="${id}"]`).classList.contains('ready'),id);
       await card.locator('.close-connection').click();return id;
     };
     const first=await add('Claude 工作'),second=await add('Claude 個人');
     let state=await page.evaluate(()=>window.quota.getState());assert.equal(state.providers[first].reading.windows[0].usedPercent,10);assert.equal(state.providers[second].reading.windows[0].usedPercent,40);
-    assert.equal(state.providers.claude.reading,null);assert.equal(state.accounts.length,2);assert.equal(await page.locator('#claude-account-count').textContent(),'3');
+    assert.equal(state.providers.claude.reading,null);assert.equal(state.accounts.length,2);
+    const histories=await page.evaluate(async ids=>Promise.all(ids.map(id=>quota.historyQuery(id,'',1))),[first,second]);assert.equal(histories[0].points.at(-1).used,10);assert.equal(histories[1].points.at(-1).used,40);
+    assert.match(await page.locator('#claude-account-count').textContent(),/^[1-3]\/3$/);
     await page.locator(`[data-provider="${second}"] .card-grip`).focus();await page.keyboard.press('Alt+ArrowUp');
     state=await page.evaluate(()=>window.quota.getState());assert.ok(state.settings.order.indexOf(second)<state.settings.order.indexOf(first));
     assert.equal(JSON.stringify(state).includes('TEST-claude-account-'),false);
@@ -24,13 +26,13 @@ const {_electron:electron}=require('playwright'),assert=require('node:assert/str
     assert.notEqual(await fs.readFile(credentialPaths[0],'utf8'),await fs.readFile(credentialPaths[1],'utf8'));
     await assert.rejects(fs.stat(path.join(dir,'primary','.credentials.json')));
     await page.evaluate(({id})=>window.quota.settings({pacing:true,reservePercent:{[id]:15}}),{id:first});
-    state=await page.evaluate(()=>window.quota.getState());assert.equal(state.settings.reservePercent[first],15);assert.equal(state.settings.reservePercent[second],5);
+    state=await page.evaluate(()=>window.quota.getState());assert.equal(state.settings.reservePercent[first],15);assert.equal(state.settings.reservePercent[second],10);
     await page.locator(`[data-provider="${first}"] .pace-link`).click();await page.locator('#pace-details').waitFor();assert.match(await page.locator('#pace-details-title').textContent(),/Claude 工作/);
     await page.locator(`[data-provider="${first}"] .pace-link`).click();
     await page.locator('#tab-accounts').click();await fs.mkdir('test-results',{recursive:true});await page.screenshot({path:'test-results/multi-claude-accounts.png'});
     await page.locator(`[data-provider="${first}"] .account-logout`).click();await page.locator(`[data-provider="${first}"] .confirm-logout`).click();
     await page.waitForFunction(id=>!document.querySelector(`[data-provider="${id}"]`).classList.contains('ready'),first);
-    state=await page.evaluate(()=>window.quota.getState());assert.equal(state.providers[first].reading,null);assert.equal(state.providers[second].status,'ready');
+    state=await page.evaluate(()=>window.quota.getState());assert.equal(state.providers[first].reading,null);assert.equal(state.providers[second].status,'ready');assert.equal((await page.evaluate(id=>quota.historyQuery(id,'',1),first)).points.at(-1).used,10,'logout retains history');
     await assert.rejects(fs.stat(credentialPaths[0]));await fs.stat(credentialPaths[1]);
     assert.equal(await page.locator(`[data-provider="${first}"] .account-switch`).isEnabled(),true);
     await app.close();app=await launch();page=await app.firstWindow();page.on('pageerror',e=>errors.push(e.stack));

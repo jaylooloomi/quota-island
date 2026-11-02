@@ -53,6 +53,10 @@ Switch Remaining / Used / Pacing without changing the provider order. Drag cards
 
 The default reserve is **10% of total quota**. Guidance divides the remaining usable quota by the actual time until reset; it is a planning suggestion, not a provider-enforced daily allowance. Open pacing details to adjust the reserve and quota window.
 
+### Inspect usage trends
+
+Open **Usage trends** on a quota card to expand a local history chart without moving its original controls. Choose a quota window and the last 24 hours, 7 days or 30 days. The chart always shows **used quota %**, separates resets and data gaps, and never estimates token counts. Recording begins with successful readings after this feature is installed; no past history is invented. History stays local for up to 90 days / 50 MiB, and can be cleared in settings. Viewing charts makes no additional provider requests.
+
 ### Keep account controls separate
 
 <img src="docs/readme-v1.16.10/accounts-en.png" alt="Actual accounts tab with provider connection controls" width="464">

@@ -8,7 +8,7 @@ export class Poller {
   private failures = new Map<ProviderId, number>();
   private lastRequest = new Map<ProviderId, number>();
   private rateLimitUntil = new Map<ProviderId, number>();
-  constructor(private fetcher: Fetcher, private changed: () => void, private now = Date.now) {
+  constructor(private fetcher: Fetcher, private changed: () => void, private now = Date.now, private observed?: (id:ProviderId,reading:Reading,time:string)=>void) {
     this.states = Object.fromEntries(providerIds.map(provider => [provider, { provider, status: 'loading', reading: null, updatedAt: null, error: null, nextPollAt: 0, enabled: true }])) as Record<ProviderId, ProviderState>;
   }
   setEnabled(id: ProviderId, enabled: boolean) { this.states[id].enabled = enabled; this.changed(); }
@@ -46,6 +46,7 @@ export class Poller {
       const reading = await this.fetcher(id);
       if (!s.enabled) return;
       s.reading = reading; s.status = 'ready'; s.updatedAt = new Date(this.now()).toISOString(); s.error = null;
+      try{this.observed?.(id,reading,s.updatedAt);}catch{/* History must never break quota polling. */}
       delete s.errorCode;
       this.failures.delete(id); s.nextPollAt = this.now() + Math.max(120_000,this.minimum.get(id)??0);
       this.rateLimitUntil.delete(id);

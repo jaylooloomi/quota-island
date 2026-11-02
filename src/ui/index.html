@@ -74,7 +74,7 @@
           <label><span>Codex</span><input type="checkbox" data-enable="codex" role="switch"></label></div>
           <label>Google 配額來源<select id="google-source"><option value="antigravity">Antigravity（個人版）</option><option value="code_assist">Code Assist（企業版）</option></select></label>
           <p>拖拉服務圖示或卡片標題可排序；左側把手移動整座島。Ctrl / ⌘ + Alt + Q 隱藏或顯示。</p>
-          <div class="settings-actions"><button id="hide" class="text-button">隱藏到系統匣</button><button id="quit" class="text-button danger">結束 Quota Pebble</button></div>
+          <div class="history-settings" data-localized-text></div><div class="settings-actions"><button id="hide" class="text-button">隱藏到系統匣</button><button id="quit" class="text-button danger">結束 Quota Pebble</button></div>
         </section>
         <div id="cards" class="cards" aria-live="polite"></div><section id="add-account-area"><button id="add-account-toggle" class="text-button">＋ 新增帳號</button><form id="add-account-form" hidden><label>Claude 帳號名稱<input id="account-label" maxlength="24" required placeholder="例如：Claude 工作帳號" autocomplete="off"></label><p>新增獨立 Claude 登入，不會更改目前的帳號。</p><div><button type="submit">新增並登入</button><button id="cancel-add-account" type="button">取消</button></div><p id="add-account-error" role="alert"></p></form></section>
         <section id="pace-details" hidden><div class="quota-details-heading"><h2 id="pace-details-title"></h2></div><label class="pace-setting">配額窗口<select id="pace-window"></select></label><label class="pace-setting">保留比例<span><input id="pace-reserve" type="range" min="0" max="100" step="1"><output id="pace-reserve-value"></output></span></label><p class="pace-explanation">保留比例以總配額為基準；各來源與窗口獨立計算。</p><div id="pace-summary"></div><p class="pace-explanation">這是平均分配建議，不是用量上限；少於一天的窗口改以每小時計算。</p></section>
@@ -108,6 +108,6 @@
     </article>
   </template>
   <template id="window-template"><div class="quota-row"><div class="quota-label"><span class="window-label"></span><span class="quota-number"></span></div><div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="fill"></div></div><div class="reset"></div></div></template>
-  <script src="presentation.js"></script><script src="i18n.js"></script><script src="pet-policy.js"></script><script src="pet-animation.js"></script><script src="pet-wander.js"></script><script src="pet-behavior.js"></script><script src="pet-theater.js"></script><script src="app.js"></script>
+  <script src="presentation.js"></script><script src="i18n.js"></script><script src="pet-policy.js"></script><script src="pet-animation.js"></script><script src="pet-wander.js"></script><script src="pet-behavior.js"></script><script src="pet-theater.js"></script><script src="usage-trends.js"></script><script src="app.js"></script>
 </body>
 </html>

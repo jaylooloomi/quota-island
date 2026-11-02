@@ -1,0 +1,33 @@
+const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
+const {UsageHistory}=require('../dist/usage-history');
+(async()=>{
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'quota-trend-ui-')),output='test-results/usage-trends';await fs.mkdir(output,{recursive:true});
+  const now=Date.now(),hist=new UsageHistory(path.join(dir,'demo-usage-history'),()=>now);
+  const source='展示資料 · 非真實帳號用量',start=now-20*3600000,reset=start+12*3600000;
+  for(let i=0;i<=120;i++){if(i>40&&i<50)continue;const time=start+i*600000;hist.record('claude',{provider:'claude',plan:'team',source,windows:[{id:'session',label:'5 小時',usedPercent:time<reset?Math.round(15+i*.45):Math.round((i-72)*.8),resetsAt:new Date(time<reset?reset:reset+86400000).toISOString()},{id:'weekly',label:'每週',usedPercent:20+i*.1,resetsAt:new Date(reset+4*86400000).toISOString()}]},new Date(time).toISOString(),600000);}
+  const env={...process.env,QUOTA_TEST_DATA:dir};delete env.ELECTRON_RUN_AS_NODE;
+  let app;
+  try{
+    app=await _electron.launch({...(process.env.QUOTA_PACKAGED_EXE?{executablePath:process.env.QUOTA_PACKAGED_EXE}:{}),args:[...(process.env.QUOTA_PACKAGED_EXE?[]:['.']),'--demo','--test-mode'],env});const p=await app.firstWindow(),errors=[];p.on('pageerror',e=>errors.push(e.message));
+    await p.waitForFunction(()=>window.quota&&document.querySelector('.trend-link'));
+    await p.evaluate(async()=>{await quota.addAccount('Claude 個人');await quota.refresh();});
+    await p.locator('#toggle').click();await p.waitForTimeout(350);
+    const card=p.locator('.card[data-provider="claude"]'),trend=card.locator('.usage-trend');
+    const geometry=()=>p.evaluate(()=>{const c=document.querySelector('.card[data-provider="claude"]');return ['.provider-icon','h2','.quota-windows .track'].map(sel=>{const r=c.querySelector(sel).getBoundingClientRect(),base=c.getBoundingClientRect();return{x:r.x-base.x,y:r.y-base.y,w:r.width,h:r.height}})});
+    const countBefore=(await p.evaluate(()=>quota.getState())).providers.claude.updatedAt;
+    const before=await geometry();await p.screenshot({path:output+'/collapsed.png'});
+    await card.locator('.trend-link').click();await trend.locator('svg').waitFor();await p.waitForTimeout(300);
+    const after=await geometry();for(let i=0;i<before.length;i++)for(const k of ['x','y','w','h'])assert.ok(Math.abs(before[i][k]-after[i][k])<=1,`stable ${i}.${k}: ${before[i][k]} vs ${after[i][k]}`);
+    assert.ok(await trend.locator('.trend-line').count()>=3,'gap and reset produce separate paths');assert.ok(await trend.locator('.trend-gap').count()>0);assert.ok(await trend.locator('.trend-boundary').count()>0);
+    await trend.locator('svg').focus();await p.keyboard.press('Home');assert.match(await trend.locator('.trend-tooltip').innerText(),/15%/);await p.screenshot({path:output+'/expanded-zh-TW.png'});await p.keyboard.press('Escape');assert.equal(await trend.locator('.trend-tooltip').isVisible(),false);
+    for(const locale of ['en','ja','ko','zh-TW']){await p.evaluate(locale=>quota.settings({locale}),locale);await trend.locator('svg').waitFor();await p.waitForTimeout(150);assert.equal(await trend.evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'no overflow '+locale);await p.screenshot({path:output+'/expanded-'+locale+'.png'});}
+    await trend.locator('.trend-ranges button').nth(1).click();await trend.locator('svg').waitFor();assert.equal(await trend.locator('.trend-ranges button').nth(1).getAttribute('aria-pressed'),'true');
+    const selected=await trend.locator('.trend-window option').nth(1).getAttribute('value');await trend.locator('.trend-window').selectOption(selected);await trend.locator('svg').waitFor();assert.equal(await trend.locator('.trend-window').inputValue(),selected);
+    await card.locator('.trend-link').click();await p.waitForTimeout(150);const restored=await geometry();for(let i=0;i<before.length;i++)assert.deepEqual(restored[i],before[i]);
+    await p.locator('.card[data-provider="codex"] .trend-link').click();await p.waitForTimeout(200);assert.equal(await p.locator('.card[data-provider="codex"] .trend-line').count(),0,'one actual demo sample is not invented history');await p.screenshot({path:output+'/single-point.png'});
+    await p.locator('#settings-toggle').click();await p.locator('.history-clear').click();await p.locator('.history-confirm .danger').click();await p.waitForTimeout(150);assert.equal((await p.evaluate(()=>quota.historyQuery('claude','',1))).points.length,0);
+    await p.locator('#settings-toggle').click();await card.locator('.trend-link').click();await p.waitForTimeout(200);assert.equal(await trend.locator('svg').count(),0);await p.screenshot({path:output+'/empty.png'});
+    assert.equal((await p.evaluate(()=>quota.getState())).providers.claude.updatedAt,countBefore,'chart interactions never trigger an extra provider read');
+    assert.deepEqual(errors,[]);console.log('PASS: real Electron UI, fixed card geometry, gap/reset paths, four locales, keyboard tooltips, window/range switches, single-point and cleared states');
+  }finally{if(app)await app.close();await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
+})().catch(e=>{console.error(e);process.exitCode=1;});
