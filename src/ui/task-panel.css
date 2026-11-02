@@ -20,3 +20,5 @@
 .compact-brand.pet-idle>.compact-task-summary{display:none}
 
 .task-row-indicators{display:flex;align-items:center;gap:7px;flex-shrink:0}.task-provider-icon{display:block;width:20px;height:20px;object-fit:contain;flex-shrink:0}
+
+.task-row-identity{display:flex;align-items:center;gap:8px;min-width:0;flex:1}.task-row-identity h4{min-width:0}
