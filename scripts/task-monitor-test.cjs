@@ -29,7 +29,13 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     await page.locator('.task-list').evaluate(e=>e.scrollTop=e.scrollHeight);assert.ok(await page.locator('.task-list').evaluate(e=>e.lastElementChild.getBoundingClientRect().bottom<=e.getBoundingClientRect().bottom+1));
     const savedScroll=await page.locator('.task-list').evaluate(e=>e.scrollTop);data.tasks.checkedAt=Date.now();await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);assert.equal(await page.locator('.task-list').evaluate(e=>e.scrollTop),savedScroll,'updates preserve list scroll');
     await page.screenshot({path:output+'/three-row-scroll.png'});
+    const nativeHeight=()=>app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].getBounds().height);
+    await page.waitForTimeout(100);const allHeight=await nativeHeight();const filterStarted=Date.now();
     await page.locator('.task-filters button').nth(1).click();assert.equal(await page.locator('.task-row').count(),1);
+    await page.waitForTimeout(150);const runningHeight=await nativeHeight();assert.ok(runningHeight<allHeight,'filter shrinks native window without next monitor publish');
+    await page.locator('.task-filters button').first().click();await page.waitForTimeout(150);assert.equal(await nativeHeight(),allHeight,'all filter expands immediately');
+    console.log('PASS immediate filter sizing; running height '+runningHeight+', all height '+allHeight+', round trip '+(Date.now()-filterStarted)+'ms');
+    await page.locator('.task-filters button').nth(1).click();
     await page.locator('#tab-tasks').focus();await page.keyboard.press('Home');await page.waitForTimeout(150);assert.equal(await page.locator('#tab-quota').getAttribute('aria-selected'),'true');
     const after=await page.locator('.card[data-provider="claude"]').boundingBox();for(const key of ['x','y','width','height'])assert.ok(Math.abs(after[key]-quotaPosition[key])<=1,'quota geometry '+key);
     assert.equal((await page.evaluate(()=>quota.getState())).providers.codex.updatedAt,quotaTime,'task monitor never refreshes quota');
