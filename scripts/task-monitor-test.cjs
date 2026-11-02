@@ -28,7 +28,7 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     assert.ok(await page.locator('.task-provider-icon').evaluateAll(nodes=>nodes.every(n=>n.complete&&n.naturalWidth>0)));
     await page.screenshot({path:output+'/provider-icons.png'});
     const scrolling=await page.locator('.task-list').evaluate(e=>{const r=e.getBoundingClientRect(),rows=[...e.querySelectorAll('.task-row')].map(n=>n.getBoundingClientRect());return{height:r.height,overflows:e.scrollHeight>e.clientHeight,thirdBottom:rows[2].bottom,bottom:r.bottom,fourthTop:rows[3].top,overflowY:getComputedStyle(e).overflowY};});
-    assert.ok(Math.abs(scrolling.height-260)<1);assert.ok(scrolling.overflows);assert.ok(scrolling.thirdBottom<=scrolling.bottom+1);assert.ok(scrolling.fourthTop>=scrolling.bottom);assert.equal(scrolling.overflowY,'auto');
+    assert.ok(Math.abs(scrolling.height-308)<1);assert.ok(scrolling.overflows);assert.ok(scrolling.thirdBottom<=scrolling.bottom+1);assert.ok(scrolling.fourthTop>=scrolling.bottom);assert.equal(scrolling.overflowY,'auto');
     await page.locator('.task-list').evaluate(e=>e.scrollTop=e.scrollHeight);assert.ok(await page.locator('.task-list').evaluate(e=>e.lastElementChild.getBoundingClientRect().bottom<=e.getBoundingClientRect().bottom+1));
     const savedScroll=await page.locator('.task-list').evaluate(e=>e.scrollTop);data.tasks.checkedAt=Date.now();await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);assert.equal(await page.locator('.task-list').evaluate(e=>e.scrollTop),savedScroll,'updates preserve list scroll');
     await page.screenshot({path:output+'/three-row-scroll.png'});

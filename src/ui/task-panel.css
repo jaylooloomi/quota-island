@@ -11,8 +11,8 @@
 .task-summary-setting{justify-content:space-between;border:1px solid #30343b;border-radius:8px;padding:8px 10px;background:#171a1e}
 
 /* Three complete rows; only the list scrolls. */
-.task-list{display:grid;grid-auto-rows:82px;gap:7px;max-height:260px;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:#59616e #171b20;overscroll-behavior:contain}
-.task-list .task-row{height:82px;margin-bottom:0;overflow:hidden}.task-row h4{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.task-list::-webkit-scrollbar{display:block;width:7px}.task-list::-webkit-scrollbar-track{background:#171b20;border-radius:8px}.task-list::-webkit-scrollbar-thumb{background:#59616e;border-radius:8px;border:1px solid #171b20}.task-list::-webkit-scrollbar-thumb:hover{background:#7b8798}
+.task-list{display:grid;grid-auto-rows:98px;gap:7px;max-height:308px;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:#59616e #171b20;overscroll-behavior:contain}
+.task-list .task-row{height:98px;margin-bottom:0;overflow:hidden}.task-row h4{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.task-list::-webkit-scrollbar{display:block;width:7px}.task-list::-webkit-scrollbar-track{background:#171b20;border-radius:8px}.task-list::-webkit-scrollbar-thumb{background:#59616e;border-radius:8px;border:1px solid #171b20}.task-list::-webkit-scrollbar-thumb:hover{background:#7b8798}
 
 /* Reserve both text lines; inset padding previously clipped the short brand box. */
 .compact-brand.tasks-summary{height:34px;min-height:34px}.compact-brand.tasks-summary>.compact-task-summary{display:flex;inset:0;flex-direction:column;align-items:center;justify-content:center;gap:1px}.compact-task-summary strong{font-size:10px;line-height:14px}.compact-task-summary small{font-size:8px;line-height:11px}
@@ -22,3 +22,8 @@
 .task-row-indicators{display:flex;align-items:center;gap:7px;flex-shrink:0}.task-provider-icon{display:block;width:20px;height:20px;object-fit:contain;flex-shrink:0}
 
 .task-row-identity{display:flex;align-items:center;gap:8px;min-width:0;flex:1}.task-row-identity h4{min-width:0}
+
+/* Match account cards: centered provider mark and a separate content column. */
+.task-list .task-row{position:relative;border:1px solid #ffffff0c;border-radius:12px;background:#ffffff02;padding:11px 12px 11px 42px}
+.task-row>.task-provider-icon{position:absolute;left:7px;top:50%;transform:translateY(-50%);width:30px;height:30px}
+.task-row-heading{align-items:center;min-height:22px}.task-row h4{font-size:15px;line-height:22px;font-weight:650}.task-project{margin:6px 0 9px;font-size:10px;line-height:14px}.task-meta{line-height:13px}
