@@ -50,3 +50,8 @@ Ocelin (https://github.com/m-sanchez/ocelin, MIT) was studied as a design
 reference for bounded local-session reads and lifecycle reconciliation. The
 Quota Pebble metadata-only collector is independently implemented; Ocelin's
 runtime, UI, conversation preview and assets are not bundled.
+
+lucianlamp/codex-monitor (https://github.com/lucianlamp/codex-monitor, MIT)
+was studied as a reference for the Remote Control challenge/proof protocol.
+Pebble's Windows CNG helper and read-only transport are independently implemented;
+the upstream executable and the official Desktop App native binaries are not bundled.

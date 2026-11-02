@@ -18,3 +18,15 @@
 
 These restrictions apply to task monitoring. Subscription quota fetching is a
 separate existing feature and must not be used as evidence of task execution.
+
+## Explicitly authorized remote monitoring
+
+- The user subsequently requested integration of already authorized remote Codex
+  devices through the official relay. This extends the local-only source scope.
+- Use only existing current-user enrollment and matching public-key evidence.
+  Windows CNG may sign validated official challenges; never export private keys,
+  modify official App binaries, reset pairing or impersonate an assistant chat.
+- Remote task RPCs are limited to initialization, `thread/list` and `thread/read`
+  without turns. Do not resume threads, start tasks or send approvals.
+- Remote snapshots retain task metadata only. Disconnect, expired observations,
+  unsupported runtime states and failed reads must be represented as unknown.

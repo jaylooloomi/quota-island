@@ -15,6 +15,10 @@
   Object.assign(words.en,{today:'Today',threeDays:'3 days',fiveDays:'5 days',week:'Week',runFilter:'Running',waitFilter:'Waiting'});
   Object.assign(words.ja,{today:'今日',threeDays:'3日間',fiveDays:'5日間',week:'1週間',runFilter:'実行',waitFilter:'確認待ち'});
   Object.assign(words.ko,{today:'오늘',threeDays:'3일',fiveDays:'5일',week:'일주일',runFilter:'실행',waitFilter:'대기'});
+  Object.assign(words['zh-TW'],{remoteHeading:'Codex 任務',remoteNotice:'本機狀態依事件推定；遠端狀態來自已授權裝置的唯讀查詢。',remoteSource:'遠端',remoteOffline:'遠端暫時未連接'});
+  Object.assign(words.en,{remoteHeading:'Codex tasks',remoteNotice:'Local states are inferred; remote states come from authorized read-only queries.',remoteSource:'Remote',remoteOffline:'Remote temporarily disconnected'});
+  Object.assign(words.ja,{remoteHeading:'Codex タスク',remoteNotice:'ローカル状態は推定、リモート状態は承認済み端末への読み取り専用クエリです。',remoteSource:'リモート',remoteOffline:'リモート未接続'});
+  Object.assign(words.ko,{remoteHeading:'Codex 작업',remoteNotice:'로컬 상태는 추정이며 원격 상태는 승인된 기기의 읽기 전용 조회입니다.',remoteSource:'원격',remoteOffline:'원격 연결 끊김'});
   let filter='running',last='',busy=false,host,latest;
   function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined){n.textContent=text;if(tag==='h4')n.title=text;}if(cls)n.className=cls;return n;}
   function update(state,visible){
@@ -24,17 +28,17 @@
     if(!visible)return;document.getElementById('mode-label').textContent=w.tab;
     const data=state.tasks||{rows:[],counts:{},connection:'idle'};
     const key=JSON.stringify([data,state.settings.locale,state.settings.compactTaskSummary,filter,busy,new Date().toDateString()]);if(key===last)return;last=key;const scrollTop=host.querySelector('.task-list')?.scrollTop||0;host.replaceChildren();
-    const title=el('div',undefined,'task-heading');title.append(el('h3',w.heading),el('span',w.scope));host.append(title);
+    const title=el('div',undefined,'task-heading');title.append(el('h3',data.remote?.connected?w.remoteHeading:w.heading),el('span',w.scope));host.append(title);
     const counts=el('div',undefined,'task-counts');for(const status of ['running','waiting','unknown']){const c=el('div');c.append(el('strong',status!=='unknown'&&!data.liveCoverage?'—':String(data.counts[status]||0)),el('span',w[status]));counts.append(c);}host.append(counts);
-    host.append(el('p',data.connection==='checking'?w.checking:data.connection==='local'?w.local+(data.partial?' '+w.partial:''):w.unconnected,'task-notice'));
+    host.append(el('p',data.remote?.connected?w.remoteNotice+(data.partial?' '+w.partial:''):data.connection==='checking'?w.checking:data.connection==='local'?w.local+(data.partial?' '+w.partial:''):w.unconnected,'task-notice'));
     const controls=el('div',undefined,'task-controls'),refresh=el('button',w.refresh);refresh.disabled=busy;refresh.onclick=async()=>{busy=true;update(latest,true);try{await quota.tasksStart();}finally{busy=false;update(latest,true);}};controls.append(refresh);host.append(controls);
     const summarySetting=el('label',undefined,'task-summary-setting'),summarySwitch=el('input');summarySwitch.type='checkbox';summarySwitch.setAttribute('role','switch');summarySwitch.checked=!!state.settings.compactTaskSummary;summarySwitch.onchange=()=>quota.settings({compactTaskSummary:summarySwitch.checked});summarySetting.append(el('span',w.summary),summarySwitch);host.append(summarySetting);
     const filters=el('div',undefined,'task-filters');filters.setAttribute('aria-label',w.heading);for(const f of QuotaTaskFilters.order){const b=el('button',f==='running'?w.runFilter:f==='waiting'?w.waitFilter:w[f]);b.dataset.taskFilter=f;b.setAttribute('aria-pressed',String(f===filter));b.onclick=()=>{filter=f;const list=host.querySelector('.task-list');if(list)list.scrollTop=0;update(latest,true);window.dispatchEvent(new Event('task-layout-change'));};filters.append(b);}host.append(filters);
     const list=el('div',undefined,'task-list');for(const row of data.rows.filter(r=>QuotaTaskFilters.matches(r,filter))){
       const card=el('article',undefined,'task-row');card.dataset.status=row.status;if(row.evidence==='inferred')card.title=w.local;card.dataset.sessionId=row.id;const h=el('div',undefined,'task-row-heading');const identity=el('div',undefined,'task-row-identity'),indicators=el('div',undefined,'task-row-indicators');indicators.append(el('span',w[row.status]+(row.evidence==='inferred'?' *':''),'task-status '+row.status));const provider=row.provider??'codex',brandInfo={codex:['codex','Codex'],claude:['claude','Claude'],antigravity:['gemini','Antigravity'],gemini:['gemini','Antigravity']}[provider];if(brandInfo){const icon=el('img',undefined,'task-provider-icon');icon.src='icons/'+brandInfo[0]+'.svg';icon.alt=brandInfo[1];icon.title=brandInfo[1];icon.draggable=false;card.append(icon);}identity.append(el('h4',row.title==='Codex session'?w.session+' · '+row.id.slice(0,8):row.title));h.append(identity,indicators);card.append(h);
       const project=el('p',row.project||'—','task-project');project.title=row.project;card.append(project);
-      const meta=el('div',undefined,'task-meta');meta.append(el('span',w.source+': '+(row.source==='rollout'?w.localSource:w.unknown)),el('span',(row.source==='rollout'?w.lastEvent:w.last)+': '+(row.confirmedAt?new Date(row.confirmedAt).toLocaleTimeString(state.settings.locale,{hour:'2-digit',minute:'2-digit',second:'2-digit'}):w.never)));card.append(meta);list.append(card);
-    }if(!list.children.length)list.append(el('p',!data.liveCoverage&&['running','waiting'].includes(filter)?w.unconnected:w.empty,'task-empty'));host.append(list,el('p',data.connection==='local'?w.localNote:w.note,'task-footnote'));list.scrollTop=scrollTop;
+      const meta=el('div',undefined,'task-meta');meta.append(el('span',w.source+': '+(row.source==='remote'?w.remoteSource+' · '+(row.host||'Codex'):row.source==='rollout'?w.localSource:w.unknown)),el('span',(row.source==='rollout'?w.lastEvent:w.last)+': '+(row.confirmedAt?new Date(row.confirmedAt).toLocaleTimeString(state.settings.locale,{hour:'2-digit',minute:'2-digit',second:'2-digit'}):w.never)));card.append(meta);list.append(card);
+    }if(!list.children.length)list.append(el('p',!data.liveCoverage&&['running','waiting'].includes(filter)?w.unconnected:w.empty,'task-empty'));host.append(list,el('p',data.remote?.connected?w.remoteNotice:data.connection==='local'?w.localNote:w.note,'task-footnote'));list.scrollTop=scrollTop;
   }
   window.TaskPanel={update};
 })();

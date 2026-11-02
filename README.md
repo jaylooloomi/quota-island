@@ -22,6 +22,9 @@
 
 The **Tasks** tab reads existing local Codex Desktop session events directly: no CLI process, inference or Hook setup. Running/waiting status is explicitly **inferred**; stale or insufficient evidence remains Unknown. Clear terminal events mark the last turn idle. Cloud-only sessions may be missing. The three-row scrollable list and optional compact summary preserve the island layout. [Design, tested scope and limits](docs/design/task-monitor/LOCAL-SESSIONS.zh-TW.md).
 
+
+Windows can also read already-authorized remote Codex hosts through the official relay, using current-user Windows CNG signing without exporting private keys. It requires a compatible existing Desktop enrollment; it does not pair new devices. Remote runtime states are separate from inferred local events, and disconnects become Unknown. Polling is every 30 seconds, bounded to 30 recent threads per remote host (five hosts / 100 displayed rows overall); older tasks may be omitted. [Verification and limitations](docs/windows-remote-controller-research.md).
+
 ## A quick introduction
 
 AI-generated promotional videos, not recordings of the running app. Video 01 is in English; video 02 temporarily uses Chinese captions. GIF animations are silent.

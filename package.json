@@ -1,6 +1,6 @@
 {
   "name": "quota-island",
-  "version": "1.19.10",
+  "version": "1.20.0",
   "private": true,
   "description": "A local-first desktop island for Claude, Gemini CLI and Codex quotas",
   "author": "Quota Island",
@@ -73,7 +73,10 @@
       "category": "Development",
       "target": "AppImage"
     },
-    "icon": "build/icons/quota-pebble.png"
+    "icon": "build/icons/quota-pebble.png",
+    "asarUnpack": [
+      "dist/native/*.ps1"
+    ]
   },
   "devDependencies": {
     "@types/node": "26.6.6",

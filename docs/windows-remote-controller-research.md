@@ -1,3 +1,62 @@
+# Windows 遠端任務監控：已驗證路徑
+
+更新：2026-11-03（台灣時間），版本 1.20.0。
+
+## 本次已解決
+
+原生模組原樣複製到隔離目錄後，載入錯誤由 Access is denied 變成相依模組缺失。
+PE 匯入表包含官方 App 的 chrome.dll，不能當成一般 Node 套件直接使用。
+這些證據縮小原因，但沒有證明單一 Windows 系統政策是最初錯誤的完整根因。
+
+正式實作改用 Windows CNG：公鑰先與既有授權登錄比對，私鑰留在 Windows，
+只允許讀公鑰及簽署經驗證的官方挑戰。沒有建立、刪除、匯出官方裝置私鑰或修改官方 App。
+這是沿用使用者現有授權，不是替 Pebble 新建獨立登錄；後者仍涉及 step-up 安全驗證。
+
+| 實測 | 結果 |
+| --- | --- |
+| 既有 CNG 公鑰 | 與登錄一致，非匯出政策為 0 |
+| 官方 refresh/start、refresh/finish | 都為 HTTP 200 |
+| 獨立 Windows WebSocket 簽章挑戰 | 通過 |
+| 遠端 initialize、thread/list | 成功 |
+| 指定 MCP 任務 thread/read | 取得真實 runtime 狀態，查詢時 idle |
+| 正式模組 | 取得 30 筆近期遠端任務，包含 MCP 任務 |
+| 中斷連線／重連 | 即時狀態變未知，重連後可再次讀取 |
+
+全程沒有啟動 Codex CLI、app-server、推理、Hook 或私人接收端，亦未冒用助手聊天執行器身分。
+OAuth 權杖與簽章只存在記憶體與受控子程序管道，不寫入 UI、報告或診斷 log。
+另以 Pebble 自有測試金鑰驗證 CNG 非匯出政策、公鑰跨程序重開、八次簽章及竄改拒絕；
+測試金鑰已刪除，這項離線測試本身不代表遠端授權成功。
+
+## 功能範圍與限制
+
+- Windows 相容的既有 ecdsa_p256_sha256 / os_protected_nonextractable 登錄已驗證。
+  未配對、其他金鑰類別或公鑰不符時保留本機監控，不自行重設授權。
+- 校驗帳號、client、公鑰、nonce、目標 origin/path、audience、到期、token digest 與 scope。
+- 任務只用 thread/list 與 thread/read(includeTurns:false)，不 resume、不讀回合內容、不寫任務。
+- 每 30 秒更新，每台最多最近 30 筆、五台遠端主機，含本機合計最多顯示 100 筆。
+  後續頁未讀完會標示部分記錄；日期篩選與計數也只涵蓋這個範圍。
+- 遠端狀態直接使用 runtime；未載入、無法辨識、查詢失敗、斷線或觀測超過 65 秒顯示未知。
+- 各主機 ID 分隔，本機不重複計入遠端。只保存任務中繼資料，不保存逐字稿或原始回應。
+- token 到期或登入資料改變會重新驗證。失敗採 30 秒起、最多五分鐘加抖動的退避。
+- 限制分段大小、框架頻率、RPC 逾時與掃描預算；不盲目對通知發送 ack。
+- 控制端協定不是官方保證穩定的第三方 SDK；目前不代表 macOS/Linux 也已支援。
+
+## 重跑驗證
+
+執行 npm run build、node --test test/remote-task-monitor.test.cjs、node scripts/task-monitor-test.cjs。
+真實遠端驗證使用 node scripts/remote-task-live-test.cjs --live，讀取既有授權、測試斷線失效及重連，
+不建立任務。可設定 QUOTA_PACKAGED_EXE 驗證打包成品。UI 配額為展示資料，任務為真實遠端資料。
+報告與截圖在忽略的 test-results/remote-task-live/，不提交裝置識別資料。
+
+CNG 政策參考 [Microsoft 文件](https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.cngexportpolicies)。
+協定與官方文件來源見以下歷史研究紀錄。
+
+---
+
+# 第一輪研究紀錄（歷史，並非目前功能狀態）
+
+以下保留當時的卡點與計畫；其中尚未完成的門檻，已由上方本次實測重新確認。
+
 # Windows 遠端任務控制端研究
 
 研究日期：2026-11-03（台灣時間）。分支：`codex/research-windows-remote-controller`。
