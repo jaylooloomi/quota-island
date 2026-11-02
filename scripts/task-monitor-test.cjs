@@ -30,8 +30,8 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     const dateTimes=Array.from({length:6},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);return i===0?Date.now():d.getTime();});
     data.tasks.rows.forEach((r,i)=>r.confirmedAt=dateTimes[i]??null);
     await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);
-    assert.deepEqual(await page.locator('.task-filters button').evaluateAll(ns=>ns.map(n=>n.dataset.taskFilter)),['running','today','threeDays','fiveDays','idle','waiting','unknown','all']);
-    for(const [f,n] of [['today',1],['threeDays',3],['fiveDays',5],['idle',0],['waiting',1],['unknown',5],['all',7]]){await page.locator('[data-task-filter='+f+']').click();assert.equal(await page.locator('.task-row').count(),n,'date/status filter '+f);}
+    assert.deepEqual(await page.locator('.task-filters button').evaluateAll(ns=>ns.map(n=>n.dataset.taskFilter)),['running','today','threeDays','fiveDays','week','idle','waiting','unknown','all']);
+    for(const [f,n] of [['today',1],['threeDays',3],['fiveDays',5],['week',6],['idle',0],['waiting',1],['unknown',5],['all',7]]){await page.locator('[data-task-filter='+f+']').click();assert.equal(await page.locator('.task-row').count(),n,'date/status filter '+f);}
     const scrolling=await page.locator('.task-list').evaluate(e=>{const r=e.getBoundingClientRect(),rows=[...e.querySelectorAll('.task-row')].map(n=>n.getBoundingClientRect());return{height:r.height,overflows:e.scrollHeight>e.clientHeight,thirdBottom:rows[2].bottom,bottom:r.bottom,fourthTop:rows[3].top,overflowY:getComputedStyle(e).overflowY};});
     assert.ok(Math.abs(scrolling.height-308)<1);assert.ok(scrolling.overflows);assert.ok(scrolling.thirdBottom<=scrolling.bottom+1);assert.ok(scrolling.fourthTop>=scrolling.bottom);assert.equal(scrolling.overflowY,'auto');
     await page.locator('.task-list').evaluate(e=>e.scrollTop=e.scrollHeight);assert.ok(await page.locator('.task-list').evaluate(e=>e.lastElementChild.getBoundingClientRect().bottom<=e.getBoundingClientRect().bottom+1));

@@ -2,8 +2,8 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {matches,order}=require('../src/ui/task-filters');
 test('task date ranges use local calendar days, include the boundary and exclude unknown/future times',()=>{
   const now=new Date(2026,10,3,14,30).getTime(),at=(d,h=0)=>new Date(2026,10,d,h).getTime();
-  assert.deepEqual(order,['running','today','threeDays','fiveDays','idle','waiting','unknown','all']);
-  for(const [filter,day] of [['today',3],['threeDays',1],['fiveDays',-1]]){
+  assert.deepEqual(order,['running','today','threeDays','fiveDays','week','idle','waiting','unknown','all']);
+  for(const [filter,day] of [['today',3],['threeDays',1],['fiveDays',-1],['week',-3]]){
     const start=at(day);assert.equal(matches({confirmedAt:start},filter,now),true);
     assert.equal(matches({confirmedAt:start-1},filter,now),false);
     assert.equal(matches({confirmedAt:now},filter,now),true);

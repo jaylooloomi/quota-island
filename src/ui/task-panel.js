@@ -11,10 +11,10 @@
   Object.assign(words.en,{local:'Inferred from local session events. No CLI or hooks needed. Activity expires after 5 minutes.',localSource:'Local events · inferred',lastEvent:'Last event',partial:'Some records are unread or exceed the scan limit.',localNote:'Local recorded sessions only; cloud-only tasks may be missing. Idle means the last turn ended.'});
   Object.assign(words.ja,{local:'ローカルのイベントから推定。CLI・Hook は不要です。5分間更新がなければ不明になります。',localSource:'ローカルイベント · 推定',lastEvent:'最終イベント',partial:'未読の記録、または読み取り上限があります。',localNote:'端末に記録された会話のみ。クラウドのみのタスクは取得できない場合があります。待機中は前回ターン終了です。'});
   Object.assign(words.ko,{local:'로컬 세션 이벤트로 추정합니다. CLI나 Hook 없이 동작하며 5분간 갱신이 없으면 알 수 없음입니다.',localSource:'로컬 이벤트 · 추정',lastEvent:'마지막 이벤트',partial:'일부 기록을 읽지 못했거나 조회 한도에 도달했습니다.',localNote:'로컬에 기록된 대화만 포함합니다. 클라우드 작업은 누락될 수 있으며 대기 중은 이전 턴 종료를 의미합니다.'});
-  Object.assign(words['zh-TW'],{today:'今日',threeDays:'三日',fiveDays:'五日',runFilter:'執行',waitFilter:'等待'});
-  Object.assign(words.en,{today:'Today',threeDays:'3 days',fiveDays:'5 days',runFilter:'Running',waitFilter:'Waiting'});
-  Object.assign(words.ja,{today:'今日',threeDays:'3日間',fiveDays:'5日間',runFilter:'実行',waitFilter:'確認待ち'});
-  Object.assign(words.ko,{today:'오늘',threeDays:'3일',fiveDays:'5일',runFilter:'실행',waitFilter:'대기'});
+  Object.assign(words['zh-TW'],{today:'今日',threeDays:'三日',fiveDays:'五日',week:'一周',runFilter:'執行',waitFilter:'等待'});
+  Object.assign(words.en,{today:'Today',threeDays:'3 days',fiveDays:'5 days',week:'Week',runFilter:'Running',waitFilter:'Waiting'});
+  Object.assign(words.ja,{today:'今日',threeDays:'3日間',fiveDays:'5日間',week:'1週間',runFilter:'実行',waitFilter:'確認待ち'});
+  Object.assign(words.ko,{today:'오늘',threeDays:'3일',fiveDays:'5일',week:'일주일',runFilter:'실행',waitFilter:'대기'});
   let filter='running',last='',busy=false,host,latest;
   function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined){n.textContent=text;if(tag==='h4')n.title=text;}if(cls)n.className=cls;return n;}
   function update(state,visible){
