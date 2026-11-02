@@ -1,6 +1,6 @@
 import { OAuth2Client, Credentials, CodeChallengeMethod } from 'google-auth-library';
 import { createServer, Server } from 'node:http';
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import path from 'node:path';
 import { homedir } from 'node:os';
@@ -85,7 +85,7 @@ export class Gemini {
       if (typeof project !== 'string' || !project) throw new ProviderError('auth', '此 Google 帳號尚未啟用 Code Assist，請先使用 Gemini CLI 完成設定');
       const quota = await post('retrieveUserQuota', { project });
       if (generation !== this.generation) throw new ProviderError('auth', 'Google 登入狀態已變更，等待重新讀取');
-      return parseGemini(quota, loaded.currentTier?.name ?? loaded.currentTier?.id ?? null);
+      return {...parseGemini(quota, loaded.currentTier?.name ?? loaded.currentTier?.id ?? null),identityKey:createHash('sha256').update(credentials.refresh_token??credentials.access_token??'code-assist-local').digest('hex')};
     } catch (e) { throw geminiError(e); }
   }
   async login(openUrl: (url: string) => Promise<void>, timeoutMs = 300_000) {

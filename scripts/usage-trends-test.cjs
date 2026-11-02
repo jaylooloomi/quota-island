@@ -1,14 +1,15 @@
 const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
 const {UsageHistory}=require('../dist/usage-history');
 (async()=>{
-  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'quota-trend-ui-')),output='test-results/usage-trends';await fs.mkdir(output,{recursive:true});
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'quota-trend-ui-')),output=process.env.QUOTA_TRENDS_SMALL_SCREEN==='1'?'test-results/usage-trends-small':'test-results/usage-trends';await fs.mkdir(output,{recursive:true});
   const now=Date.now(),hist=new UsageHistory(path.join(dir,'demo-usage-history'),()=>now);
   const source='展示資料 · 非真實帳號用量',start=now-20*3600000,reset=start+12*3600000;
   for(let i=0;i<=120;i++){if(i>40&&i<50)continue;const time=start+i*600000;hist.record('claude',{provider:'claude',plan:'team',source,windows:[{id:'session',label:'5 小時',usedPercent:time<reset?Math.round(15+i*.45):Math.round((i-72)*.8),resetsAt:new Date(time<reset?reset:reset+86400000).toISOString()},{id:'weekly',label:'每週',usedPercent:20+i*.1,resetsAt:new Date(reset+4*86400000).toISOString()}]},new Date(time).toISOString(),600000);}
   const env={...process.env,QUOTA_TEST_DATA:dir};delete env.ELECTRON_RUN_AS_NODE;
   let app;
   try{
-    app=await _electron.launch({...(process.env.QUOTA_PACKAGED_EXE?{executablePath:process.env.QUOTA_PACKAGED_EXE}:{}),args:[...(process.env.QUOTA_PACKAGED_EXE?[]:['.']),'--demo','--test-mode'],env});const p=await app.firstWindow(),errors=[];p.on('pageerror',e=>errors.push(e.message));
+    app=await _electron.launch({...(process.env.QUOTA_PACKAGED_EXE?{executablePath:process.env.QUOTA_PACKAGED_EXE}:{}),args:[...(process.env.QUOTA_PACKAGED_EXE?[]:['.']),'--demo','--test-mode'],env});if(process.env.QUOTA_TRENDS_SMALL_SCREEN==='1')await app.evaluate(({screen})=>{const original=screen.getDisplayMatching;screen.getDisplayMatching=rect=>{const display=original(rect);return {...display,workArea:{...display.workArea,height:720}};};});
+    const p=await app.firstWindow(),errors=[];p.on('pageerror',e=>errors.push(e.message));
     await p.waitForFunction(()=>window.quota&&document.querySelector('.trend-link'));
     await p.evaluate(async()=>{await quota.addAccount('Claude 個人');await quota.refresh();});
     await p.locator('#toggle').click();await p.waitForTimeout(350);

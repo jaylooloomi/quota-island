@@ -539,3 +539,6 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 .trend-chart svg{stroke:none}.trend-gap{stroke:none}.trend-axis{stroke:none}.trend-tooltip{user-select:text}
 
 .trend-window{border:1px solid #3c424e;border-radius:7px;background:#20252b;color:#dce0e7}.trend-window option{background:#20252b}
+
+/* Preserve quota geometry when content first exceeds the monitor work area. Wheel/keyboard scrolling remains available. */
+.panel-body{scrollbar-width:none}.panel-body::-webkit-scrollbar{display:none;width:0;height:0}
