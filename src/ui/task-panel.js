@@ -15,7 +15,7 @@
   Object.assign(words.en,{today:'Today',threeDays:'3 days',fiveDays:'5 days',runFilter:'Running',waitFilter:'Waiting'});
   Object.assign(words.ja,{today:'今日',threeDays:'3日間',fiveDays:'5日間',runFilter:'実行',waitFilter:'確認待ち'});
   Object.assign(words.ko,{today:'오늘',threeDays:'3일',fiveDays:'5일',runFilter:'실행',waitFilter:'대기'});
-  let filter='all',last='',busy=false,host,latest;
+  let filter='running',last='',busy=false,host,latest;
   function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined){n.textContent=text;if(tag==='h4')n.title=text;}if(cls)n.className=cls;return n;}
   function update(state,visible){
     host=document.getElementById('task-panel');host.hidden=!visible;latest=state;const w=words[state.settings.locale]||words['zh-TW'];
