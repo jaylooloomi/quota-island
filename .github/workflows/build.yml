@@ -31,6 +31,8 @@ jobs:
           path: test-results/coverage.txt
       - if: runner.os == 'Windows'
         run: npm run test:tasks
+      - if: runner.os == 'Windows'
+        run: npm run test:sessions
       - run: npm audit --omit=dev
       - if: runner.os == 'Linux'
         run: xvfb-run -a npm run test:desktop

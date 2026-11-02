@@ -20,7 +20,7 @@
 
 ### Local Codex tasks
 
-The **Tasks** tab shows local session status separately from subscription quotas. The optional Codex Hooks bridge observes new CLI turns; historical sessions and expired signals remain **Unknown**, never counted as running. Existing desktop chats and other devices are not guaranteed to be covered. Review the eight bridge handlers in Codex /hooks before use. The optional collapsed summary preserves island dimensions and pet preferences. [Setup and tested limitations](docs/design/task-monitor/VERIFICATION.zh-TW.md).
+The **Tasks** tab reads existing local Codex Desktop session events directly: no CLI process, inference or Hook setup. Running/waiting status is explicitly **inferred**; stale or insufficient evidence remains Unknown. Clear terminal events mark the last turn idle. Cloud-only sessions may be missing. The three-row scrollable list and optional compact summary preserve the island layout. [Design, tested scope and limits](docs/design/task-monitor/LOCAL-SESSIONS.zh-TW.md).
 
 ## A quick introduction
 

@@ -45,3 +45,8 @@ and encrypted credential storage using `google-auth-library` and Electron
 
 QuotaDeck, AI Quota Deck and QuotaPulse were researched as references. Their
 implementation code and assets are not included in this application.
+
+Ocelin (https://github.com/m-sanchez/ocelin, MIT) was studied as a design
+reference for bounded local-session reads and lifecycle reconciliation. The
+Quota Pebble metadata-only collector is independently implemented; Ocelin's
+runtime, UI, conversation preview and assets are not bundled.

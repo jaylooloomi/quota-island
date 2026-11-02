@@ -20,7 +20,7 @@
 
 ### Codex 本機任務
 
-新增「任務」分頁，將會話執行狀態與訂閱配額分開。可選的 Codex Hooks 橋接已驗證能觀察新的 CLI 回合；歷史紀錄與過期訊號顯示「未知」，不列入執行數。既有桌面聊天及其他裝置不保證涵蓋。安裝後需在 Codex /hooks 審閱八個接收器項目；可選收合摘要，固定島的大小並保留寵物偏好。[設定方式、實測範圍與限制](docs/design/task-monitor/VERIFICATION.zh-TW.md)。
+「任務」分頁直接讀取 Codex 桌面 App 的本機 session 事件，不啟動 CLI、不送推理、不使用 Hook。執行與等待狀態標示為「推定」；證據不足或過期時顯示未知，明確結束事件則顯示上一回合閒置。雲端未落地的任務可能缺漏。清單最多三筆高度、支援捲動與收合摘要。[設計、實測範圍與限制](docs/design/task-monitor/LOCAL-SESSIONS.zh-TW.md)。
 
 ## 10 秒認識 Quota Pebble
 

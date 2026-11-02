@@ -2,6 +2,9 @@
 
 版本：Quota Pebble 1.18.0。日期：2026-11-02。
 
+**目前產品路徑已在 1.19.0 改為純本機事件讀取，不啟動 CLI、也不使用 Hook。**
+請以 [1.19.0 設計與驗證](LOCAL-SESSIONS.zh-TW.md)為準；以下保留先前版本的實驗紀錄。
+
 ### 1.18.2 修正（2026-11-03）
 
 後續檢查確認桌面工具有 2 個 active 聊天，但接收器沒有收到這兩個聊天的事件。此時官方 daemon 已可連線，先前的 proxy client 卻把原始 socket 當成 JSONL，漏掉 WebSocket HTTP Upgrade，造成反覆逾時。已修正 transport 並以真正 HTTP Upgrade／WebSocket frame 的獨立 fixture 測試。

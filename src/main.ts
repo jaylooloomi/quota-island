@@ -1,7 +1,4 @@
-import {TaskMonitor} from './task-monitor';
-import {installTaskBridge} from './task-bridge-setup';
-import {CodexRpc} from './rpc';
-import {findCli} from './cli';
+import {LocalTaskMonitor as TaskMonitor} from './local-task-monitor';
 import {UsageHistory} from './usage-history';
 import {AutoReconnect} from './auto-reconnect';
 import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray, globalShortcut, powerMonitor, Notification, safeStorage } from 'electron';
@@ -157,7 +154,6 @@ function installHandlers() {
   for (const [channel, handler] of Object.entries({
     'get-state': () => snapshot(),
     'tasks-start':async()=>{await taskMonitor.start();return taskMonitor.snapshot();},
-    'tasks-install':()=>{if(demo||testing)return {ok:false,demo:true};try{return installTaskBridge(homedir(),path.join(__dirname,'ui/task-hook.cjs'),undefined,process.env.CODEX_HOME||path.join(homedir(),'.codex'));}catch{return {ok:false};}},
     'history-query': (_event:any,id:unknown,window:unknown,days:unknown)=>{if(typeof id!=='string'||!providerIds.includes(id as ProviderId)&&!accounts.has(id))throw new Error('Unknown account');return usageHistory.query(id,window,days);},
     'history-clear':()=>({ok:usageHistory.clear()}),
     'pet-height': (_event:any,value:unknown)=>{if(value!==0&&value!==112)return;petHeight=value;reposition();},
@@ -260,7 +256,7 @@ else {
     readSettings();
     if(!demo&&!testing){if(process.argv.includes('--enable-autostart'))settings.autoStart=true;try{settings.autoStart=syncLoginStartup(app,settings.autoStart,{platform:process.platform,packaged:app.isPackaged,demo,testing,executable:process.execPath});saveSettings();}catch{settings.autoStart=false;}}
     usageHistory=new UsageHistory(path.join(app.getPath('userData'),demo?'demo-usage-history':'usage-history'));
-    taskMonitor=new TaskMonitor(path.join(testing?(process.env.QUOTA_TASK_BRIDGE_HOME||app.getPath('userData')):homedir(),'.quota-pebble','task-events'),new CodexRpc(()=>{if(demo)throw new Error('demo');return findCli('codex');}),new CodexRpc(()=>{if(demo)throw new Error('demo');return findCli('codex');},'proxy'),publish);
+    taskMonitor=new TaskMonitor(testing?(process.env.QUOTA_TEST_SESSION_ROOT||path.join(app.getPath('userData'),'codex-sessions')):path.join(process.env.CODEX_HOME||path.join(homedir(),'.codex'),'sessions'),publish);
     diagnostics=new Diagnostics(path.join(app.getPath('userData'),demo?'demo-logs':'logs'));diagnostics.startup(app.getVersion(),settings.enabled);
     providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource);
     poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish,Date.now,(id,reading,time)=>usageHistory.record(id,reading,time,id==='claude'?600000:120000));if(!demo)poller.setMinimumInterval('claude',600000);

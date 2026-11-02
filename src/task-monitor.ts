@@ -1,7 +1,8 @@
 import {readdirSync,readFileSync,lstatSync} from 'node:fs';
 import path from 'node:path';
+import {CodexSessionReader} from './codex-session-reader';
 export type TaskStatus='running'|'waiting'|'idle'|'unknown';
-export type TaskRow={id:string;title:string;project:string;status:TaskStatus;source:'runtime'|'hook'|'history';confirmedAt:number|null;event?:string};
+export type TaskRow={id:string;title:string;project:string;status:TaskStatus;source:'runtime'|'hook'|'history'|'rollout';confirmedAt:number|null;event?:string;evidence?:'inferred'};
 export const TASK_FRESH_MS=45_000;
 const events=new Set(['SessionStart','UserPromptSubmit','PreToolUse','PostToolUse','PermissionRequest','Stop','Interrupt','SessionEnd']);
 const clean=(v:unknown,n:number)=>typeof v==='string'?v.replace(/[\u0000-\u001f\u007f]/g,' ').slice(0,n):'';
@@ -50,15 +51,22 @@ export function taskRows(threads:any[],loaded:Set<string>,runtime:boolean,events
 export class TaskMonitor{
   private threads:any[]=[];private loaded=new Set<string>();private runtime=false;private confirmed=0;private lastAttempt=0;private busy=false;private closed=false;
   private eventCache:any[]=[];private eventReadAt=-Infinity;
-  private enabled=false;private timer:NodeJS.Timeout|undefined;private connection:'idle'|'checking'|'history'|'runtime'|'unavailable'='idle';
-  constructor(private directory:string,private rpc:{call(method:string,params?:any):Promise<any>;close():void},private proxy:{call(method:string,params?:any):Promise<any>;close():void},private changed:()=>void,private now=Date.now){}
+  private enabled=false;private timer:NodeJS.Timeout|undefined;private connection:'idle'|'checking'|'history'|'runtime'|'local'|'unavailable'='idle';
+  private local?:CodexSessionReader;
+  constructor(private directory:string,private rpc:{call(method:string,params?:any):Promise<any>;close():void},private proxy:{call(method:string,params?:any):Promise<any>;close():void},private changed:()=>void,private now=Date.now,sessionsRoot?:string){if(sessionsRoot)this.local=new CodexSessionReader(sessionsRoot,now);}
   snapshot(){const now=this.now();if(this.enabled&&now-this.eventReadAt>=1000){this.eventCache=readTaskEvents(this.directory,now);this.eventReadAt=now;}
-    const rows=this.enabled?taskRows(this.threads,this.loaded,this.runtime&&now-this.confirmed<=TASK_FRESH_MS,this.eventCache,now):[];
-    const liveCoverage=this.enabled&&(this.runtime&&this.loaded.size>0&&now-this.confirmed<=TASK_FRESH_MS||rows.some(r=>r.source==='hook'&&r.confirmedAt!==null&&now-r.confirmedAt<=TASK_FRESH_MS&&r.event!=='Stop'&&r.event!=='SessionEnd'));
-    return {enabled:this.enabled,connection:this.connection,liveCoverage,checkedAt:this.confirmed||null,rows:this.enabled?rows:[],counts:Object.fromEntries(['running','waiting','idle','unknown'].map(k=>[k,rows.filter(r=>r.status===k).length])),scope:'local',limit:100};}
+    let rows=this.enabled?taskRows(this.threads,this.loaded,this.runtime&&now-this.confirmed<=TASK_FRESH_MS,this.eventCache,now):[];
+    if(this.enabled&&this.local){if(this.local.available)rows=rows.filter(r=>r.source!=='hook'||r.status!=='unknown');const merged=new Map(rows.map(r=>[r.id,r]));for(const r of this.local.rows()){
+      const previous=merged.get(r.id);if(previous?.source==='runtime')continue;
+      if(previous?.source==='hook'&&previous.confirmedAt!==null&&r.confirmedAt!==null&&previous.confirmedAt>r.confirmedAt&&previous.status!=='unknown')continue;
+      merged.set(r.id,r);
+    }const rank={waiting:0,running:1,idle:2,unknown:3};rows=[...merged.values()].sort((a,b)=>rank[a.status]-rank[b.status]||(b.confirmedAt??0)-(a.confirmedAt??0)).slice(0,100);}
+    const liveCoverage=this.enabled&&(!!this.local?.available||this.runtime&&this.loaded.size>0&&now-this.confirmed<=TASK_FRESH_MS||rows.some(r=>r.source==='hook'&&r.confirmedAt!==null&&now-r.confirmedAt<=TASK_FRESH_MS&&r.event!=='Stop'&&r.event!=='SessionEnd'));
+    return {enabled:this.enabled,connection:this.connection,liveCoverage,partial:this.local?.partial??false,inferred:!!this.local?.available,checkedAt:this.confirmed||null,rows:this.enabled?rows:[],counts:Object.fromEntries(['running','waiting','idle','unknown'].map(k=>[k,rows.filter(r=>r.status===k).length])),scope:'local',limit:100};}
   async start(){if(this.closed)return;const first=!this.enabled;if(first){this.enabled=true;this.timer=setInterval(()=>{void this.tick();this.changed();},2000);this.timer.unref();}await this.tick(first);}
-  async tick(force=false){const now=this.now();if(this.closed||!this.enabled||this.busy||!force&&now-this.lastAttempt<30000)return;this.busy=true;this.lastAttempt=now;this.connection='checking';this.changed();
+  async tick(force=false){const now=this.now();if(this.closed||!this.enabled||this.busy||!force&&now-this.lastAttempt<(this.local?1500:30000))return;this.busy=true;this.lastAttempt=now;if(!this.local||!this.confirmed){this.connection='checking';this.changed();}
     try{
+      if(this.local){await this.local.scan();if(this.closed)return;this.confirmed=this.now();this.connection=this.local.available?'local':'unavailable';return;}
       let client=this.rpc;this.runtime=false;
       try{await this.proxy.call('thread/loaded/list',{});client=this.proxy;this.runtime=true;}catch{this.proxy.close();}
       if(this.closed)return;

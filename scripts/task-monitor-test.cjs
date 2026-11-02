@@ -1,9 +1,8 @@
 const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os');
-const {record}=require('../src/ui/task-hook.cjs');
 (async()=>{
   const dir=await fs.mkdtemp(path.join(os.tmpdir(),'quota-task-ui-')),output='test-results/task-monitor';await fs.mkdir(output,{recursive:true});
-  const events=path.join(dir,'.quota-pebble/task-events');record({session_id:'fixture-running',turn_id:'t',hook_event_name:'PreToolUse',cwd:'D:/projects/Quota Pebble'},events);
-  record({session_id:'fixture-waiting',turn_id:'t',hook_event_name:'PermissionRequest',cwd:'D:/projects/Review'},events);
+  const root=path.join(dir,'codex-sessions/2026/11/03');await fs.mkdir(root,{recursive:true});const time=new Date().toISOString();
+  for(const [id,waiting] of [['01a188f8-5146-7ed1-bf76-242e9b60a849',false],['01a1986b-ebee-7a00-88eb-558b3ea244cc',true]]){const rows=[{type:'session_meta',payload:{id,cwd:'D:/projects/Task'}},{type:'event_msg',timestamp:time,payload:{type:'task_started',turn_id:'t'}}];if(waiting)rows.push({type:'response_item',timestamp:time,payload:{type:'function_call',name:'request_user_input',call_id:'ask'}});await fs.writeFile(path.join(root,'rollout-2026-11-03T01-00-00-'+id+'.jsonl'),rows.map(r=>JSON.stringify(r)).join('\n')+'\n');}
   const env={...process.env,QUOTA_TEST_DATA:dir};delete env.ELECTRON_RUN_AS_NODE;let app;
   try{
     app=await _electron.launch({...(process.env.QUOTA_PACKAGED_EXE?{executablePath:process.env.QUOTA_PACKAGED_EXE}:{}),args:[...(process.env.QUOTA_PACKAGED_EXE?[]:['.']),'--demo','--test-mode'],env});
@@ -34,8 +33,8 @@ const {record}=require('../src/ui/task-hook.cjs');
     await page.locator('#tab-tasks').focus();await page.keyboard.press('Home');await page.waitForTimeout(150);assert.equal(await page.locator('#tab-quota').getAttribute('aria-selected'),'true');
     const after=await page.locator('.card[data-provider="claude"]').boundingBox();for(const key of ['x','y','width','height'])assert.ok(Math.abs(after[key]-quotaPosition[key])<=1,'quota geometry '+key);
     assert.equal((await page.evaluate(()=>quota.getState())).providers.codex.updatedAt,quotaTime,'task monitor never refreshes quota');
-    data.settings.locale='zh-TW';data.tasks.liveCoverage=false;data.tasks.connection='runtime';data.tasks.rows=data.tasks.rows.map(r=>({...r,status:'unknown'}));data.tasks.counts={running:0,waiting:0,idle:0,unknown:data.tasks.rows.length};
-    await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);await page.locator('#tab-tasks').click();assert.equal(await page.locator('.task-counts strong').first().innerText(),'—');assert.match(await page.locator('.task-notice').first().innerText(),/未接上/);
+    data.settings.locale='zh-TW';data.tasks.liveCoverage=false;data.tasks.connection='unavailable';data.tasks.rows=data.tasks.rows.map(r=>({...r,status:'unknown'}));data.tasks.counts={running:0,waiting:0,idle:0,unknown:data.tasks.rows.length};
+    await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);await page.locator('#tab-tasks').click();assert.equal(await page.locator('.task-counts strong').first().innerText(),'—');assert.match(await page.locator('.task-notice').first().innerText(),/本機.*記錄/);
     await page.screenshot({path:output+'/source-unconnected.png'});
     await app.evaluate(({BrowserWindow})=>{BrowserWindow.getAllWindows()[0].webContents.send=global.taskFixtureSend;});
     await page.locator('.task-summary-setting input').check();
@@ -45,6 +44,6 @@ const {record}=require('../src/ui/task-hook.cjs');
     for(const locale of ['zh-TW','en','ja','ko']){await page.evaluate(locale=>quota.settings({locale}),locale);const clipped=await page.locator('.compact-task-summary').evaluate(e=>{const r=e.getBoundingClientRect();return [...e.children].some(n=>{const b=n.getBoundingClientRect();return b.top<r.top-1||b.bottom>r.bottom+1||b.left<r.left-1||b.right>r.right+1;});});assert.equal(clipped,false,'summary text fully visible '+locale);}
     await page.screenshot({path:output+'/compact-summary.png'});
     await page.locator('#toggle').click();await page.locator('.task-summary-setting input').uncheck();await page.locator('#collapse').click();await page.waitForTimeout(100);const original=await compactGeometry();for(let i=0;i<compact.length;i++)for(const k of ['x','y','w','h'])assert.ok(Math.abs(compact[i][k]-original[i][k])<1,'compact summary fixed '+k);
-    assert.deepEqual(errors,[]);console.log('PASS task UI: real Electron, hook fixtures, four locales, XSS, keyboard, fixed geometry and no quota calls');
+    assert.deepEqual(errors,[]);console.log('PASS task UI: real Electron, local event fixtures, four locales, XSS, keyboard, fixed geometry and no quota calls');
   }finally{if(app)await app.close();await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

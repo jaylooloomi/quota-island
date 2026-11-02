@@ -1,7 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('quota', {
   tasksStart:()=>ipcRenderer.invoke('tasks-start'),
-  tasksInstall:()=>ipcRenderer.invoke('tasks-install'),
   historyQuery:(id:string,window:string,days:number)=>ipcRenderer.invoke('history-query',id,window,days),
   historyClear:()=>ipcRenderer.invoke('history-clear'),
   getState: () => ipcRenderer.invoke('get-state'),
