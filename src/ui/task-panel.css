@@ -44,3 +44,5 @@
 .summary-details{display:flex;flex:0 0 44px;width:44px;min-width:0;flex-direction:column;justify-content:center;gap:3px;border-left:1px solid #ffffff24;padding-left:3px;height:27px;box-sizing:border-box}
 .summary-recent,.summary-history{display:block;white-space:nowrap;line-height:11px;font-variant-numeric:tabular-nums;letter-spacing:-.1px;color:#b6bdc7}
 .summary-history{color:#d7dce2}
+
+.task-native-sources{display:flex;gap:5px;flex-wrap:wrap;margin:5px 0 8px}.task-source-health{font-size:9px;line-height:16px;border:1px solid #ffffff20;border-radius:5px;padding:1px 6px;color:#999fa8}.task-source-health[data-connected="true"]{color:#9cdbbd;border-color:#79b99c55;background:#67b39410}

@@ -69,3 +69,18 @@ Antigravity CLI [statusline](https://antigravity.google/docs/cli/statusline) 有
 4. 本機兩種來源通過後，再獨立研究官方跨裝置控制端的唯讀介接。
 
 不將「讀到閒置」或「官方網頁可連線」誇大成所有 runtime 轉換及 Pebble 跨電腦整合已通過。
+
+## v1.22.0 接入結果
+
+已新增獨立的本機 collector，合併進任務列表、篩選、統計與收合摘要，使用各來源的圖示及本機主機標籤。保留三筆捲動列表及四語系；來源未連接或清單不完整時明確提示。
+
+- Claude 每 5 秒讀取最多 100 個、各 8 KiB 的數字 PID 登錄檔。Windows 以程序名稱及原生 FILETIME 比對 `procStart`，不以 `startedAt` 或 mtime 代替。Linux 使用 procfs field 22，macOS 使用 UTC `ps lstart`；後兩平台尚未在本次 Windows 環境實測，不匹配即未知。
+- Claude `busy` → 執行中、`waiting` → 等待、`idle`／`shell` → 閒置；背景 shell 不代表模型回合仍執行。相同會話的不同程序保留獨立身分。程序死亡、PID 重用、session 選擇改變、解析失敗均不可沿用舊的活躍狀態。
+- Antigravity 每 10 秒重新確認本機程序及其 listener，僅呼叫 `GetAllCascadeTrajectories`。限制四個服務、每個八個候選 port、單次回應 2 MiB、每輪時間預算。快取只保存仍屬於目前程序及 token 的有效 listener，沒有讀取完整 trajectory steps。
+- 已在本機服務二進位中確認 enum 含 `IDLE`、`RUNNING`、`CANCELING`、`BUSY`、`UNSPECIFIED`。只映射明確的 `RUNNING`／`IDLE`；`BUSY`、取消中及未支援值維持未知，等待狀態不猜測。
+- 來源失聯、缺漏及超過 25 秒未成功觀察的資料轉為未知；重新連線後用新快照恢復。空 RPC 清單可能只有 resident 範圍，不能宣稱帳號沒有任務。
+- Claude／Antigravity 目前不觸發成功完成訊息泡：尚無已驗證的成功回合識別證據，不能將 busy → idle 當成成功。
+
+本次真實唯讀實測：五個 Claude 程序均存活、原生啟動時間相符，五筆 idle；Antigravity 一筆 IDLE。沒有啟動 CLI、推理或 Hook，沒有讀取 `.key` 或對話內容。沒有自然發生的執行／等待轉換可供此次 live 驗證，這部分僅有獨立標記的單元及 UI fixture 測試，不冒稱自然任務實測。
+
+驗證入口：`npm test`、`npm run test:tasks`、`npm run test:i18n`。真實來源及四語系畫面：`npm run check:native-tasks`（明確唯讀 live 檢查，報告放在忽略的 test-results）。既有 macOS/Linux 工作流程仍會建置；本次本機 GUI／程序驗證限 Windows。

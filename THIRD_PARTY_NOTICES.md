@@ -55,3 +55,10 @@ lucianlamp/codex-monitor (https://github.com/lucianlamp/codex-monitor, MIT)
 was studied as a reference for the Remote Control challenge/proof protocol.
 Pebble's Windows CNG helper and read-only transport are independently implemented;
 the upstream executable and the official Desktop App native binaries are not bundled.
+
+cctop (https://github.com/tomstagl/cctop, MIT) and
+antigravity-trajectory-extractor
+(https://github.com/jijiamoer/antigravity-trajectory-extractor, MIT) were studied
+as references for native registry metadata and local RPC discovery. Pebble's
+read-only collectors are independently implemented. Their runtimes, Hook
+integrations, transcript exporters and assets are not bundled.

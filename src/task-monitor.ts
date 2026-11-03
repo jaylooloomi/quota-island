@@ -2,7 +2,7 @@ import {readdirSync,readFileSync,lstatSync} from 'node:fs';
 import path from 'node:path';
 import {CodexSessionReader} from './codex-session-reader';
 export type TaskStatus='running'|'waiting'|'idle'|'unknown';
-export type TaskRow={provider?:'codex'|'claude'|'antigravity'|'gemini';id:string;title:string;project:string;status:TaskStatus;source:'runtime'|'hook'|'history'|'rollout'|'remote';confirmedAt:number|null;event?:string;evidence?:'inferred';host?:string;observedAt?:number};
+export type TaskRow={provider?:'codex'|'claude'|'antigravity'|'gemini';id:string;title:string;project:string;status:TaskStatus;source:'runtime'|'hook'|'history'|'rollout'|'remote'|'claude-registry'|'antigravity-rpc';confirmedAt:number|null;event?:string;evidence?:'inferred';host?:string;observedAt?:number};
 export const TASK_FRESH_MS=45_000;
 const events=new Set(['SessionStart','UserPromptSubmit','PreToolUse','PostToolUse','PermissionRequest','Stop','Interrupt','SessionEnd']);
 const clean=(v:unknown,n:number)=>typeof v==='string'?v.replace(/[\u0000-\u001f\u007f]/g,' ').slice(0,n):'';
