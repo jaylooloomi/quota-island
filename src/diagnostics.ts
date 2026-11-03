@@ -4,6 +4,7 @@ export class Diagnostics {
   readonly file:string;
   private previous=new Map<string,string>();
   private authSeen=new Set<string>();
+  private taskBeat=0;
   constructor(directory:string,private maxBytes=1024*1024){this.file=path.join(directory,'diagnostics.jsonl');}
   private write(event:Record<string,unknown>){
     try{
@@ -14,6 +15,14 @@ export class Diagnostics {
   }
   startup(version:string,enabled:Record<string,boolean>){this.write({event:'startup',version:version.replace(/[^0-9.]/g,'').slice(0,24),enabled:{claude:enabled.claude,codex:enabled.codex,gemini:enabled.gemini}});}
   sourceToggle(provider:string,enabled:boolean){if(['claude','codex','gemini'].includes(provider))this.write({event:'source_toggle',origin:'settings',provider,enabled});}
+  taskNotice(kind:string,provider:string,stage:string){if(['idle','completed'].includes(kind)&&['codex','claude','antigravity'].includes(provider)&&['eligible','queued','shown','hidden','closed','viewed','expired','cleared'].includes(stage))this.write({event:'task_notice',kind,provider,stage});}
+  taskMonitor(tasks:any,tracker:any,flags:{enabled:boolean;paused:boolean;visible:boolean}){
+    const counts=Object.fromEntries(['codex','claude','antigravity'].map(provider=>[provider,Object.fromEntries(['running','waiting','idle','unknown'].map(status=>[status,(tasks?.rows??[]).filter((r:any)=>(r.provider??'codex')===provider&&r.status===status).length]))]));
+    const decisions:Record<string,number>={};for(const [key,value] of Object.entries(tracker.decisions??{}))if(/^(codex|claude|antigravity):(baseline_running|baseline_nonrunning|observation_lost|running_observed|idle_pending|completed_priority|eligible|task_cooldown|global_cooldown)$/.test(key)&&typeof value==='number'&&Number.isFinite(value))decisions[key]=value;
+    const count=(v:unknown)=>typeof v==='number'&&Number.isInteger(v)&&v>=0&&v<=200?v:0;
+    const summary={event:'task_monitor',enabled:flags.enabled===true,paused:flags.paused===true,visible:flags.visible===true,liveCoverage:tasks?.liveCoverage===true,counts,tracker:{tracked:count(tracker.tracked),armed:count(tracker.armed),pending:count(tracker.pending),decisions}},serialized=JSON.stringify(summary);
+    if(this.previous.get('task-monitor')!==serialized||Date.now()-this.taskBeat>=60000){this.previous.set('task-monitor',serialized);this.taskBeat=Date.now();this.write(summary);}
+  }
   observe(snapshot:any){
     for(const id of Object.keys(snapshot.auth??{}))if(/^(claude|codex|gemini|claude-account-[0-9a-f-]{36})$/.test(id))this.authSeen.add(id);
     for(const id of this.authSeen){

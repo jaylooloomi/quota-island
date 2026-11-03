@@ -39,3 +39,19 @@ Tests: `npm test`, `node scripts/task-idle-bubble-test.cjs`,
 events through the actual monitor and waits the full 30-second gate. Native
 provider transition logic is covered with deterministic fixtures; this does not
 claim a naturally running Claude or Antigravity task was observed completing.
+
+## Runtime evidence (v1.26.2)
+
+The bounded local diagnostic log (`%APPDATA%/quota-island/logs/diagnostics.jsonl`)
+now records `task_monitor` summaries on decision/state changes and at least once
+per minute while observations are published. These show the enabled/pause/window
+flags, per-provider state counts, tracked/armed/pending counts and decision totals.
+Decisions distinguish initial non-running baselines, observed running, pending
+idle, observation loss, completion priority and per-task/global cooldown.
+
+`task_notice` events distinguish eligible, queued and shown notifications, plus
+hidden, closed, viewed, expired and cleared stages. `shown` means Electron has
+made the notice window visible; it does not prove the user read it. No task title,
+project path, session identifier, host name or credential is added to these logs.
+Logging does not change notification gates or add provider calls. Older versions
+did not record this evidence, so past notification display cannot be reconstructed.

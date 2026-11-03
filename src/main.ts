@@ -93,7 +93,8 @@ function snapshot() { const extra=accounts?.snapshot();return { providers: {...p
 function publish() {
   persistRateLimits();
   if(taskMonitor)taskPeak?.observe(taskMonitor.snapshot(),!paused);
-  if(taskMonitor)for(const notice of idleTracker.observe(taskMonitor.snapshot().rows,settings.taskCompletionNotifications&&!paused&&!!win?.isVisible()))taskBubble?.enqueue(notice);
+  if(taskMonitor)for(const notice of idleTracker.observe(taskMonitor.snapshot().rows,settings.taskCompletionNotifications&&!paused&&!!win?.isVisible())){diagnostics?.taskNotice('idle',notice.provider,'eligible');taskBubble?.enqueue(notice);}
+  if(taskMonitor)diagnostics?.taskMonitor(taskMonitor.snapshot(),idleTracker.diagnostics(),{enabled:settings.taskCompletionNotifications,paused,visible:!!win?.isVisible()});
   if(poller){const snap=snapshot();diagnostics?.observe(snap);for(const [id,s] of Object.entries(snap.providers) as [string,ProviderState][])if(snap.paused||((snap.auth as any)?.[id]?.pending&&(snap.auth as any)[id].phase!=='syncing')||!s.enabled||['stale','unavailable','signed_out'].includes(s.status))usageHistory?.gap(id);}
   if (!win?.isDestroyed() && !win?.webContents.isDestroyed()) win?.webContents.send('state', snapshot());
   if (settings.notifications && !demo && !testing && Notification.isSupported()) {
@@ -263,7 +264,7 @@ else {
     if(!demo&&!testing){if(process.argv.includes('--enable-autostart'))settings.autoStart=true;try{settings.autoStart=syncLoginStartup(app,settings.autoStart,{platform:process.platform,packaged:app.isPackaged,demo,testing,executable:process.execPath});saveSettings();}catch{settings.autoStart=false;}}
     usageHistory=new UsageHistory(path.join(app.getPath('userData'),demo?'demo-usage-history':'usage-history'));
     taskPeak=new TaskPeak(path.join(app.getPath('userData'),demo?'demo-task-peak.json':'task-peak.json'));
-    taskMonitor=new TaskMonitor(testing?(process.env.QUOTA_TEST_SESSION_ROOT||path.join(app.getPath('userData'),'codex-sessions')):path.join(process.env.CODEX_HOME||path.join(homedir(),'.codex'),'sessions'),publish,!demo&&!testing,item=>{idleTracker.completion(item.id);if(settings.taskCompletionNotifications&&!paused)taskBubble?.enqueue(item);});
+    taskMonitor=new TaskMonitor(testing?(process.env.QUOTA_TEST_SESSION_ROOT||path.join(app.getPath('userData'),'codex-sessions')):path.join(process.env.CODEX_HOME||path.join(homedir(),'.codex'),'sessions'),publish,!demo&&!testing,item=>{diagnostics?.taskNotice('completed',item.provider,'eligible');idleTracker.completion(item.id);if(settings.taskCompletionNotifications&&!paused)taskBubble?.enqueue(item);});
     diagnostics=new Diagnostics(path.join(app.getPath('userData'),demo?'demo-logs':'logs'));diagnostics.startup(app.getVersion(),settings.enabled);
     providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource);
     poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish,Date.now,(id,reading,time)=>usageHistory.record(id,reading,time,id==='claude'?600000:120000));if(!demo)poller.setMinimumInterval('claude',600000);
@@ -299,7 +300,7 @@ else {
       alwaysOnTop: settings.alwaysOnTop, skipTaskbar: true, show: false, title: 'Quota Pebble', icon: path.join(__dirname, 'ui/icons/quota-pebble.png'),
       webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true }
     });
-    taskBubble=new TaskBubble(win,id=>{setExpanded(true);win.show();win.webContents.send('task-focus',id);});taskBubble.configure(settings.locale,settings.taskCompletionNotifications);
+    taskBubble=new TaskBubble(win,id=>{setExpanded(true);win.show();win.webContents.send('task-focus',id);},(kind,provider,stage)=>diagnostics?.taskNotice(kind,provider,stage));taskBubble.configure(settings.locale,settings.taskCompletionNotifications);
     win.setMenu(null); reposition();
     win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     win.webContents.on('will-navigate', event => event.preventDefault());
