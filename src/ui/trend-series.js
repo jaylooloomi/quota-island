@@ -13,15 +13,15 @@
     return null;
   }
   function build(points,relative=true){
-    let baseline,start,last,count=0,cycle=0,hasGaps=false;
-    const rows=points.map(p=>{if(!start||cycleBoundary(last,p)){baseline=p.used;start=p;count=0;hasGaps=false;cycle++;}else if(p.segment!==last.segment&&!['change','schedule'].includes(p.reason))hasGaps=true;count++;last=p;const delta=round(p.used-baseline);return{...p,baseline,delta,cycle,value:relative?delta:p.used};});
+    let baseline,baselineTime,resetBaseline=false,start,last,count=0,cycle=0,hasGaps=false;
+    const rows=points.map(p=>{const boundary=cycleBoundary(last,p),reset=boundary==='reset'||!start&&p.reason==='reset';if(!start||boundary){baseline=reset?0:p.used;baselineTime=reset&&Number.isFinite(last?.reset)&&last.reset<=p.time?last.reset:p.time;resetBaseline=reset;start=p;count=0;hasGaps=false;cycle++;}else if(p.segment!==last.segment&&!['change','schedule'].includes(p.reason))hasGaps=true;count++;last=p;const delta=round(p.used-baseline);return{...p,baseline,delta,cycle,resetBaseline:reset,baselineTime,value:relative?delta:p.used};});
     let min=0,max=100,ticks=[0,50,100];
     if(relative){
       const low=Math.min(0,...rows.map(p=>p.value)),high=Math.max(0,...rows.map(p=>p.value)),top=Math.max(1,Math.min(100,high*1.1)),step=niceStep(Math.max(1,top-low)/4);
       min=round(Math.floor(low/step)*step);max=round(Math.ceil(top/step)*step);ticks=[];
       for(let value=min;value<=max+step/100;value+=step)ticks.push(round(value));
     }
-    return{points:rows,min,max,ticks,relative,summary:start?{start,last,count,hasGaps,change:count>1?round(last.used-start.used):null}:null};
+    return{points:rows,min,max,ticks,relative,summary:start?{start,last,count,hasGaps,baseline,baselineTime,resetBaseline,change:count>1||resetBaseline?round(last.used-baseline):null}:null};
   }
   const api={build,cycleBoundary};if(typeof module==='object'&&module.exports)module.exports=api;else root.QuotaTrendSeries=api;
 })(typeof window==='object'?window:globalThis);

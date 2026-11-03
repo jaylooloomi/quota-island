@@ -20,6 +20,12 @@ step chart and summary below the quota row.
   the stored readings. An unexplained decrease alone is not treated as proof of
   reset and can show a signed correction.
 - A single reading shows an unknown change, rather than claiming zero usage.
+- Since v1.26.1, a confirmed reset establishes a **0%** baseline, not the first
+  post-reset reading. If the first observed new-cycle usage is 2%, it contributes
+  +2 percentage points. A hollow 0 marker identifies the reset baseline (not a
+  sampled reading); absolute-mode samples remain unchanged. A future reset
+  deadline alone does not reset the current graph. Single-point post-reset
+  summaries can show the difference from this known zero baseline.
 - These are observed quota percentages, not token counts. Scale changes use
   already loaded history and do not trigger provider requests.
 - Account/window selections remain independent; existing history retention and
