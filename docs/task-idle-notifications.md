@@ -17,8 +17,9 @@ alert; if success proof arrives after a blue card, green replaces it immediately
 
 Sources are the existing local Codex records, authorized Codex remote metadata,
 Claude process-verified registry and Antigravity local RPC. No new CLI, Hooks,
-provider quota requests or private receivers are introduced. Claude/Antigravity
-currently support idle alerts, not verified-success announcements.
+provider quota requests or private receivers are introduced. Since v1.25.0,
+Claude/Antigravity can also produce green completion cards when the additional
+[native completion evidence gates](native-completion-notifications.md) pass.
 
 The shared **Completion / idle alerts** setting controls both types. Cards remain
 visible for 12 seconds, pause dismissal on hover, can be closed, and open the

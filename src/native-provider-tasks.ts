@@ -5,6 +5,8 @@ import {hostname} from 'node:os';
 import path from 'node:path';
 import {discoverAntigravity,localAntigravityStatus} from './antigravity';
 import type {TaskRow,TaskStatus} from './task-monitor';
+import {claudeEndTurn,NativeCompletionTracker} from './native-task-completion';
+import type {TaskCompletion} from './task-completion';
 const exec=promisify(execFile),clean=(v:unknown,n=160)=>typeof v==='string'?v.replace(/[\u0000-\u001f\u007f]/g,' ').slice(0,n):'';
 const validId=(v:unknown):v is string=>typeof v==='string'&&/^[\w-]{1,128}$/.test(v);
 type Identity={pid:number;procStart:string;claude:boolean};
@@ -16,7 +18,7 @@ export function claudeRegistryRow(v:any,identity:Identity|undefined,now=Date.now
   // unchanged status is valid only while the same OS process generation lives.
   const verified=identity?.claude&&identity.pid===v.pid&&identity.procStart===v.procStart&&(!v.pidDomain||typeof v.pidDomain==='string'&&v.pidDomain.split(':')[0]===process.platform);
   const status:TaskStatus=!verified?'unknown':v.status==='busy'?'running':v.status==='waiting'?'waiting':['idle','shell'].includes(v.status)?'idle':'unknown';
-  return{provider:'claude',id:'claude:'+v.sessionId+':'+v.pid,title:clean(v.name)||'Claude Code · '+v.sessionId.slice(0,8),project:clean(v.cwd,512),status,source:'claude-registry',host:hostname(),confirmedAt:timestamp(v.statusUpdatedAt,now)??timestamp(v.updatedAt,now),observedAt:now,event:'registry-'+(verified?clean(v.status,32):'identity-unverified')};
+  return{provider:'claude',id:'claude:'+v.sessionId+':'+v.pid,title:clean(v.name)||'Claude Code · '+v.sessionId.slice(0,8),project:clean(v.cwd,512),status,source:'claude-registry',host:hostname(),confirmedAt:timestamp(v.statusUpdatedAt,now)??timestamp(v.updatedAt,now),observedAt:now,activityKey:v.procStart,event:'registry-'+(verified?clean(v.status,32):'identity-unverified')};
 }
 export async function claudeProcessIdentities(pids:number[]):Promise<Identity[]> {
   const ids=[...new Set(pids)].filter(n=>Number.isInteger(n)&&n>0&&n<=2147483647).slice(0,100);if(!ids.length)return[];
@@ -58,7 +60,10 @@ export function antigravityTaskRows(data:any,now=Date.now()):TaskRow[]{
     const status:TaskStatus=v.status==='CASCADE_RUN_STATUS_RUNNING'?'running':v.status==='CASCADE_RUN_STATUS_IDLE'?'idle':'unknown';
     const workspace=Array.isArray(v.workspaces)?v.workspaces[0]:undefined;
     const project=typeof workspace==='string'?workspace:workspace?.workspaceFolderAbsoluteUri??workspace?.workspacePath??workspace?.uri??workspace?.path;
-    rows.push({provider:'antigravity',id:'antigravity:'+v.trajectoryId,title:clean(v.summary)||'Antigravity · '+v.trajectoryId.slice(0,8),project:clean(project,512),status,source:'antigravity-rpc',host:hostname(),confirmedAt:timestamp(v.lastUserInputTime,now)??timestamp(v.lastModifiedTime,now),observedAt:now,event:clean(v.status,64)});
+    const input=timestamp(v.lastUserInputTime,now),end=timestamp(v.lastModifiedTime,now),steps=Number(v.stepCount),index=Number(v.lastUserInputStepIndex);
+    const activityKey=input!==null&&Number.isInteger(index)&&index>=0?input+':'+index:undefined;
+    const completionEvidence=status==='idle'&&v.latestExecutorTerminationReason==='EXECUTOR_TERMINATION_REASON_NO_TOOL_CALL'&&activityKey&&end!==null&&end>=input!&&Number.isInteger(steps)&&steps>index?{id:'ag-'+activityKey+'-'+steps+'-'+end,time:end}:undefined;
+    rows.push({provider:'antigravity',id:'antigravity:'+v.trajectoryId,title:clean(v.summary)||'Antigravity · '+v.trajectoryId.slice(0,8),project:clean(project,512),status,source:'antigravity-rpc',host:hostname(),confirmedAt:input??end,observedAt:now,event:clean(v.status,64),activityKey,completionEvidence});
   }return rows;
 }
 export class AntigravityTaskReader{
@@ -82,18 +87,19 @@ export class AntigravityTaskReader{
   }
 }
 export class NativeProviderTaskMonitor {
+  private completionTracker:NativeCompletionTracker;private proofCursor=0;
   private rows:TaskRow[]=[];private closed=false;private claudeBusy=false;private agBusy=false;private timer?:NodeJS.Timeout;private lastAg=0;
   private claude:Result={rows:[],available:false,partial:false,checkedAt:0};private ag:Result={rows:[],available:false,partial:false,checkedAt:0};
-  constructor(private root:string,private changed:()=>void,private readClaude=readClaudeRegistry,private reader=new AntigravityTaskReader(),private now=Date.now){}
+  constructor(private root:string,private changed:()=>void,private readClaude=readClaudeRegistry,private reader=new AntigravityTaskReader(),private now=Date.now,private completed?:(value:TaskCompletion)=>void){this.completionTracker=new NativeCompletionTracker(now);}
   snapshot(){const now=this.now();return{rows:this.rows.map(r=>!r.observedAt||now-r.observedAt>25000?{...r,status:'unknown' as const}:r),claude:{available:this.claude.available&&now-this.claude.checkedAt<=25000,count:this.claude.rows.length},antigravity:{available:this.ag.available&&now-this.ag.checkedAt<=25000,count:this.ag.rows.length},partial:this.claude.partial||this.ag.partial};}
   async start(){if(this.closed)return;if(!this.timer){this.timer=setInterval(()=>void this.tick(),5000);this.timer.unref();}await this.tick();}
   private rebuild(){
     if(this.closed)return;const previous=this.rows;this.rows=[...this.claude.rows,...this.ag.rows];
-    const keys=new Set(this.rows.map(r=>r.id));for(const r of previous)if(!keys.has(r.id))this.rows.push({...r,status:'unknown'});this.rows=this.rows.slice(0,200);this.changed();
+    const keys=new Set(this.rows.map(r=>r.id));for(const r of previous)if(!keys.has(r.id))this.rows.push({...r,status:'unknown'});this.rows=this.rows.slice(0,200);if(this.completed)for(const item of this.completionTracker.observe(this.snapshot().rows))this.completed(item);this.changed();
   }
   private failed():Result{return{rows:[],available:false,partial:true,checkedAt:this.now()};}
   private async tickClaude(){if(this.closed||this.claudeBusy)return;this.claudeBusy=true;
-    try{const value=await this.readClaude(this.root);if(!this.closed)this.claude=value;}catch{if(!this.closed)this.claude=this.failed();}
+    try{const value=await this.readClaude(this.root);if(this.completed){const candidates=value.rows.filter(r=>r.status==='idle'&&this.completionTracker.isTracking(r.id));const selected=Array.from({length:Math.min(8,candidates.length)},(_,i)=>candidates[(this.proofCursor+i)%candidates.length]!);this.proofCursor+=selected.length;await Promise.all(selected.map(async r=>{r.completionEvidence=await claudeEndTurn(path.dirname(this.root),r);}));}if(!this.closed)this.claude=value;}catch{if(!this.closed)this.claude=this.failed();}
     finally{this.claudeBusy=false;this.rebuild();}
   }
   private async tickAg(){if(this.closed||this.agBusy||this.lastAg&&this.now()-this.lastAg<10000)return;this.agBusy=true;this.lastAg=this.now();

@@ -8,7 +8,7 @@ import {hostname} from 'node:os';
 export class CombinedTaskMonitor {
   private native?:NativeProviderTaskMonitor;private local:LocalTaskMonitor;private remote?:RemoteTaskMonitor;
   constructor(sessionsRoot:string,private changed:()=>void,remoteEnabled:boolean,completed?:(value:TaskCompletion)=>void){
-    if(remoteEnabled)this.native=new NativeProviderTaskMonitor(path.join(process.env.CLAUDE_CONFIG_DIR||path.join(homedir(),'.claude'),'sessions'),changed);
+    if(remoteEnabled)this.native=new NativeProviderTaskMonitor(path.join(process.env.CLAUDE_CONFIG_DIR||path.join(homedir(),'.claude'),'sessions'),changed,undefined,undefined,Date.now,completed);
     this.local=new LocalTaskMonitor(sessionsRoot,changed,Date.now,item=>completed?.({...item,host:hostname()}));
     if(remoteEnabled&&process.platform==='win32')this.remote=new RemoteTaskMonitor(path.dirname(sessionsRoot),changed,completed);
   }

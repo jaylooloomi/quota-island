@@ -1,5 +1,5 @@
 import type {TaskRow} from './task-monitor';
-export type TaskCompletion={kind?:'completed';id:string;turnId:string;title:string;host:string;provider:'codex';time:number};
+export type TaskCompletion={kind?:'completed';id:string;turnId:string;title:string;host:string;provider:'codex'|'claude'|'antigravity';time:number};
 // Explicit successful terminal evidence only. A baseline, idle, disconnect or
 // assistant final message is never sufficient to announce completion.
 export class CompletionTracker {
