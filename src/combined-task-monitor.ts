@@ -14,10 +14,10 @@ export class CombinedTaskMonitor {
   }
   snapshot(){
     const original=this.local.snapshot(),local={...original,rows:original.rows.map(r=>({...r,host:hostname()}))},remote=this.remote?.snapshot();
-    const native=this.native?.snapshot();if(!remote&&!native)return local;
+    const native=this.native?.snapshot();const localSource={available:original.liveCoverage,checkedAt:original.checkedAt??null};if(!remote&&!native)return {...local,localSource};
     const rank={waiting:0,running:1,idle:2,unknown:3};
     const allRows=[...local.rows,...(remote?.rows??[]),...(native?.rows??[])].sort((a,b)=>rank[a.status]-rank[b.status]||(b.confirmedAt??0)-(a.confirmedAt??0));const rows=allRows.slice(0,100);
-    return {...local,rows,counts:Object.fromEntries(['running','waiting','idle','unknown'].map(s=>[s,rows.filter(r=>r.status===s).length])),connection:remote?.available?'remote':local.connection,liveCoverage:local.liveCoverage||!!remote?.available||!!native?.claude.available||!!native?.antigravity.available,partial:allRows.length>100||local.partial||!!remote?.partial||!!native?.partial,remote:{connected:!!remote?.available,error:remote?.error,count:remote?.rows.length??0},native:native?{claude:native.claude,antigravity:native.antigravity}:undefined,scope:'local-and-authorized-remote',limit:100};
+    return {...local,localSource,rows,counts:Object.fromEntries(['running','waiting','idle','unknown'].map(s=>[s,rows.filter(r=>r.status===s).length])),connection:remote?.available?'remote':local.connection,liveCoverage:local.liveCoverage||!!remote?.available||!!native?.claude.available||!!native?.antigravity.available,partial:allRows.length>100||local.partial||!!remote?.partial||!!native?.partial,remote:{connected:!!remote?.available,error:remote?.error,count:remote?.rows.length??0},native:native?{claude:native.claude,antigravity:native.antigravity}:undefined,scope:'local-and-authorized-remote',limit:100};
   }
   async start(){this.remote?.start();void this.native?.start();await this.local.start();}
   close(){this.local.close();this.remote?.close();this.native?.close();}

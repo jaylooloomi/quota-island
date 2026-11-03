@@ -20,6 +20,11 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
       assert.equal(await page.locator('.task-host-badge').count(),proof.claude.count+proof.antigravity.count);
       await page.screenshot({path:out+'/'+locale+'.png'});
     }
+    for(const [local,remote] of [[true,false],[false,true],[false,false],[true,true]]){
+      await app.evaluate(({BrowserWindow},values)=>{const s=global.nativeLiveUI;s.tasks.localSource={available:values[0]};s.tasks.remote={connected:values[1]};BrowserWindow.getAllWindows()[0].webContents.send('state',s);},[local,remote]);
+      assert.equal(await page.locator('.task-source-health[data-provider="codex"]').getAttribute('data-connected'),String(local||remote),'Codex reflects its own local/remote sources');
+      assert.ok((await page.locator('.task-source-health[data-provider="codex"]').getAttribute('title')).length>0,'local/remote tooltip exists');
+    }
     // Separate deterministic UI regression, never reported as live task activity.
     await app.evaluate(({app,BrowserWindow})=>{
       const require=process.mainModule.require.bind(process.mainModule),path=require('node:path'),{claudeRegistryRow,antigravityTaskRows}=require(path.join(app.getAppPath(),'dist/native-provider-tasks')),now=Date.now();
@@ -30,7 +35,7 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     await page.locator('[data-task-filter=running]').click();assert.equal(await page.locator('.task-row').count(),2);assert.equal(await page.locator('.task-provider-icon[alt="Claude"]').count(),1);assert.equal(await page.locator('.task-provider-icon[alt="Antigravity"]').count(),1);
     await page.locator('[data-task-filter=waiting]').click();assert.equal(await page.locator('.task-row').count(),1);assert.equal(await page.locator('.task-provider-icon[alt="Claude"]').count(),1);
     await app.evaluate(({BrowserWindow})=>{const s=global.nativeFixtureUI;s.tasks.rows=s.tasks.rows.map(r=>({...r,status:'unknown'}));s.tasks.counts={running:0,waiting:0,idle:0,unknown:3};s.tasks.native={claude:{available:false,count:2},antigravity:{available:false,count:1}};BrowserWindow.getAllWindows()[0].webContents.send('state',s);});
-    await page.locator('[data-task-filter=unknown]').click();assert.equal(await page.locator('.task-row').count(),3);assert.equal(await page.locator('.task-source-health[data-connected="false"]').count(),2);
+    await page.locator('[data-task-filter=unknown]').click();assert.equal(await page.locator('.task-row').count(),3);assert.equal(await page.locator('.task-source-health[data-connected="false"]:not([data-provider="codex"])').count(),2);
     assert.deepEqual(errors,[]);proof.uiFixtureChecks=['running across providers','Claude waiting','source disconnect becomes unknown'];await fs.writeFile(out+'/proof.json',JSON.stringify(proof,null,2));console.log(proof);
   }finally{await app?.evaluate(()=>global.nativeLiveMonitor?.close()).catch(()=>{});await app?.close();assert.ok(dir.startsWith(path.join(os.tmpdir(),'pebble-native-live-')));await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
 })().catch(e=>{console.error(e);process.exitCode=1;});
