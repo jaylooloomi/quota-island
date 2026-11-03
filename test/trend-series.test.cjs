@@ -1,0 +1,18 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),{build}=require('../src/ui/trend-series');
+const p=(used,segment='a',time=0)=>({used,segment,time});
+test('relative chart uses percentage point deltas, explicit positive ticks and headroom',()=>{
+  const input=[p(70),p(71),p(73),p(76)],before=JSON.stringify(input),s=build(input);
+  assert.deepEqual(s.points.map(p=>p.value),[0,1,3,6]);assert.deepEqual(s.ticks,[0,2,4,6,8]);assert.equal(s.summary.start.used,70);assert.equal(s.summary.last.used,76);assert.equal(s.summary.change,6);assert.equal(JSON.stringify(input),before);
+});
+test('resets, corrections and gaps rebase separately; latest segment summary never crosses boundaries',()=>{
+  const s=build([p(70,'a'),p(80,'a'),p(4,'reset'),p(9,'reset'),p(30,'gap'),p(32,'gap')]);
+  assert.deepEqual(s.points.map(p=>p.value),[0,10,0,5,0,2]);assert.equal(s.summary.change,2);assert.equal(s.summary.start.used,30);
+});
+test('flat, single-point, empty and fractional series remain honest and finite',()=>{
+  assert.equal(build([p(0),p(0)]).summary.change,0);assert.equal(build([p(76)]).summary.change,null);assert.equal(build([]).summary,null);
+  const tiny=build([p(12.34),p(12.36)]);assert.equal(tiny.summary.change,.02);assert.ok(tiny.max>=1);
+  const full=build([p(0),p(100)]);assert.equal(full.max,100);assert.ok(full.ticks.every(Number.isFinite));
+});
+test('absolute mode retains actual quota percentages with fixed 0–100% scale',()=>{
+  const s=build([p(70),p(76)],false);assert.deepEqual(s.points.map(p=>p.value),[70,76]);assert.deepEqual(s.ticks,[0,50,100]);assert.equal(s.summary.change,6);
+});

@@ -18,7 +18,7 @@ const {UsageHistory}=require('../dist/usage-history');
     const geometry=()=>p.evaluate(()=>{const c=document.querySelector('.card[data-provider="claude"]');return ['.provider-icon','h2','.quota-windows .track'].map(sel=>{const r=c.querySelector(sel).getBoundingClientRect(),base=c.getBoundingClientRect();return{x:r.x-base.x,y:r.y-base.y,w:r.width,h:r.height}})});
     const countBefore=(await p.evaluate(()=>quota.getState())).providers.claude.updatedAt;
     const before=await geometry();await p.screenshot({path:output+'/collapsed.png'});
-    await card.locator('.trend-link').click();await trend.locator('svg').waitFor();await p.waitForTimeout(300);
+    await card.locator('.trend-link').click();await trend.locator('svg').waitFor();assert.equal(await trend.locator('[data-days="0.3333333333333333"]').getAttribute('aria-pressed'),'true','default 8-hour range');await trend.locator('[data-days="1"]').click();await trend.locator('svg').waitFor();await p.waitForTimeout(300);
     const after=await geometry();for(let i=0;i<before.length;i++)for(const k of ['x','y','w','h'])assert.ok(Math.abs(before[i][k]-after[i][k])<=1,`stable ${i}.${k}: ${before[i][k]} vs ${after[i][k]}`);
     assert.ok(await trend.locator('.trend-line').count()>=3,'gap and reset produce separate paths');assert.ok(await trend.locator('.trend-gap').count()>0);assert.ok(await trend.locator('.trend-boundary').count()>0);
     await trend.locator('svg').focus();await p.keyboard.press('Home');assert.match(await trend.locator('.trend-tooltip').innerText(),/15%/);await p.screenshot({path:output+'/expanded-zh-TW.png'});await p.keyboard.press('Escape');assert.equal(await trend.locator('.trend-tooltip').isVisible(),false);
