@@ -18,6 +18,17 @@ step chart and summary below the quota row.
   raw readings are unchanged. All controls support Chinese, English, Japanese
   and Korean, including keyboard chart inspection.
 
+## Smart tooltip (v1.24.2)
+
+The existing dark floating card evaluates all four chart corners. Avoiding the
+inspected point has priority, followed by the density of plotted readings. A
+score margin keeps the previous corner when differences are small; moving onto
+the selected point overrides this hysteresis. No connector curve is drawn and
+the chart's height is unchanged. Both scales and keyboard inspection use the
+same positioning logic. Positions use measured tooltip dimensions, including
+translated text. Very dense data can still be covered, as noted in proposal 03.
+Placement scoring samples at most 500 readings per candidate.
+
 Validation: `npm test`, `npm run test:trends`,
 `QUOTA_TRENDS_SMALL_SCREEN=1 node scripts/usage-trends-test.cjs`, and
 `npm run test:relative-trends`. The last test uses isolated demo readings
