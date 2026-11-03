@@ -1,9 +1,11 @@
 # Task tab running peak — v1.26.0
 
-Applies proposal 01 (numbers side by side) to the task tab only. Three equal
-cards share label/value baselines: Running shows current / peak with an explicit
-Peak label; Waiting and Idle show current counts with secondary descriptions.
-The compact island summary is unchanged. All four locales are supported.
+Since v1.28.1, the approved single-row design applies to the task tab only.
+Three equal 48px-high cards place status and number on one horizontal row:
+Running shows current / peak with an explicit Peak label; Waiting and Idle
+show only their current counts. Secondary description rows are removed.
+The compact island summary is unchanged. All four locales are supported, with
+one shared font scale across the three cards if three-digit counts need fitting.
 
 The record is the highest observed **simultaneous running** count, not a capacity
 limit, cumulative task total, or reconstructed historical number. It includes
