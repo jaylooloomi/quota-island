@@ -15,8 +15,8 @@ test('baseline idle, duplicate cached snapshots, disconnect, missing rows and lo
  f.set(65000);t.observe([r('running')]);f.set(70000);t.observe([r('unknown')]);f.set(75000);t.observe([r('idle')]);f.set(90000);assert.deepEqual(t.observe([r('idle')]),[]);
  f.set(95000);t.observe([r('running')]);t.observe([]);f.set(100000);assert.deepEqual(t.observe([r('idle')]),[]);
 });
-test('same-task 10min and global 60s cooldowns drop suppressed cycles rather than delaying notifications',()=>{
- const f=fixture(),{tracker:t,row:r}=f;t.observe([r('running','a'),r('running','b')]);f.set(5000);t.observe([r('idle','a'),r('idle','b')]);f.set(20000);t.observe([r('idle','a'),r('idle','b')]);f.set(35000);assert.equal(t.observe([r('idle','a'),r('idle','b')]).length,1);
+test('same-task 10min cooldown remains while simultaneous different tasks are passed to batching',()=>{
+ const f=fixture(),{tracker:t,row:r}=f;t.observe([r('running','a'),r('running','b')]);f.set(5000);t.observe([r('idle','a'),r('idle','b')]);f.set(20000);t.observe([r('idle','a'),r('idle','b')]);f.set(35000);assert.equal(t.observe([r('idle','a'),r('idle','b')]).length,2);
  f.set(45000);t.observe([r('running','a'),r('idle','b')]);f.set(50000);t.observe([r('idle','a'),r('idle','b')]);f.set(65000);t.observe([r('idle','a'),r('idle','b')]);f.set(80000);assert.deepEqual(t.observe([r('idle','a'),r('idle','b')]),[]);
  f.set(640000);t.observe([r('running','a')]);f.set(645000);t.observe([r('idle','a')]);f.set(660000);t.observe([r('idle','a')]);f.set(675000);assert.equal(t.observe([r('idle','a')]).length,1);
 });

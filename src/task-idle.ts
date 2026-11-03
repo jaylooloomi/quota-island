@@ -4,7 +4,7 @@ type State={seen:number;status:string;runAt:number;cycle:number;since:number;cou
 // Observation timestamps must advance: rendering or repeatedly reading a cached
 // snapshot cannot satisfy the second observation or the 30-second stability gate.
 export class IdleTracker {
-  private states=new Map<string,State>();private cooldown=new Map<string,number>();private completed=new Map<string,number>();private global=-Infinity;private sequence=0;
+  private states=new Map<string,State>();private cooldown=new Map<string,number>();private completed=new Map<string,number>();private sequence=0;
   private decisions:Record<string,number>={};
   private audit(provider:string,reason:string){const key=provider+':'+reason;this.decisions[key]=(this.decisions[key]??0)+1;}
   diagnostics(){return{tracked:this.states.size,armed:[...this.states.values()].filter(s=>!!s.runAt&&!s.sent).length,pending:[...this.states.values()].filter(s=>!!s.since&&!s.sent).length,decisions:{...this.decisions}};}
@@ -33,12 +33,12 @@ export class IdleTracker {
         // idle status snapshot. A later running cycle can become eligible again.
         if((this.completed.get(row.id)??-Infinity)>=s.runAt){if(!s.sent)this.audit(provider,'completed_priority');s.sent=true;}
         if(!s.sent&&s.count>=2&&at-s.since>=30000){
-          s.sent=true; // Cooldown suppression drops this cycle, never queues it.
-          if(now-(this.cooldown.get(key)??-Infinity)>=600000&&now-this.global>=60000){
-            this.cooldown.set(key,now);this.trim(this.cooldown);this.global=now;
+          s.sent=true; // Per-task cooldown drops only repeated activity; global bursts are batched by the notice queue.
+          if(now-(this.cooldown.get(key)??-Infinity)>=600000){
+            this.cooldown.set(key,now);this.trim(this.cooldown);
             this.audit(provider,'eligible');
             result.push({kind:'idle',id:row.id,turnId:'idle-'+s.cycle,title:row.title.slice(0,160),host:(row.host||'').slice(0,80),provider,time:now});
-          }else this.audit(provider,now-(this.cooldown.get(key)??-Infinity)<600000?'task_cooldown':'global_cooldown');
+          }else this.audit(provider,'task_cooldown');
         }
       }else{s.runAt=0;s.since=0;s.count=0;}
       s.status=row.status;

@@ -93,7 +93,7 @@ function snapshot() { const extra=accounts?.snapshot();return { providers: {...p
 function publish() {
   persistRateLimits();
   if(taskMonitor)taskPeak?.observe(taskMonitor.snapshot(),!paused);
-  if(taskMonitor)for(const notice of idleTracker.observe(taskMonitor.snapshot().rows,settings.taskCompletionNotifications&&!paused&&!!win?.isVisible())){diagnostics?.taskNotice('idle',notice.provider,'eligible');taskBubble?.enqueue(notice);}
+  if(taskMonitor)for(const notice of idleTracker.observe(taskMonitor.snapshot().rows,settings.taskCompletionNotifications&&!paused)){diagnostics?.taskNotice('idle',notice.provider,'eligible');taskBubble?.enqueue(notice);}
   if(taskMonitor)diagnostics?.taskMonitor(taskMonitor.snapshot(),idleTracker.diagnostics(),{enabled:settings.taskCompletionNotifications,paused,visible:!!win?.isVisible()});
   if(poller){const snap=snapshot();diagnostics?.observe(snap);for(const [id,s] of Object.entries(snap.providers) as [string,ProviderState][])if(snap.paused||((snap.auth as any)?.[id]?.pending&&(snap.auth as any)[id].phase!=='syncing')||!s.enabled||['stale','unavailable','signed_out'].includes(s.status))usageHistory?.gap(id);}
   if (!win?.isDestroyed() && !win?.webContents.isDestroyed()) win?.webContents.send('state', snapshot());

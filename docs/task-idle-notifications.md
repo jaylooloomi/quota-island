@@ -7,11 +7,14 @@ An eligible task must be observed running today (local calendar day), then idle
 for at least 30 seconds with at least two distinct, fresh observations. Repeated
 renders of the same cached snapshot cannot advance the gate. Each observed
 activity cycle can notify once. Notifications have a 10-minute per-task cooldown
-and a 60-second global cooldown; suppressed cycles are dropped, not queued later.
+and (before v1.28.0) a 60-second global cooldown. As of v1.28.0, different-task
+bursts are retained in the [batched notification inbox](batched-task-inbox.md)
+instead of being suppressed globally. Same-task cooldown cycles are still dropped.
 
 Initial idle records, missing rows, unknown/stale sources, interruptions in
 observation, waiting states, pause/disabled notifications and reconnect baselines
-do not generate old idle alerts. Running after a baseline establishes a new
+do not generate old idle alerts. Since v1.28.0, hiding the window preserves
+observation and queues reminders for when it is shown again. Running after a baseline establishes a new
 eligible activity. Successful completion suppresses the corresponding idle
 alert; if success proof arrives after a blue card, green replaces it immediately.
 

@@ -19,8 +19,8 @@ export class CompletionTracker {
     return{id:row.id,turnId,title:row.title.slice(0,160),host:(row.host||'').slice(0,80),provider:'codex',time};
   }
 }
-export function bubbleBounds(parent:{x:number;y:number;width:number;height:number},area:{x:number;y:number;width:number;height:number},anchor:number,height=142){
-  const width=Math.min(300,area.width),tip=Math.max(parent.x,Math.min(parent.x+parent.width,parent.x+anchor)),header=Math.min(60,parent.height);
+export function bubbleBounds(parent:{x:number;y:number;width:number;height:number},area:{x:number;y:number;width:number;height:number},anchor:number,height=142,preferredWidth=300){
+  const width=Math.min(preferredWidth,area.width),tip=Math.max(parent.x,Math.min(parent.x+parent.width,parent.x+anchor)),header=Math.min(60,parent.height);
   height=Math.min(height,area.height);
   const clampX=(x:number)=>Math.round(Math.max(area.x,Math.min(area.x+area.width-width,x))),clampY=(y:number)=>Math.round(Math.max(area.y,Math.min(area.y+area.height-height,y)));
   let x=clampX(tip-width/2),y:number,placement:'above'|'below'|'left'|'right';
