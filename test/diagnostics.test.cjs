@@ -15,3 +15,11 @@ test('diagnostics rotates bounded files and tolerates unwritable destinations',(
     const blocked=path.join(dir,'file');fs.writeFileSync(blocked,'x');assert.doesNotThrow(()=>new Diagnostics(blocked).startup('1',{}));
   }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('auth diagnostics record transitions and cancellation without authorization data',()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pebble-auth-log-'));try{
+    const d=new Diagnostics(dir),s={auth:{claude:{phase:'web_login',pending:true,message:'SECRET',browserUrl:'https://private.example/SECRET',code:'SECRET',canReopen:true}}};
+    d.observe(s);d.observe(s);s.auth.claude.phase='verifying';d.observe(s);delete s.auth.claude;d.observe(s);
+    const text=fs.readFileSync(d.file,'utf8'),rows=text.trim().split('\n').map(JSON.parse);assert.equal(rows.length,3);assert.deepEqual(rows.map(r=>r.phase),['web_login','verifying','none']);assert.equal(rows[2].pending,false);assert.ok(!text.includes('SECRET'));assert.ok(!text.includes('https://'));
+  }finally{assert.ok(dir.startsWith(path.join(os.tmpdir(),'pebble-auth-log-')));fs.rmSync(dir,{recursive:true,force:true});}
+});

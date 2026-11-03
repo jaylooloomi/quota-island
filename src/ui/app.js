@@ -124,7 +124,7 @@ function sourceFor(id){
   if(id==='gemini')return state.settings.googleSource==='antigravity'?'Antigravity 本機服務的 Gemini 模型配額；沿用 Antigravity 帳號，需保持 Antigravity 執行。這不是 Gemini 網頁版或企業 Code Assist 額度。':'企業 Code Assist OAuth 配額；個人版請選擇 Antigravity 來源。';
   return id==='codex'?'官方 Codex app-server · account/rateLimits/read。由 Codex CLI 管理 ChatGPT 帳號授權。':'官方 Claude Code 管理登入，讀取本機授權後查詢 Claude OAuth 用量端點。';
 }
-function startLogin(id){activeDetail=id;void api.login(id);}
+function startLogin(id){activeDetail=id;settingsOpen=false;render(state);if(!state.auth[id]?.pending)void api.login(id);}
 function makeCards(){
   for(const id of ids){
     if(cardNodes[id])continue;
@@ -157,12 +157,13 @@ function makeCards(){
     grip.addEventListener('keydown',event=>{if(!event.altKey||!['ArrowUp','ArrowDown'].includes(event.key))return;const order=state.settings.order,index=order.indexOf(id),target=order[index+(event.key==='ArrowUp'?-1:1)];if(target){event.preventDefault();moveProvider(id,target);grip.focus();}});
     card.querySelector('.connection-status').addEventListener('click',()=>{activeDetail=activeDetail===id?null:id;render(state);});
     card.querySelector('.close-connection').addEventListener('click',()=>{activeDetail=null;render(state);});
-      card.querySelector('.connect-primary').addEventListener('click',()=>{const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
+      card.querySelector('.connect-primary').addEventListener('click',()=>{if(state.auth[id]?.pending){startLogin(id);return;}const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
     card.querySelector('.continue-claude-login').addEventListener('click',()=>api.continueClaudeLogin(id));
     card.querySelector('.login').addEventListener('click',()=>startLogin(id));
     card.querySelector('.quota-details-link').addEventListener('click',()=>{window.UsageTrends.close();quotaDetailsProvider=id;quotaDetailsOpen=true;activeDetail=null;settingsOpen=false;footerPopover=null;render(state);});
     card.querySelector('.pace-link').addEventListener('click',()=>{window.UsageTrends.close();paceDetailsProvider=paceDetailsProvider===id?null:id;quotaDetailsOpen=false;activeDetail=null;footerPopover=null;render(state);});
     card.querySelector('.account-switch').addEventListener('click',async()=>{
+      if(state.auth[id]?.pending){startLogin(id);return;}
       if(id==='gemini'&&state.settings.googleSource==='antigravity'){
         activeDetail=id;render(state);const result=await api.antigravityAccount('switch');
         if(!result.ok){state.auth[id]={pending:false,phase:'error',message:result.message};render(state);}
@@ -206,12 +207,13 @@ function renderConnection(id,s,auth){
   message.classList.toggle('success',!!connected);message.classList.toggle('error',phase==='error'||(!auth?.pending&&!['cooldown','waiting'].includes(phase)&&['stale','unavailable'].includes(s.status)));
   const text=phase==='syncing'?'自動同步中…':phase==='connecting'?'連接中…':auth?.pending?'等待授權…':id==='codex'?(connected?'切換 Codex 帳號 →':'登入 Codex（ChatGPT） →'):connected?'重新連接':antigravity?'連接 Antigravity 並同步 →':`登入 ${id==='gemini'?'Google':names[id]} 並同步 →`;
   for(const button of [card.querySelector('.login'),card.querySelector('.connect-primary')]){button.textContent=text;button.disabled=!!auth?.pending||(!s.enabled&&!isExtra(id));}
+  if(auth?.pending){const entry=card.querySelector('.connect-primary');entry.disabled=false;entry.textContent=phase==='web_login'?'繼續登入':'查看登入進度';}
   if(phase==='verifying')card.querySelector('.login').textContent='驗證授權碼中…';
   const limited=/429|限制查詢|查詢頻率/.test(s.error??'');
   card.querySelector('.connect-primary').hidden=false;
   if(limited&&!auth?.pending){for(const button of [card.querySelector('.login'),card.querySelector('.connect-primary')])button.textContent=`登入 ${id==='gemini'?'Google':names[id]}（管理授權） →`;}
-  else if(s.status==='unavailable')card.querySelector('.connect-primary').textContent='重新同步';
-  else if(s.status==='loading'){card.querySelector('.connect-primary').textContent='同步中…';card.querySelector('.connect-primary').disabled=true;}
+  else if(s.status==='unavailable'&&!auth?.pending)card.querySelector('.connect-primary').textContent='重新同步';
+  else if(s.status==='loading'&&!auth?.pending){card.querySelector('.connect-primary').textContent='同步中…';card.querySelector('.connect-primary').disabled=true;}
   card.querySelector('.connection-note').textContent=limited?`目前限制的是配額查詢，不代表已登出。可登入或更新授權；重新登入不會解除限流。${retryLabel(s)||'冷卻後自動重試'}。`:'登入完成後自動更新，不必手動查用量。';
   if(id==='codex')card.querySelector('.connection-note').textContent+=' Codex 使用獨立的 OpenAI／ChatGPT 授權；切換會同步更新本機 Codex CLI 的帳號，不會登出 Claude 或 Gemini。瀏覽器若帶入其他帳號，請選擇使用其他帳號登入。';
   if(auth?.pending)card.querySelector('.connection-note').textContent=phase==='verifying'?'正在等待官方登入程序完成驗證；配額限流不會阻止帳號授權。':'請在瀏覽器完成登入；若選錯帳號，可取消後重試。';
@@ -246,7 +248,7 @@ function renderCard(id){
   card.querySelector('.quota-display-mode').textContent=state.settings.remaining?'剩餘額度':'已用額度';
   if(state.settings.pacing)card.querySelector('.quota-display-mode').textContent='配速建議';
   let status=!s.enabled?'已暫停':s.status==='ready'?'已連接':s.status==='stale'?'更新失敗':s.status==='loading'?'同步中':s.status==='signed_out'?'未連接':limited?'服務限流':'讀取失敗';
-  if(expired)status='資料過期';if(auth?.pending)status=auth.phase==='syncing'?'同步中':'連接中';
+  if(expired)status='資料過期';if(auth?.pending)status=auth.phase==='web_login'?'等待登入':auth.codeRequired?'等待授權碼':auth.phase==='syncing'?'同步中':'連接中';
   card.querySelector('.status-label').textContent=status;
   if(disconnected)card.querySelector('.status-label').textContent='已中斷連接';
   const updated=card.querySelector('.updated');updated.textContent=elapsed(s.updatedAt);updated.title=s.error??(s.updatedAt?new Date(s.updatedAt).toLocaleString():'尚未同步');
@@ -277,8 +279,8 @@ function renderCard(id){
   card.querySelector('.empty-message').title=s.error??'';
   renderConnection(id,s,auth);
   const accountActions=card.querySelector('.account-actions');accountActions.hidden=currentView!=='accounts'||activeDetail===id;
-  const switchButton=card.querySelector('.account-switch');switchButton.textContent=usesAntigravity?'切換帳號':ready(s)?'切換帳號':'登入帳號';
-  switchButton.disabled=!!auth?.pending||logoutBusy===id||(!s.enabled&&!usesAntigravity&&!isExtra(id));
+  const switchButton=card.querySelector('.account-switch');switchButton.textContent=auth?.pending?(auth.phase==='web_login'?'繼續登入':'查看登入進度'):usesAntigravity?'切換帳號':ready(s)?'切換帳號':'登入帳號';
+  switchButton.disabled=logoutBusy===id||(!auth?.pending&&!s.enabled&&!usesAntigravity&&!isExtra(id));
   const logoutButton=card.querySelector('.account-logout');logoutButton.textContent=usesAntigravity?'中斷連接':'登出';logoutButton.hidden=usesAntigravity?!s.enabled:id==='gemini'||!s.reading;logoutButton.disabled=!!auth?.pending||logoutBusy===id;
   card.querySelector('.logout-confirm').hidden=confirmLogout!==id;
   if(isExtra(id))card.querySelector('.logout-confirm p').textContent='只登出此獨立帳號，不影響其他帳號。';

@@ -3,6 +3,7 @@ import path from 'node:path';
 export class Diagnostics {
   readonly file:string;
   private previous=new Map<string,string>();
+  private authSeen=new Set<string>();
   constructor(directory:string,private maxBytes=1024*1024){this.file=path.join(directory,'diagnostics.jsonl');}
   private write(event:Record<string,unknown>){
     try{
@@ -14,6 +15,15 @@ export class Diagnostics {
   startup(version:string,enabled:Record<string,boolean>){this.write({event:'startup',version:version.replace(/[^0-9.]/g,'').slice(0,24),enabled:{claude:enabled.claude,codex:enabled.codex,gemini:enabled.gemini}});}
   sourceToggle(provider:string,enabled:boolean){if(['claude','codex','gemini'].includes(provider))this.write({event:'source_toggle',origin:'settings',provider,enabled});}
   observe(snapshot:any){
+    for(const id of Object.keys(snapshot.auth??{}))if(/^(claude|codex|gemini|claude-account-[0-9a-f-]{36})$/.test(id))this.authSeen.add(id);
+    for(const id of this.authSeen){
+      const auth=snapshot.auth?.[id];
+      const phase=auth?.phase??'none';
+      if(!['none','web_login','authorizing','connecting','code','verifying','syncing','cooldown','waiting','ready','error'].includes(phase))continue;
+      // Phase/flags only: never log the authorization URL, code or messages.
+      const summary={event:'auth_state',provider:id,phase,pending:auth?.pending===true,codeRequired:auth?.codeRequired===true,canReopen:auth?.canReopen===true},serialized=JSON.stringify(summary);
+      if(this.previous.get('auth:'+id)!==serialized){this.previous.set('auth:'+id,serialized);this.write(summary);}
+    }
     for(const [id,r] of Object.entries(snapshot.morningHello??{}) as [string,any][]){
       if(!/^(claude|claude-account-[0-9a-f-]{36})$/.test(id)||!['sending','sent','confirmed','active','error','uncertain'].includes(r?.status))continue;
       const summary={event:'morning_hello',provider:id,status:r.status,day:/^\d{4}-\d\d-\d\d$/.test(r.day)?r.day:null,code:['auth','network','schema','rate_limit','missing_cli','storage'].includes(r.code)?r.code:null},serialized=JSON.stringify(summary);
