@@ -20,9 +20,15 @@ export class CompletionTracker {
   }
 }
 export function bubbleBounds(parent:{x:number;y:number;width:number;height:number},area:{x:number;y:number;width:number;height:number},anchor:number,height=142){
-  const width=Math.min(300,area.width),tip=Math.max(parent.x,Math.min(parent.x+parent.width,parent.x+anchor));
-  const x=Math.round(Math.max(area.x,Math.min(area.x+area.width-width,tip-width/2)));
-  const above=parent.y-height-4>=area.y;
-  const y=Math.round(Math.max(area.y,Math.min(area.y+area.height-height,above?parent.y-height-4:parent.y+parent.height+4)));
-  return{x,y,width,height,above,tip:Math.max(24,Math.min(width-24,tip-x))};
+  const width=Math.min(300,area.width),tip=Math.max(parent.x,Math.min(parent.x+parent.width,parent.x+anchor)),header=Math.min(60,parent.height);
+  height=Math.min(height,area.height);
+  const clampX=(x:number)=>Math.round(Math.max(area.x,Math.min(area.x+area.width-width,x))),clampY=(y:number)=>Math.round(Math.max(area.y,Math.min(area.y+area.height-height,y)));
+  let x=clampX(tip-width/2),y:number,placement:'above'|'below'|'left'|'right';
+  if(parent.y-height-4>=area.y){placement='above';y=clampY(parent.y-height-4);}
+  // Keep fallback notices near the header, never below the entire expanded
+  // panel. Prefer an exterior side so quota rows and controls stay accessible.
+  else if(parent.x+parent.width+8+width<=area.x+area.width){placement='right';x=clampX(parent.x+parent.width+8);y=clampY(parent.y+header/2-height/2);}
+  else if(parent.x-8-width>=area.x){placement='left';x=clampX(parent.x-8-width);y=clampY(parent.y+header/2-height/2);}
+  else{placement='below';y=clampY(parent.y+header+4);}
+  return{x,y,width,height,placement,above:placement==='above',tip:Math.max(24,Math.min(width-24,tip-x)),sideTip:Math.max(24,Math.min(height-24,parent.y+header/2-y))};
 }

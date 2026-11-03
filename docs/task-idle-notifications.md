@@ -26,6 +26,13 @@ corresponding task on View task. The main window dimensions do not change. The
 arrow anchors to the corresponding provider where visible. Chinese, English,
 Japanese and Korean are supported.
 
+As of v1.24.1, both card types use the monitor containing the header to choose
+their work area. Placement priority is above the header, outside its right/left
+edge, then immediately below the 60px header if neither side fits. Expanding a
+trend or settings panel never moves a fallback notice to the panel bottom. The
+arrow direction follows placement and the whole notice is clamped to the work
+area. Positioning does not resize the main window or restart dismissal timing.
+
 Tests: `npm test`, `node scripts/task-idle-bubble-test.cjs`,
 `node scripts/task-bubble-test.cjs`. The idle UI test feeds isolated local fixture
 events through the actual monitor and waits the full 30-second gate. Native

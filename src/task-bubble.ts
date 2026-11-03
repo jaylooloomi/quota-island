@@ -28,7 +28,7 @@ export class TaskBubble {
     this.window.setMenu(null);this.window.webContents.on('will-navigate',e=>e.preventDefault());this.window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
     this.window.webContents.once('did-finish-load',()=>{if(this.closed)return;this.ready=true;this.position();this.arm();});void this.window.loadFile(path.join(__dirname,'ui/task-bubble.html'));
   }this.position();this.arm();}
-  private position=()=>{if(!this.current||!this.ready||!this.window||this.parent.isDestroyed())return;const p=this.parent.getBounds(),b=bubbleBounds(p,screen.getDisplayMatching(p).workArea,this.anchors[this.current.provider]??this.anchor,this.current.kind==='idle'?166:142);this.window.setBounds({x:b.x,y:b.y,width:b.width,height:b.height});this.window.webContents.send('task-bubble-state',{...this.current,locale:this.locale,above:b.above,tip:b.tip});this.window.showInactive();};
+  private position=()=>{if(!this.current||!this.ready||!this.window||this.parent.isDestroyed())return;const p=this.parent.getBounds(),b=bubbleBounds(p,screen.getDisplayMatching({...p,height:Math.min(60,p.height)}).workArea,this.anchors[this.current.provider]??this.anchor,this.current.kind==='idle'?166:142);this.window.setBounds({x:b.x,y:b.y,width:b.width,height:b.height});this.window.webContents.send('task-bubble-state',{...this.current,locale:this.locale,above:b.above,placement:b.placement,sideTip:b.sideTip,tip:b.tip});this.window.showInactive();};
   private clear=()=>{clearTimeout(this.timer);this.queue=[];this.current=undefined;this.window?.hide();};
   close(){this.closed=true;this.clear();ipcMain.removeListener('task-bubble-action',this.action);ipcMain.removeListener('task-bubble-hover',this.hover);this.window?.destroy();}
 }

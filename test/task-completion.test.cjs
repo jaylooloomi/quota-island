@@ -15,8 +15,18 @@ test('completion proof requires observed matching active turn; failure, baseline
 test('bubble anchors to provider, follows parent, clamps multiple displays and falls below near top',()=>{
   const a={x:-1920,y:0,width:1920,height:1080},p={x:-1500,y:400,width:464,height:188};
   let b=bubbleBounds(p,a,280);assert.equal(b.y,254);assert.equal(b.x+b.tip,p.x+280);assert.equal(b.above,true);
-  b=bubbleBounds({...p,y:12},a,280);assert.equal(b.above,false);assert.equal(b.y,204);
+  b=bubbleBounds({...p,y:12},a,280);assert.equal(b.above,false);assert.equal(b.placement,'right');assert.ok(b.y<80);
   for(const x of [-1920,-470]){b=bubbleBounds({...p,x},a,280);assert.ok(b.x>=a.x&&b.x+b.width<=a.x+a.width);}
+});
+
+test('tall panels use header-adjacent placement, both notice heights fit, and fallback never follows panel bottom',()=>{
+  const area={x:0,y:40,width:960,height:680};
+  for(const height of [142,166])for(const panelHeight of [76,480,1100]){
+    const p={x:250,y:50,width:464,height:panelHeight},b=bubbleBounds(p,area,280,height);
+    assert.equal(b.placement,'below');assert.equal(b.y,114);assert.ok(b.y+b.height<=720);assert.ok(b.x>=0&&b.x+b.width<=960);
+    for(const x of [5,490]){const side=bubbleBounds({...p,x},area,280,height);assert.equal(side.placement,x===5?'right':'left');assert.ok(side.y>=40&&side.y<100);assert.ok(side.y+side.height<=720);assert.ok(side.sideTip>=24&&side.sideTip<=height-24);}
+  }
+  const b=bubbleBounds({x:-1500,y:-100,width:464,height:1000},{x:-1920,y:-120,width:1920,height:1080},280,166);assert.ok(b.x>=-1920&&b.y>=-120);assert.ok(b.y<0);
 });
 test('incremental local completion queue excludes historical, aborted, failed and subagent events; handles short appends',async()=>{
   const home=await fs.mkdtemp(path.join(os.tmpdir(),'pebble-completion-'));let now=Date.now();
