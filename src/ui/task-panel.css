@@ -46,3 +46,5 @@
 .summary-history{color:#d7dce2}
 
 .task-native-sources{display:flex;gap:5px;flex-wrap:wrap;margin:5px 0 8px}.task-source-health{font-size:9px;line-height:16px;border:1px solid #ffffff20;border-radius:5px;padding:1px 6px;color:#999fa8}.task-source-health[data-connected="true"]{color:#9cdbbd;border-color:#79b99c55;background:#67b39410}
+
+.task-counts>.task-stat{display:grid;grid-template-rows:16px 28px 15px;gap:3px;padding:10px;align-items:center;min-width:0}.task-stat-label{grid-row:1;white-space:nowrap}.task-stat-values{grid-row:2;display:flex;align-items:baseline;gap:5px;min-width:0;white-space:nowrap;font-variant-numeric:tabular-nums}.task-counts .task-stat-current{font-size:22px;line-height:28px}.task-stat[data-stat="running"] .task-stat-current{color:#a1e5d0}.task-counts .task-stat-divider{font-size:17px;color:#7f8a9b}.task-stat-peak{font-size:16px;color:#d0d9e8}.task-counts .task-stat-peak-label{font-size:9px;color:#9eacbd;margin-left:auto}.task-counts .task-stat-note{grid-row:3;font-size:9px;line-height:13px;color:#91a0b2;white-space:normal;overflow-wrap:anywhere}.task-stat-values:has(.task-stat-current:not(:only-child)){gap:4px}
