@@ -1,5 +1,6 @@
 import {CombinedTaskMonitor as TaskMonitor} from './combined-task-monitor';
 import {TaskBubble} from './task-bubble';
+import {IdleTracker} from './task-idle';
 import {UsageHistory} from './usage-history';
 import {AutoReconnect} from './auto-reconnect';
 import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray, globalShortcut, powerMonitor, Notification, safeStorage } from 'electron';
@@ -43,7 +44,7 @@ let paused = false;
 let providers: Providers;
 let poller: Poller;
 let usageHistory:UsageHistory;
-let taskMonitor:TaskMonitor;let taskBubble:TaskBubble;
+let taskMonitor:TaskMonitor;let taskBubble:TaskBubble;const idleTracker=new IdleTracker();
 let interval: NodeJS.Timeout;
 let connections: Connections;
 let credentialWatch: CredentialWatch;
@@ -90,6 +91,7 @@ let morningHello:MorningHello|undefined;
 function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, tasks:taskMonitor?.snapshot(), morningHello:morningHello?.snapshot()??{}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
 function publish() {
   persistRateLimits();
+  if(taskMonitor)for(const notice of idleTracker.observe(taskMonitor.snapshot().rows,settings.taskCompletionNotifications&&!paused&&!!win?.isVisible()))taskBubble?.enqueue(notice);
   if(poller){const snap=snapshot();diagnostics?.observe(snap);for(const [id,s] of Object.entries(snap.providers) as [string,ProviderState][])if(snap.paused||((snap.auth as any)?.[id]?.pending&&(snap.auth as any)[id].phase!=='syncing')||!s.enabled||['stale','unavailable','signed_out'].includes(s.status))usageHistory?.gap(id);}
   if (!win?.isDestroyed() && !win?.webContents.isDestroyed()) win?.webContents.send('state', snapshot());
   if (settings.notifications && !demo && !testing && Notification.isSupported()) {
@@ -258,7 +260,7 @@ else {
     readSettings();
     if(!demo&&!testing){if(process.argv.includes('--enable-autostart'))settings.autoStart=true;try{settings.autoStart=syncLoginStartup(app,settings.autoStart,{platform:process.platform,packaged:app.isPackaged,demo,testing,executable:process.execPath});saveSettings();}catch{settings.autoStart=false;}}
     usageHistory=new UsageHistory(path.join(app.getPath('userData'),demo?'demo-usage-history':'usage-history'));
-    taskMonitor=new TaskMonitor(testing?(process.env.QUOTA_TEST_SESSION_ROOT||path.join(app.getPath('userData'),'codex-sessions')):path.join(process.env.CODEX_HOME||path.join(homedir(),'.codex'),'sessions'),publish,!demo&&!testing,item=>{if(settings.taskCompletionNotifications&&!paused)taskBubble?.enqueue(item);});
+    taskMonitor=new TaskMonitor(testing?(process.env.QUOTA_TEST_SESSION_ROOT||path.join(app.getPath('userData'),'codex-sessions')):path.join(process.env.CODEX_HOME||path.join(homedir(),'.codex'),'sessions'),publish,!demo&&!testing,item=>{idleTracker.completion(item.id);if(settings.taskCompletionNotifications&&!paused)taskBubble?.enqueue(item);});
     diagnostics=new Diagnostics(path.join(app.getPath('userData'),demo?'demo-logs':'logs'));diagnostics.startup(app.getVersion(),settings.enabled);
     providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource);
     poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish,Date.now,(id,reading,time)=>usageHistory.record(id,reading,time,id==='claude'?600000:120000));if(!demo)poller.setMinimumInterval('claude',600000);

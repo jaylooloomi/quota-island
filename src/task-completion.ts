@@ -1,5 +1,5 @@
 import type {TaskRow} from './task-monitor';
-export type TaskCompletion={id:string;turnId:string;title:string;host:string;provider:'codex';time:number};
+export type TaskCompletion={kind?:'completed';id:string;turnId:string;title:string;host:string;provider:'codex';time:number};
 // Explicit successful terminal evidence only. A baseline, idle, disconnect or
 // assistant final message is never sufficient to announce completion.
 export class CompletionTracker {
@@ -19,8 +19,8 @@ export class CompletionTracker {
     return{id:row.id,turnId,title:row.title.slice(0,160),host:(row.host||'').slice(0,80),provider:'codex',time};
   }
 }
-export function bubbleBounds(parent:{x:number;y:number;width:number;height:number},area:{x:number;y:number;width:number;height:number},anchor:number){
-  const width=Math.min(300,area.width),height=142,tip=Math.max(parent.x,Math.min(parent.x+parent.width,parent.x+anchor));
+export function bubbleBounds(parent:{x:number;y:number;width:number;height:number},area:{x:number;y:number;width:number;height:number},anchor:number,height=142){
+  const width=Math.min(300,area.width),tip=Math.max(parent.x,Math.min(parent.x+parent.width,parent.x+anchor));
   const x=Math.round(Math.max(area.x,Math.min(area.x+area.width-width,tip-width/2)));
   const above=parent.y-height-4>=area.y;
   const y=Math.round(Math.max(area.y,Math.min(area.y+area.height-height,above?parent.y-height-4:parent.y+parent.height+4)));

@@ -13,7 +13,7 @@ export class CombinedTaskMonitor {
     if(remoteEnabled&&process.platform==='win32')this.remote=new RemoteTaskMonitor(path.dirname(sessionsRoot),changed,completed);
   }
   snapshot(){
-    const original=this.local.snapshot(),local={...original,rows:original.rows.map(r=>({...r,host:hostname()}))},remote=this.remote?.snapshot();
+    const original=this.local.snapshot(),local={...original,rows:original.rows.map(r=>({...r,host:hostname(),observedAt:original.checkedAt??undefined}))},remote=this.remote?.snapshot();
     const native=this.native?.snapshot();const localSource={available:original.liveCoverage,checkedAt:original.checkedAt??null};if(!remote&&!native)return {...local,localSource};
     const rank={waiting:0,running:1,idle:2,unknown:3};
     const allRows=[...local.rows,...(remote?.rows??[]),...(native?.rows??[])].sort((a,b)=>rank[a.status]-rank[b.status]||(b.confirmedAt??0)-(a.confirmedAt??0));const rows=allRows.slice(0,100);
