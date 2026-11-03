@@ -2,6 +2,7 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['任務完成訊息泡','Task completion bubble','タスク完了通知','작업 완료 알림'],
     ['預覽 3 分鐘，期間可隨時關閉','Preview for 3 minutes; dismiss at any time.','3分間プレビュー。いつでも閉じられます。','3분간 미리보기, 언제든 닫을 수 있습니다.'],
     ['常駐散步陪伴','Resident roaming pet','常駐お散歩ペット','상주 산책 친구'],['常駐向左、向右散步；關閉後才離開，救援短劇結束後恢復散步','Walks left and right until dismissed; resumes after rescue scenes.','閉じるまで左右にお散歩。救援劇の後はお散歩を再開します。','닫을 때까지 좌우로 산책하며 구조 극장이 끝나면 다시 산책합니다.'],
     ['隨機角色散步 24 秒；自動模式每 2–5 分鐘出現一次','A random pet strolls for 24 seconds; automatic visits occur every 2–5 minutes.','ランダムなペットが24秒お散歩。自動では2～5分ごとに登場します。','무작위 펫이 24초 산책하며 자동 모드에서는 2~5분마다 나타납니다.'],

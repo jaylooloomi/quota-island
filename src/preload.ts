@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('quota', {
+  taskBubbleAnchor:(x:number)=>ipcRenderer.invoke('task-bubble-anchor',x),
+  onTaskFocus:(fn:(id:string)=>void)=>ipcRenderer.on('task-focus',(_event,id)=>fn(id)),
   tasksStart:()=>ipcRenderer.invoke('tasks-start'),
   historyQuery:(id:string,window:string,days:number)=>ipcRenderer.invoke('history-query',id,window,days),
   historyClear:()=>ipcRenderer.invoke('history-clear'),

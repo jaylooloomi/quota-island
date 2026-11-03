@@ -26,7 +26,8 @@ separate existing feature and must not be used as evidence of task execution.
 - Use only existing current-user enrollment and matching public-key evidence.
   Windows CNG may sign validated official challenges; never export private keys,
   modify official App binaries, reset pairing or impersonate an assistant chat.
-- Remote task RPCs are limited to initialization, `thread/list` and `thread/read`
-  without turns. Do not resume threads, start tasks or send approvals.
+- Remote task RPCs are limited to initialization, `thread/list`, `thread/read`
+  without turns, and `thread/turns/list` limited to the latest turn with
+  `itemsView: notLoaded` (completion metadata only; no turn items). Do not resume threads, start tasks or send approvals.
 - Remote snapshots retain task metadata only. Disconnect, expired observations,
   unsupported runtime states and failed reads must be represented as unknown.

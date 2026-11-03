@@ -1,3 +1,4 @@
+import {CompletionTracker,TaskCompletion} from './task-completion';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -112,7 +113,9 @@ export class Controller {
     this.pending.delete(m.id);clearTimeout(p.timer);m.error?p.reject(Error('REMOTE_RPC_ERROR')):p.resolve(m.result);
   }
   async rpc(env:string,method:string,params:any){
-    if(!['initialize','thread/list','thread/read'].includes(method))throw Error('METHOD_NOT_ALLOWED');
+    if(!['initialize','thread/list','thread/read','thread/turns/list'].includes(method))throw Error('METHOD_NOT_ALLOWED');
+    if(method==='thread/read'&&params?.includeTurns===true)throw Error('TURN_ITEMS_NOT_ALLOWED');
+    if(method==='thread/turns/list'&&(params?.itemsView!=='notLoaded'||params?.limit!==1||params?.sortDirection!=='desc'))throw Error('INVALID_TURN_QUERY');
     if(!this.usable)throw Error('DISCONNECTED');let stream=this.streams.get(env);
     if(!stream){stream={env,id:crypto.randomUUID(),seq:0};this.streams.set(env,stream);try{await this.rpc(env,'initialize',{clientInfo:{name:'quota_pebble',version:'1.20.0'},capabilities:{experimentalApi:true}});this.send(stream,{method:'initialized',params:{}});}catch(e){this.streams.delete(env);throw e;}}
     const id=++this.nextId;return new Promise<any>((resolve,reject)=>{const timer=setTimeout(()=>{this.pending.delete(id);reject(Error('RPC_TIMEOUT'));},12000);this.pending.set(id,{resolve,reject,timer,env,stream:stream!.id});try{this.send(stream!,{id,method,params});}catch{clearTimeout(timer);this.pending.delete(id);reject(Error('DISCONNECTED'));}});
@@ -123,9 +126,9 @@ export class Controller {
   disconnect(){this.closed=true;this.authenticated=false;this.rejectReady?.(Error('DISCONNECTED'));this.rejectReady=undefined;this.resolveReady=undefined;for(const p of this.pending.values()){clearTimeout(p.timer);p.reject(Error('DISCONNECTED'));}this.pending.clear();this.chunks.clear();const ws=this.ws;this.ws=undefined;if(ws?.readyState===1){try{for(const s of this.streams.values())ws.send(JSON.stringify({type:'client_closed',client_id:this.enrollment.clientId,env_id:s.env,stream_id:s.id,seq_id:++s.seq}));ws.close();setTimeout(()=>ws.terminate(),500).unref();}catch{ws.terminate();}}else ws?.terminate();this.streams.clear();}
 }
 export class RemoteTaskMonitor {
-  private controller:Controller;private rows:TaskRow[]=[];private busy=false;private closed=false;private timer?:NodeJS.Timeout;private retryAt=0;private failures=0;private checkedAt:number|null=null;private available=false;private partial=false;private error='';
-  constructor(private root:string,private changed:()=>void){this.controller=new Controller(root,()=>{this.invalidate();this.changed();});}
-  private invalidate(){this.available=false;this.rows=this.rows.map(r=>({...r,status:'unknown'}));}
+  private completions=new CompletionTracker();private controller:Controller;private rows:TaskRow[]=[];private busy=false;private closed=false;private timer?:NodeJS.Timeout;private retryAt=0;private failures=0;private checkedAt:number|null=null;private available=false;private partial=false;private error='';
+  constructor(private root:string,private changed:()=>void,private completed?:(value:TaskCompletion)=>void){this.controller=new Controller(root,()=>{this.invalidate();this.changed();});}
+  private invalidate(){this.completions.reset();this.available=false;this.rows=this.rows.map(r=>({...r,status:'unknown'}));}
   snapshot(){if(this.checkedAt&&Date.now()-this.checkedAt>65000)this.invalidate();const now=Date.now();return {rows:this.rows.map(r=>r.observedAt&&now-r.observedAt>65000?{...r,status:'unknown' as const}:r),available:this.available,partial:this.partial,checkedAt:this.checkedAt,error:this.error};}
   start(){if(this.closed)return;if(!this.timer){this.timer=setInterval(()=>void this.tick(),30000);this.timer.unref();}void this.tick();}
   async tick(){
@@ -138,14 +141,25 @@ export class RemoteTaskMonitor {
       for(const env of environments.slice(0,5)){
         if(this.closed)return;
         const previous=this.rows.filter(r=>r.id.startsWith(env.env_id+':'));
-        if(!env.online){rows.push(...previous.map(r=>({...r,status:'unknown' as const})));continue;}
+        if(!env.online){this.completions.reset();rows.push(...previous.map(r=>({...r,status:'unknown' as const})));continue;}
         try{
           const list=await this.controller.rpc(env.env_id,'thread/list',{limit:30,sortKey:'updated_at',sortDirection:'desc'});partial=partial||!!list.nextCursor;
           const deadline=Date.now()+20000;for(const t of (list.data||[]).slice(0,30)){
             if(this.closed)return;
             let row=remoteRow(t,env.env_id,env.display_name||env.host_name||env.name,Date.now());if(!row)continue;
             try{if(Date.now()>deadline)throw Error('SCAN_BUDGET');const read=await this.controller.rpc(env.env_id,'thread/read',{threadId:t.id,includeTurns:false});row=remoteRow(read.thread,env.env_id,row.host||'',Date.now());}catch{if(row)row={...row,status:'unknown'};partial=true;}
-            if(row)rows.push(row);
+            if(row){
+              const prior=previous.find(r=>r.id===row!.id);
+              if(row.status==='unknown')this.completions.reset();
+              if(this.completed&&row.status!=='unknown'&&(['running','waiting'].includes(row.status)||prior&&['running','waiting'].includes(prior.status))){
+                try{if(Date.now()>deadline)throw Error('SCAN_BUDGET');const result=await this.controller.rpc(env.env_id,'thread/turns/list',{threadId:t.id,limit:1,sortDirection:'desc',itemsView:'notLoaded'});const turn=result.data?.[0];
+                  if(typeof turn?.id==='string'&&/^[\w-]{1,128}$/.test(turn.id)&&['inProgress','completed','interrupted','failed'].includes(turn.status)){
+                    const item=this.completions.observe(row,turn.id,turn.status,Date.now());if(item&&!this.closed)this.completed(item);
+                  }
+                }catch{this.completions.reset();/* Missing completion proof must not affect runtime status. */}
+              }
+              rows.push(row);
+            }
           }
         }catch{rows.push(...previous.map(r=>({...r,status:'unknown' as const})));partial=true;}
       }

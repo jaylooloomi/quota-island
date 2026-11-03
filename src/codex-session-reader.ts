@@ -1,6 +1,7 @@
 import {open,readdir,lstat} from 'node:fs/promises';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
+import type {TaskCompletion} from './task-completion';
 import type {TaskRow,TaskStatus} from './task-monitor';
 
 // Independent metadata-only implementation, informed by Ocelin's bounded
@@ -10,9 +11,11 @@ export const SESSION_FRESH_MS=5*60_000;
 const validId=(s:unknown):s is string=>typeof s==='string'&&/^[\w-]{1,128}$/.test(s);
 const text=(s:unknown,n=512)=>typeof s==='string'?s.replace(/[\u0000-\u001f\u007f]/g,' ').slice(0,n):'';
 type State={id:string;project:string;parent:boolean;turn:string;retired:Set<string>;terminal:boolean;status:TaskStatus;time:number;reason:string;waitingCall?:string};
-type Cursor={state:State;offset:number;size:number;mtime:number;identity:string;prefix:string;skip:boolean};
+type Cursor={state:State;offset:number;size:number;mtime:number;identity:string;prefix:string;prefixLength:number;skip:boolean};
 export class CodexSessionReader{
   private files=new Map<string,Cursor>();private busy=false;private discovery=0;private candidates:string[]=[];private names=new Map<string,string>();
+  private completedKeys=new Set<string>();private completions:TaskCompletion[]=[];private readingBaseline=true;
+  drainCompletions(){return this.completions.splice(0);}
   available=false;partial=false;bytesRead=0;
   constructor(private root:string,private now=Date.now){}
   private empty(id:string):State{return{id,project:'',parent:false,turn:'',retired:new Set(),terminal:false,status:'unknown',time:0,reason:'no-events'};}
@@ -52,7 +55,12 @@ export class CodexSessionReader{
     if(reason==='turn-start'){s.terminal=false;if(turn)s.turn=turn;}
     if(status==='waiting')s.waitingCall=typeof p.call_id==='string'?p.call_id:undefined;
     else if(reason==='tool-result'||status==='idle'||reason==='turn-start')s.waitingCall=undefined;
-    if(status==='idle')s.terminal=true;
+    if(status==='idle'){
+      if(!this.readingBaseline&&!s.parent&&!!s.project&&reason==='turn-complete'&&turn&&turn===s.turn&&(p.status===undefined||p.status==='completed'||p.status?.type==='completed')&&!p.error&&!p.aborted&&!p.cancelled&&this.now()-time<120000&&!this.completedKeys.has(s.id+':'+turn)){
+        this.completedKeys.add(s.id+':'+turn);if(this.completedKeys.size>1000)this.completedKeys.delete(this.completedKeys.values().next().value!);
+        this.completions.push({id:s.id,turnId:turn,title:this.names.get(s.id)||'Codex session',host:'',provider:'codex',time});if(this.completions.length>100)this.completions.shift();
+      }s.terminal=true;
+    }
     s.status=status;s.time=time;s.reason=reason;
   }
   private lines(c:Cursor,b:Buffer,start:number){
@@ -69,13 +77,13 @@ export class CodexSessionReader{
     const stat=await lstat(file);if(!stat.isFile()||stat.isSymbolicLink())throw Error('Not a regular file');
     const handle=await open(file,'r');
     try{
-      let c=this.files.get(file);const identity=`${stat.dev}:${stat.ino}:${stat.birthtimeMs}`;
+      let c=this.files.get(file);this.readingBaseline=!c;const identity=`${stat.dev}:${stat.ino}:${stat.birthtimeMs}`;
       if(c&&c.size===stat.size&&c.mtime===stat.mtimeMs&&c.offset===stat.size)return;
-      const prefix=Buffer.alloc(Math.min(1024,stat.size));await handle.read(prefix,0,prefix.length,0);this.bytesRead+=prefix.length;
+      const prefix=Buffer.alloc(Math.min(c?.prefixLength??1024,stat.size));await handle.read(prefix,0,prefix.length,0);this.bytesRead+=prefix.length;
       const digest=createHash('sha256').update(prefix).digest('hex');
       if(!c||c.identity!==identity||stat.size<c.offset||c.prefix!==digest||stat.size===c.size&&stat.mtimeMs!==c.mtime){
         const id=/rollout-.*-([0-9a-f]{8}-[0-9a-f-]{27})\.jsonl$/i.exec(path.basename(file))?.[1];if(!id)return;
-        c={state:this.empty(id),offset:0,size:0,mtime:0,identity,prefix:digest,skip:false};this.files.set(file,c);
+        this.readingBaseline=true;c={state:this.empty(id),offset:0,size:0,mtime:0,identity,prefix:digest,prefixLength:prefix.length,skip:false};this.files.set(file,c);
         if(stat.size>HEAD+CHUNK){
           const head=Buffer.alloc(HEAD);await handle.read(head,0,head.length,0);this.bytesRead+=head.length;
           for(const line of head.toString('utf8').split('\n')){try{const r=JSON.parse(line);if(r.type==='session_meta')this.consume(c.state,r);}catch{}}

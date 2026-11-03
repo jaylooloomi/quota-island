@@ -1,4 +1,5 @@
 import {CombinedTaskMonitor as TaskMonitor} from './combined-task-monitor';
+import {TaskBubble} from './task-bubble';
 import {UsageHistory} from './usage-history';
 import {AutoReconnect} from './auto-reconnect';
 import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray, globalShortcut, powerMonitor, Notification, safeStorage } from 'electron';
@@ -27,8 +28,8 @@ if (testing) {
   app.setPath('userData', testData);
 }
 const petBackgrounds = ["meteor","meteor-day","cloud-day","cloud-night","sakura-day","sakura-night","coast-day","coast-night","snow-day","snow-night","greenhouse-day","greenhouse-night"] as const;
-type Settings = { compactTaskSummary:boolean; petCharacter:'claude'|'codex'|'gemini'|'octopus'|'random'; petPlacement:'stage'|'title'; autoStart:boolean; petBackground:typeof petBackgrounds[number]; petRoam:boolean; petStyle:'smooth'; petIdle:boolean;petAlerts:boolean; morningHelloEnabled:boolean; morningHelloTime:string; locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; pacing: boolean; reserveDefaultsVersion:3; reservePercent: Record<ProviderId, number>; paceWindows: Partial<Record<ProviderId, string>>; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: string[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; dock?:Dock; x?: number; y?: number };
-let settings: Settings = { compactTaskSummary:false, petCharacter:'claude', petPlacement:'stage', autoStart:true, petBackground:'meteor', petRoam:!demo, petStyle:'smooth', petIdle:!demo,petAlerts:!demo, morningHelloEnabled:true, morningHelloTime:'08:00', locale:'zh-TW', remaining: true, pacing:false, reserveDefaultsVersion:3, reservePercent:{claude:10,codex:10,gemini:10}, paceWindows:{}, alwaysOnTop: true, notifications: true, visible: { claude:true, codex:true, gemini:true }, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
+type Settings = { taskCompletionNotifications:boolean; compactTaskSummary:boolean; petCharacter:'claude'|'codex'|'gemini'|'octopus'|'random'; petPlacement:'stage'|'title'; autoStart:boolean; petBackground:typeof petBackgrounds[number]; petRoam:boolean; petStyle:'smooth'; petIdle:boolean;petAlerts:boolean; morningHelloEnabled:boolean; morningHelloTime:string; locale: 'zh-TW' | 'en' | 'ja' | 'ko'; remaining: boolean; pacing: boolean; reserveDefaultsVersion:3; reservePercent: Record<ProviderId, number>; paceWindows: Partial<Record<ProviderId, string>>; alwaysOnTop: boolean; notifications: boolean; visible: Record<ProviderId, boolean>; enabled: Record<ProviderId, boolean>; order: string[]; googleSource: 'antigravity' | 'code_assist'; presentationVersion:2; dock?:Dock; x?: number; y?: number };
+let settings: Settings = { taskCompletionNotifications:true, compactTaskSummary:false, petCharacter:'claude', petPlacement:'stage', autoStart:true, petBackground:'meteor', petRoam:!demo, petStyle:'smooth', petIdle:!demo,petAlerts:!demo, morningHelloEnabled:true, morningHelloTime:'08:00', locale:'zh-TW', remaining: true, pacing:false, reserveDefaultsVersion:3, reservePercent:{claude:10,codex:10,gemini:10}, paceWindows:{}, alwaysOnTop: true, notifications: true, visible: { claude:true, codex:true, gemini:true }, enabled: { claude: true, gemini: true, codex: true }, order: ['claude','codex','gemini'], googleSource:'antigravity', presentationVersion:2 };
 function validOrder(raw: unknown): raw is string[] {
   return Array.isArray(raw) && raw.length >= 3 && raw.length <= 23 && new Set(raw).size === raw.length && providerIds.every(id=>raw.includes(id)) && raw.every(id => providerIds.includes(id) || (typeof id === 'string' && /^claude-account-[0-9a-f-]{36}$/.test(id)));
 }
@@ -42,7 +43,7 @@ let paused = false;
 let providers: Providers;
 let poller: Poller;
 let usageHistory:UsageHistory;
-let taskMonitor:TaskMonitor;
+let taskMonitor:TaskMonitor;let taskBubble:TaskBubble;
 let interval: NodeJS.Timeout;
 let connections: Connections;
 let credentialWatch: CredentialWatch;
@@ -77,7 +78,7 @@ function readSettings() {
     for(const id of providerIds){if(typeof s.reservePercent?.[id]==='number'&&Number.isFinite(s.reservePercent[id])&&s.reservePercent[id]>=0&&s.reservePercent[id]<=100)settings.reservePercent[id]=s.reserveDefaultsVersion===2&&s.reservePercent[id]===5?10:s.reservePercent[id];if(typeof s.paceWindows?.[id]==='string'&&s.paceWindows[id].length<=160)settings.paceWindows[id]=s.paceWindows[id];}
     for (const id of providerIds) if (typeof s.visible?.[id] === 'boolean') settings.visible[id] = s.visible[id];
     if (s.googleSource === 'antigravity' || s.googleSource === 'code_assist') settings.googleSource=s.googleSource;
-    for (const key of ['compactTaskSummary','autoStart','remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof s[key] === 'boolean' && (key!=='remaining'||s.presentationVersion===2)) settings[key] = s[key];
+    for (const key of ['taskCompletionNotifications','compactTaskSummary','autoStart','remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof s[key] === 'boolean' && (key!=='remaining'||s.presentationVersion===2)) settings[key] = s[key];
     for (const id of providerIds) if (typeof s.enabled?.[id] === 'boolean') settings.enabled[id] = s.enabled[id];
     if (Number.isFinite(s.x) && Number.isFinite(s.y)) { settings.x = s.x; settings.y = s.y; }
   } catch { /* First run or invalid preferences: use defaults. */ }
@@ -153,6 +154,7 @@ function installHandlers() {
   // Only our trusted local renderer may call IPC. No arbitrary URLs, commands or paths.
   for (const [channel, handler] of Object.entries({
     'get-state': () => snapshot(),
+    'task-bubble-anchor':(_event:any,x:unknown)=>taskBubble?.setAnchor(x),
     'tasks-start':async()=>{await taskMonitor.start();return taskMonitor.snapshot();},
     'history-query': (_event:any,id:unknown,window:unknown,days:unknown)=>{if(typeof id!=='string'||!providerIds.includes(id as ProviderId)&&!accounts.has(id))throw new Error('Unknown account');return usageHistory.query(id,window,days);},
     'history-clear':()=>({ok:usageHistory.clear()}),
@@ -182,12 +184,12 @@ function installHandlers() {
       if (validOrder(patch.order)&&patch.order.every((id:string)=>providerIds.includes(id as ProviderId)||accounts.has(id))) settings.order = [...patch.order];
       const sourceChanged = !connections.states.gemini?.pending && (patch.googleSource === 'antigravity' || patch.googleSource === 'code_assist') && patch.googleSource !== settings.googleSource;
       if (sourceChanged) { settings.googleSource=patch.googleSource; delete connections.states.gemini; }
-      for (const key of ['compactTaskSummary','autoStart','remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof patch[key] === 'boolean') settings[key] = patch[key];
+      for (const key of ['taskCompletionNotifications','compactTaskSummary','autoStart','remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof patch[key] === 'boolean') settings[key] = patch[key];
       if (patch.enabled && typeof patch.enabled === 'object') for (const id of providerIds) if (typeof patch.enabled[id] === 'boolean') {
         if(settings.enabled[id]!==patch.enabled[id])diagnostics?.sourceToggle(id,patch.enabled[id]);
         settings.enabled[id] = patch.enabled[id]; poller.setEnabled(id, patch.enabled[id]);
       }
-      win.setAlwaysOnTop(settings.alwaysOnTop);maintainTop(); saveSettings(); publish();
+      win.setAlwaysOnTop(settings.alwaysOnTop);maintainTop();taskBubble?.configure(settings.locale,settings.taskCompletionNotifications);if(settings.taskCompletionNotifications&&!demo)void taskMonitor.start(); saveSettings(); publish();
       if (sourceChanged) {poller.identityChanged('gemini');usageHistory.boundary('gemini','source');void poller.authenticated('gemini');}
       if (!paused) void poller.tick();
     },
@@ -256,7 +258,7 @@ else {
     readSettings();
     if(!demo&&!testing){if(process.argv.includes('--enable-autostart'))settings.autoStart=true;try{settings.autoStart=syncLoginStartup(app,settings.autoStart,{platform:process.platform,packaged:app.isPackaged,demo,testing,executable:process.execPath});saveSettings();}catch{settings.autoStart=false;}}
     usageHistory=new UsageHistory(path.join(app.getPath('userData'),demo?'demo-usage-history':'usage-history'));
-    taskMonitor=new TaskMonitor(testing?(process.env.QUOTA_TEST_SESSION_ROOT||path.join(app.getPath('userData'),'codex-sessions')):path.join(process.env.CODEX_HOME||path.join(homedir(),'.codex'),'sessions'),publish,!demo&&!testing);
+    taskMonitor=new TaskMonitor(testing?(process.env.QUOTA_TEST_SESSION_ROOT||path.join(app.getPath('userData'),'codex-sessions')):path.join(process.env.CODEX_HOME||path.join(homedir(),'.codex'),'sessions'),publish,!demo&&!testing,item=>{if(settings.taskCompletionNotifications&&!paused)taskBubble?.enqueue(item);});
     diagnostics=new Diagnostics(path.join(app.getPath('userData'),demo?'demo-logs':'logs'));diagnostics.startup(app.getVersion(),settings.enabled);
     providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource);
     poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish,Date.now,(id,reading,time)=>usageHistory.record(id,reading,time,id==='claude'?600000:120000));if(!demo)poller.setMinimumInterval('claude',600000);
@@ -292,6 +294,7 @@ else {
       alwaysOnTop: settings.alwaysOnTop, skipTaskbar: true, show: false, title: 'Quota Pebble', icon: path.join(__dirname, 'ui/icons/quota-pebble.png'),
       webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true }
     });
+    taskBubble=new TaskBubble(win,id=>{setExpanded(true);win.show();win.webContents.send('task-focus',id);});taskBubble.configure(settings.locale,settings.taskCompletionNotifications);
     win.setMenu(null); reposition();
     win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     win.webContents.on('will-navigate', event => event.preventDefault());
@@ -316,7 +319,7 @@ else {
     powerMonitor.on('suspend', () => { paused = true; publish(); });
     powerMonitor.on('resume', () => { paused = false; publish(); void poller.tick(); });
     await win.loadFile(path.join(__dirname, 'ui/index.html'));
-    if(settings.compactTaskSummary&&!demo)void taskMonitor.start();
+    if((settings.compactTaskSummary||settings.taskCompletionNotifications)&&!demo)void taskMonitor.start();
     win.show();
     if (!demo) await credentialWatch.scan();
     void poller.tick();
@@ -326,6 +329,6 @@ else {
       if(!demo&&morningHello){const current:any=snapshot();void morningHello.tick(settings.morningHelloEnabled,settings.morningHelloTime,['claude',...current.accounts.map((a:any)=>a.id)].map((id:string)=>({id,state:current.providers[id],pending:current.auth[id]?.pending})),paused);}
     }, 5000);
   });
-  app.on('before-quit', () => { quitting = true; taskMonitor?.close();clearInterval(interval);clearInterval(topTimer); clearTimeout(dragTimer); accounts?.close();providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
+  app.on('before-quit', () => { quitting = true; taskBubble?.close();taskMonitor?.close();clearInterval(interval);clearInterval(topTimer); clearTimeout(dragTimer); accounts?.close();providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
   app.on('window-all-closed', () => { if (quitting) app.quit(); });
 }

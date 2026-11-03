@@ -1,12 +1,13 @@
+import type {TaskCompletion} from './task-completion';
 import {LocalTaskMonitor} from './local-task-monitor';
 import {RemoteTaskMonitor} from './remote-task-monitor';
 import path from 'node:path';
 import {hostname} from 'node:os';
 export class CombinedTaskMonitor {
   private local:LocalTaskMonitor;private remote?:RemoteTaskMonitor;
-  constructor(sessionsRoot:string,private changed:()=>void,remoteEnabled:boolean){
-    this.local=new LocalTaskMonitor(sessionsRoot,changed);
-    if(remoteEnabled&&process.platform==='win32')this.remote=new RemoteTaskMonitor(path.dirname(sessionsRoot),changed);
+  constructor(sessionsRoot:string,private changed:()=>void,remoteEnabled:boolean,completed?:(value:TaskCompletion)=>void){
+    this.local=new LocalTaskMonitor(sessionsRoot,changed,Date.now,item=>completed?.({...item,host:hostname()}));
+    if(remoteEnabled&&process.platform==='win32')this.remote=new RemoteTaskMonitor(path.dirname(sessionsRoot),changed,completed);
   }
   snapshot(){
     const original=this.local.snapshot(),local={...original,rows:original.rows.map(r=>({...r,host:hostname()}))},remote=this.remote?.snapshot();

@@ -53,3 +53,17 @@ test('remote monitor excludes local host, refreshes actual status, invalidates o
     m.controller.connect=async()=>{calls++;throw Error('REMOTE_HTTP_429');};await m.tick();assert.equal(m.snapshot().available,false);const before=calls;await m.tick();assert.equal(calls,before,'backoff blocks repeated retries');assert.equal(m.snapshot().rows[0].status,'unknown');
   }finally{m.close();fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test('remote completion uses metadata-only matching successful turn; cancelled turns and reconnect baseline stay silent',async()=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'pebble-remote-completion-'));fs.writeFileSync(path.join(root,'.codex-global-state.json'),'{}');
+  const events=[],m=new RemoteTaskMonitor(root,()=>{},item=>events.push(item));let active=true,turn='a',status='inProgress';
+  m.controller={usable:true,connect:async()=>{},request:async()=>({items:[{env_id:'env_other',online:true,display_name:'PC'}]}),rpc:async(env,method,params)=>{
+    if(method==='thread/list')return{data:[{id:'t',name:'Title',updatedAt:Date.now()/1000}]};
+    if(method==='thread/read')return{thread:{id:'t',name:'Title',updatedAt:Date.now()/1000,status:{type:active?'active':'idle',activeFlags:[]}}};
+    assert.equal(method,'thread/turns/list');assert.deepEqual(params,{threadId:'t',limit:1,sortDirection:'desc',itemsView:'notLoaded'});return{data:[{id:turn,status,items:[]}]};
+  },heartbeat(){},disconnect(){}};
+  try{await m.tick();assert.equal(events.length,0);active=false;status='completed';await m.tick();assert.equal(events.length,1);assert.equal(events[0].host,'PC');assert.equal(events[0].id,'env_other:t');await m.tick();assert.equal(events.length,1);
+    active=true;turn='b';status='inProgress';await m.tick();active=false;status='interrupted';await m.tick();assert.equal(events.length,1);
+    active=true;turn='c';status='inProgress';await m.tick();m.invalidate();active=false;status='completed';await m.tick();assert.equal(events.length,1);
+  }finally{m.close();assert.ok(root.startsWith(path.join(os.tmpdir(),'pebble-remote-completion-')));fs.rmSync(root,{recursive:true,force:true});}
+});

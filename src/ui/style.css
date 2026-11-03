@@ -549,3 +549,5 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 
 /* Leave room for fractional font metrics at 75% scaling in compact settings. */
 .settings{padding-top:8px;padding-bottom:8px}
+
+.task-completed-highlight{outline:1px solid #92dfb4;box-shadow:0 0 12px #80dab329;}
