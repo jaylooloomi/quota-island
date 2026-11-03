@@ -1,9 +1,11 @@
 (function(root){
   'use strict';
+  const series=typeof module==='object'&&module.exports?require('./trend-series'):root.QuotaTrendSeries;
   function kind(a,b){
+    if(a&&series.cycleBoundary(a,b)==='reset')return'reset';
     if(!a||a.segment===b.segment)return null;
     if(b.reason==='reset')return'reset';
-    if(b.reason==='change')return Number.isFinite(a.reset)&&Number.isFinite(b.reset)&&a.reset!==b.reset&&Math.abs(a.used-b.used)<.01?'schedule':'change';
+    if(b.reason==='change')return Number.isFinite(a.reset)&&Number.isFinite(b.reset)&&a.reset!==b.reset&&b.used>=a.used-.01?'schedule':'change';
     return'gap';
   }
   function summarize(points,from,to,width){
