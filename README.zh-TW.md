@@ -3,14 +3,17 @@
 <!-- project-badges -->
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-3b82f6?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/releases/tag/v1.16.10"><img alt="Released version v1.16.10" src="https://img.shields.io/badge/release-v1.16.10-8b87de?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/releases/latest"><img alt="Windows and macOS releases" src="https://img.shields.io/badge/platform-Windows%20%2B%20macOS-64748b?style=flat"></a>
+  <a href="https://github.com/jaylooloomi/quota-pebble/releases/latest"><img alt="Latest GitHub release" src="https://img.shields.io/github/v/release/jaylooloomi/quota-pebble?style=flat&color=8b87de"></a>
+  <a href="https://github.com/jaylooloomi/quota-pebble/releases/latest"><img alt="Windows and macOS releases" src="https://img.shields.io/badge/platform-Windows%20%2B%20macOS-64748b?style=flat"></a>
   <a href="#從原始碼執行"><img alt="Built with Electron and TypeScript" src="https://img.shields.io/badge/built%20with-Electron%20%2B%20TypeScript-487fa8?style=flat"></a>
   <a href="#桌面操作"><img alt="Interface languages: Traditional Chinese, English, Japanese, Korean" src="https://img.shields.io/badge/UI-%E7%B9%81%E4%B8%AD%20%2F%20EN%20%2F%20%E6%97%A5%E6%9C%AC%E8%AA%9E%20%2F%20%ED%95%9C%EA%B5%AD%EC%96%B4-637e64?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/actions/workflows/build.yml"><img alt="View actual GitHub Actions results" src="https://img.shields.io/badge/CI-view%20runs-64748b?style=flat"></a>
+  <a href="https://github.com/jaylooloomi/quota-pebble/actions/workflows/build.yml"><img alt="View actual GitHub Actions results" src="https://img.shields.io/badge/CI-view%20runs-64748b?style=flat"></a>
 </p>
 <!-- /project-badges -->
-<p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">下載 Windows / macOS</a> · <a href="README.md">English</a> · <a href="LICENSE">MIT</a></p>
+
+> 開發分支 v1.29.0 新增[寵物成長與 RSS／Atom 訊息](docs/companion-growth-and-messages.md)。正式 v1.28.2 已提供 Windows x64，以及通過原生 CI 驗證的 macOS ARM64／Intel ZIP（ad-hoc 簽章，未公證）。任務來源支援 Codex 本機／已授權遠端、Claude Code／Antigravity 本機；後兩者的跨電腦介接仍在驗證。
+
+<p align="center"><a href="https://github.com/jaylooloomi/quota-pebble/releases/latest">下載 Windows / macOS</a> · <a href="README.md">English</a> · <a href="LICENSE">MIT</a></p>
 
 <p align="center"><img src="docs/readme-v1.16.10/stage-zh-TW.png" alt="上面掌握額度，下面有個小夥伴。" width="464"><br><b>上面掌握額度，下面有個小夥伴。</b><br><sub>App 實際截圖 · 展示資料</sub></p>
 
@@ -86,7 +89,7 @@ Windows 另可透過官方中繼讀取已授權的遠端 Codex 主機，使用�
 
 ## 三步開始
 
-1. **下載**：[Releases](https://github.com/jaylooloomi/quota-island/releases/latest) 提供 Windows x64 免安裝 EXE、macOS Apple Silicon（`arm64`）及 Intel（`x64`）ZIP，可使用 `SHA256SUMS.txt` 驗證。Windows 直接執行；Mac 解壓縮後將 `Quota Pebble.app` 移至「應用程式」。Windows 未簽章；Mac 為 ad-hoc 簽署，尚無 Developer ID 與 Apple 公證。首次開啟限制請依 [Apple 官方說明](https://support.apple.com/102445) 操作。
+1. **下載**：[Releases](https://github.com/jaylooloomi/quota-pebble/releases/latest) 提供 Windows x64 免安裝 EXE、macOS Apple Silicon（`arm64`）及 Intel（`x64`）ZIP，可使用 `SHA256SUMS.txt` 驗證。Windows 直接執行；Mac 解壓縮後將 `Quota Pebble.app` 移至「應用程式」。Windows 未簽章；Mac 為 ad-hoc 簽署，尚無 Developer ID 與 Apple 公證。首次開啟限制請依 [Apple 官方說明](https://support.apple.com/102445) 操作。
 2. **連接帳號**：依下表完成各來源設定。
 3. **選擇顯示方式**：配額／帳號、剩餘／已用／配速、服務顯示、語言與寵物位置。
 
@@ -147,10 +150,10 @@ v1.16.5 發布準備時 **117 項單元測試通過**。免安裝版實際啟動
 
 若你將它用於自己的作品，也歡迎在 README、關於頁面或介紹文章附上以下出處，讓更多人找到原始專案（這是額外的友善邀請，不增加 MIT 以外的授權限制）：
 
-> Quota Pebble，由 Arthur Wang（[@jaylooloomi](https://github.com/jaylooloomi)）創作，採 MIT 授權。[原始專案](https://github.com/jaylooloomi/quota-island)。
+> Quota Pebble，由 Arthur Wang（[@jaylooloomi](https://github.com/jaylooloomi)）創作，採 MIT 授權。[原始專案](https://github.com/jaylooloomi/quota-pebble)。
 
 ## 關於作者與交流
 
 嗨，我是 Arthur Wang（jaylooloomi），Quota Pebble 的作者。我喜歡把工作中的小困擾做成實用又有趣的工具，也很樂意認識有相同興趣的朋友。
 
-無論是使用心得、功能點子、技術討論，或只是想打聲招呼，都歡迎透過 [GitHub](https://github.com/jaylooloomi)、[Issues](https://github.com/jaylooloomi/quota-island/issues) 或 Pull Request 和我交流。希望這個小工具不只讓工作順一點，也能成為我們認識彼此的起點。
+無論是使用心得、功能點子、技術討論，或只是想打聲招呼，都歡迎透過 [GitHub](https://github.com/jaylooloomi)、[Issues](https://github.com/jaylooloomi/quota-pebble/issues) 或 Pull Request 和我交流。希望這個小工具不只讓工作順一點，也能成為我們認識彼此的起點。

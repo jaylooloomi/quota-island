@@ -79,7 +79,7 @@ Antigravity CLI [statusline](https://antigravity.google/docs/cli/statusline) 有
 - Antigravity 每 10 秒重新確認本機程序及其 listener，僅呼叫 `GetAllCascadeTrajectories`。限制四個服務、每個八個候選 port、單次回應 2 MiB、每輪時間預算。快取只保存仍屬於目前程序及 token 的有效 listener，沒有讀取完整 trajectory steps。
 - 已在本機服務二進位中確認 enum 含 `IDLE`、`RUNNING`、`CANCELING`、`BUSY`、`UNSPECIFIED`。只映射明確的 `RUNNING`／`IDLE`；`BUSY`、取消中及未支援值維持未知，等待狀態不猜測。
 - 來源失聯、缺漏及超過 25 秒未成功觀察的資料轉為未知；重新連線後用新快照恢復。空 RPC 清單可能只有 resident 範圍，不能宣稱帳號沒有任務。
-- Claude／Antigravity 目前不觸發成功完成訊息泡：尚無已驗證的成功回合識別證據，不能將 busy → idle 當成成功。
+- 本段記錄 v1.22.0 的歷史結果；v1.25.0 起已加入有完成證據的 Claude／Antigravity 完成訊息泡，詳見 [目前完成判定](native-completion-notifications.md)。單純 busy → idle 仍不等於成功。
 
 本次真實唯讀實測：五個 Claude 程序均存活、原生啟動時間相符，五筆 idle；Antigravity 一筆 IDLE。沒有啟動 CLI、推理或 Hook，沒有讀取 `.key` 或對話內容。沒有自然發生的執行／等待轉換可供此次 live 驗證，這部分僅有獨立標記的單元及 UI fixture 測試，不冒稱自然任務實測。
 

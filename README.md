@@ -3,14 +3,17 @@
 <!-- project-badges -->
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-3b82f6?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/releases/tag/v1.16.10"><img alt="Released version v1.16.10" src="https://img.shields.io/badge/release-v1.16.10-8b87de?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/releases/latest"><img alt="Windows and macOS releases" src="https://img.shields.io/badge/platform-Windows%20%2B%20macOS-64748b?style=flat"></a>
+  <a href="https://github.com/jaylooloomi/quota-pebble/releases/latest"><img alt="Latest GitHub release" src="https://img.shields.io/github/v/release/jaylooloomi/quota-pebble?style=flat&color=8b87de"></a>
+  <a href="https://github.com/jaylooloomi/quota-pebble/releases/latest"><img alt="Windows and macOS releases" src="https://img.shields.io/badge/platform-Windows%20%2B%20macOS-64748b?style=flat"></a>
   <a href="#run-from-source"><img alt="Built with Electron and TypeScript" src="https://img.shields.io/badge/built%20with-Electron%20%2B%20TypeScript-487fa8?style=flat"></a>
   <a href="#desktop-controls"><img alt="Interface languages: Traditional Chinese, English, Japanese, Korean" src="https://img.shields.io/badge/UI-%E7%B9%81%E4%B8%AD%20%2F%20EN%20%2F%20%E6%97%A5%E6%9C%AC%E8%AA%9E%20%2F%20%ED%95%9C%EA%B5%AD%EC%96%B4-637e64?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/actions/workflows/build.yml"><img alt="View actual GitHub Actions results" src="https://img.shields.io/badge/CI-view%20runs-64748b?style=flat"></a>
+  <a href="https://github.com/jaylooloomi/quota-pebble/actions/workflows/build.yml"><img alt="View actual GitHub Actions results" src="https://img.shields.io/badge/CI-view%20runs-64748b?style=flat"></a>
 </p>
 <!-- /project-badges -->
-<p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">Download Windows / macOS</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="LICENSE">MIT</a></p>
+
+> Development branch v1.29.0 adds [companion growth and RSS/Atom messages](docs/companion-growth-and-messages.md). The latest published v1.28.2 includes Windows x64 and verified native macOS ARM64 / Intel ZIPs (ad-hoc signed, not notarized). Task monitoring supports Codex local/authorized remote sources and Claude Code / Antigravity local sources; their cross-device integration is still under verification.
+
+<p align="center"><a href="https://github.com/jaylooloomi/quota-pebble/releases/latest">Download Windows / macOS</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="LICENSE">MIT</a></p>
 
 <p align="center"><img src="docs/readme-v1.16.10/stage-en.png" alt="Your quotas above. A little companion below." width="464"><br><b>Your quotas above. A little companion below.</b><br><sub>Actual app screenshot · demo data</sub></p>
 
@@ -86,7 +89,7 @@ Pet growth and token-based XP are not implemented.
 
 ## Get started
 
-1. **Download** from [Releases](https://github.com/jaylooloomi/quota-island/releases/latest): Windows x64 portable EXE, macOS Apple Silicon (`arm64`) ZIP, or macOS Intel (`x64`) ZIP. Verify downloads with `SHA256SUMS.txt`. Run the EXE on Windows; on Mac, unzip and move `Quota Pebble.app` to Applications. Windows is unsigned; Mac builds are ad-hoc signed, without Developer ID or Apple notarization. For first-launch restrictions, follow [Apple’s instructions](https://support.apple.com/102445).
+1. **Download** from [Releases](https://github.com/jaylooloomi/quota-pebble/releases/latest): Windows x64 portable EXE, macOS Apple Silicon (`arm64`) ZIP, or macOS Intel (`x64`) ZIP. Verify downloads with `SHA256SUMS.txt`. Run the EXE on Windows; on Mac, unzip and move `Quota Pebble.app` to Applications. Windows is unsigned; Mac builds are ad-hoc signed, without Developer ID or Apple notarization. For first-launch restrictions, follow [Apple’s instructions](https://support.apple.com/102445).
 2. **Connect** the provider accounts you want to monitor, using the table below.
 3. **Choose your view**: quotas or accounts, Remaining / Used / Pacing, visible services, language and pet position.
 
@@ -147,10 +150,10 @@ Released under the [MIT License](LICENSE). You are welcome to use, modify, share
 
 If Pebble becomes part of your own work, a credit in your README, About page or article would also be appreciated. This is a friendly request, not an additional MIT license condition:
 
-> Quota Pebble, created by Arthur Wang ([@jaylooloomi](https://github.com/jaylooloomi)), licensed under MIT. [Original project](https://github.com/jaylooloomi/quota-island).
+> Quota Pebble, created by Arthur Wang ([@jaylooloomi](https://github.com/jaylooloomi)), licensed under MIT. [Original project](https://github.com/jaylooloomi/quota-pebble).
 
 ## Meet the author
 
 Hi, I'm Arthur Wang (jaylooloomi), the creator of Quota Pebble. I enjoy turning small everyday frustrations into useful, playful tools, and I'm always happy to meet people with similar interests.
 
-Whether you have feedback, a feature idea, a technical question, or simply want to say hello, you're welcome to connect through [GitHub](https://github.com/jaylooloomi), [Issues](https://github.com/jaylooloomi/quota-island/issues), or a pull request. I hope this little tool makes your work easier—and gives us a chance to exchange ideas and become friends.
+Whether you have feedback, a feature idea, a technical question, or simply want to say hello, you're welcome to connect through [GitHub](https://github.com/jaylooloomi), [Issues](https://github.com/jaylooloomi/quota-pebble/issues), or a pull request. I hope this little tool makes your work easier—and gives us a chance to exchange ideas and become friends.

@@ -3,6 +3,7 @@ import path from 'node:path';
 import {bubbleBounds} from './task-completion';
 import {TaskNoticeQueue,TaskNotice} from './task-notice-queue';
 export class TaskBubble {
+  get isVisible(){return !!this.window?.isVisible();}
   private window?:BrowserWindow;private inbox=new TaskNoticeQueue();
   private timer?:NodeJS.Timeout;private collectTimer?:NodeJS.Timeout;private remaining=12000;private started=0;private hovered=false;private ready=false;
   private anchor=280;private anchors:Record<string,number>={};private closed=false;private enabled=true;private locale='zh-TW';private announced=new WeakSet<object>();

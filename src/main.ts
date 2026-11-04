@@ -1,3 +1,6 @@
+import {PetMessages} from './pet-messages';
+import {PetMessageWindow} from './pet-message-window';
+import {PetGrowth} from './pet-growth';
 import {CombinedTaskMonitor as TaskMonitor} from './combined-task-monitor';
 import {TaskBubble} from './task-bubble';
 import {IdleTracker} from './task-idle';
@@ -44,7 +47,7 @@ let quitting = false;
 let paused = false;
 let providers: Providers;
 let poller: Poller;
-let usageHistory:UsageHistory;
+let usageHistory:UsageHistory;let petGrowth:PetGrowth;let petMessages:PetMessages;let petMessageWindow:PetMessageWindow;
 let taskMonitor:TaskMonitor;let taskBubble:TaskBubble;const idleTracker=new IdleTracker();let taskPeak:TaskPeak;
 let interval: NodeJS.Timeout;
 let connections: Connections;
@@ -89,7 +92,7 @@ let accounts:Accounts;
 let autoReconnect:AutoReconnect|undefined;
 let diagnostics:Diagnostics|undefined;
 let morningHello:MorningHello|undefined;
-function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, tasks:taskMonitor?{...taskMonitor.snapshot(),peak:taskPeak?.snapshot()}:undefined, morningHello:morningHello?.snapshot()??{}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
+function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, tasks:taskMonitor?{...taskMonitor.snapshot(),peak:taskPeak?.snapshot()}:undefined, petMessages:petMessages?.snapshot(), petGrowth:petGrowth?.snapshot(), morningHello:morningHello?.snapshot()??{}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
 function publish() {
   persistRateLimits();
   if(taskMonitor)taskPeak?.observe(taskMonitor.snapshot(),!paused);
@@ -159,6 +162,9 @@ function installHandlers() {
   // Only our trusted local renderer may call IPC. No arbitrary URLs, commands or paths.
   for (const [channel, handler] of Object.entries({
     'get-state': () => snapshot(),
+    'pet-feed-configure':(_event:any,action:unknown,value:unknown)=>{try{petMessages.configure(action,value);return{ok:true};}catch{return{ok:false};}},
+    'pet-message-preview':()=>petMessages.preview(),
+    'pet-message-present':(_event:any,id:unknown,anchor:unknown)=>{if(typeof anchor!=='number'||!Number.isFinite(anchor))return;const message=petMessages.snapshot().items[0];petMessageWindow.show(message&&message.id===id?message:null,Math.max(0,Math.min(464,anchor)),expanded||paused||taskBubble.isVisible);},
     'task-bubble-anchor':(_event:any,x:unknown)=>taskBubble?.setAnchor(x),
     'tasks-start':async()=>{await taskMonitor.start();return taskMonitor.snapshot();},
     'history-query': (_event:any,id:unknown,window:unknown,days:unknown)=>{if(typeof id!=='string'||!providerIds.includes(id as ProviderId)&&!accounts.has(id))throw new Error('Unknown account');return usageHistory.query(id,window,days);},
@@ -199,6 +205,7 @@ function installHandlers() {
       if (!paused) void poller.tick();
     },
     'login': (_event: any, raw: unknown) => {
+      if(typeof raw==='string'&&(providerIds.includes(raw as ProviderId)||accounts.has(raw)))petGrowth.boundary(raw);
       if(accounts.has(raw)){if(!demo){usageHistory.gap(raw,'auth');void accounts.prepareLogin(raw);}return;}
       const id = validateId(raw);
       if (demo) { connections.states[id] = { pending: false, phase: 'error', message: '展示模式不會啟動登入；正常啟動即可連接帳號' }; publish(); return; }
@@ -263,11 +270,12 @@ else {
     readSettings();
     if(!demo&&!testing){if(process.argv.includes('--enable-autostart'))settings.autoStart=true;try{settings.autoStart=syncLoginStartup(app,settings.autoStart,{platform:process.platform,packaged:app.isPackaged,demo,testing,executable:process.execPath});saveSettings();}catch{settings.autoStart=false;}}
     usageHistory=new UsageHistory(path.join(app.getPath('userData'),demo?'demo-usage-history':'usage-history'));
+    petGrowth=new PetGrowth(path.join(app.getPath('userData'),demo?'demo-pet-growth.json':'pet-growth.json'));
     taskPeak=new TaskPeak(path.join(app.getPath('userData'),demo?'demo-task-peak.json':'task-peak.json'));
     taskMonitor=new TaskMonitor(testing?(process.env.QUOTA_TEST_SESSION_ROOT||path.join(app.getPath('userData'),'codex-sessions')):path.join(process.env.CODEX_HOME||path.join(homedir(),'.codex'),'sessions'),publish,!demo&&!testing,item=>{diagnostics?.taskNotice('completed',item.provider,'eligible');idleTracker.completion(item.id);if(settings.taskCompletionNotifications&&!paused)taskBubble?.enqueue(item);});
     diagnostics=new Diagnostics(path.join(app.getPath('userData'),demo?'demo-logs':'logs'));diagnostics.startup(app.getVersion(),settings.enabled);
     providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource);
-    poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish,Date.now,(id,reading,time)=>usageHistory.record(id,reading,time,id==='claude'?600000:120000));if(!demo)poller.setMinimumInterval('claude',600000);
+    poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish,Date.now,(id,reading,time)=>{usageHistory.record(id,reading,time,id==='claude'?600000:120000);petGrowth.record(id,reading,time);});if(!demo)poller.setMinimumInterval('claude',600000);
     if(!demo){try{poller.restoreRateLimits(JSON.parse(readFileSync(path.join(app.getPath('userData'),'provider-cooldowns.json'),'utf8')));}catch{/* No prior cooldowns. */}}
     connections = new Connections(providers, poller, openAuthUrl, publish, () => {
       if (!quitting && win && !win.isDestroyed()) { setExpanded(true); win.show(); win.focus(); }
@@ -276,7 +284,7 @@ else {
       const service=new Providers(new Gemini(new GeminiVault(app.getPath('userData'),safeStorage)),()=>settings.googleSource,directory);
       if(demo)service.read=async()=>demoReading('claude');
       return service;
-    },openAuthUrl,publish,()=>{if(!quitting&&win&&!win.isDestroyed()){setExpanded(true);win.show();win.focus();}},(id,reading,time)=>usageHistory.record(id,reading,time,600000));
+    },openAuthUrl,publish,()=>{if(!quitting&&win&&!win.isDestroyed()){setExpanded(true);win.show();win.focus();}},(id,reading,time)=>{usageHistory.record(id,reading,time,600000);petGrowth.record(id,reading,time);});
     morningHello=new MorningHello(path.join(app.getPath('userData'),demo?'demo-morning-hello.json':'morning-hello.json'),async id=>{
       if(demo)throw new ProviderError('auth','展示模式不會送出 Hello');
       if(!settings.morningHelloEnabled||paused||(id==='claude'&&(!poller.states.claude.enabled||connections.states.claude?.pending)))throw new ProviderError('auth','Hello 已停用或帳號正在連接');
@@ -300,6 +308,7 @@ else {
       alwaysOnTop: settings.alwaysOnTop, skipTaskbar: true, show: false, title: 'Quota Pebble', icon: path.join(__dirname, 'ui/icons/quota-pebble.png'),
       webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true }
     });
+    petMessages=new PetMessages(path.join(app.getPath('userData'),demo?'demo-pet-messages.json':'pet-messages.json'),publish,undefined,Date.now,!demo&&!testing);petMessageWindow=new PetMessageWindow(win,id=>petMessages.acknowledge(id),()=>!!taskBubble?.isVisible);
     taskBubble=new TaskBubble(win,id=>{setExpanded(true);win.show();win.webContents.send('task-focus',id);},(kind,provider,stage)=>diagnostics?.taskNotice(kind,provider,stage));taskBubble.configure(settings.locale,settings.taskCompletionNotifications);
     win.setMenu(null); reposition();
     win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
@@ -326,7 +335,7 @@ else {
     powerMonitor.on('resume', () => { paused = false; publish(); void poller.tick(); });
     await win.loadFile(path.join(__dirname, 'ui/index.html'));
     if((settings.compactTaskSummary||settings.taskCompletionNotifications)&&!demo)void taskMonitor.start();
-    win.show();
+    win.show();petMessages.start();
     if (!demo) await credentialWatch.scan();
     void poller.tick();
     void accounts.tick();
@@ -335,6 +344,6 @@ else {
       if(!demo&&morningHello){const current:any=snapshot();void morningHello.tick(settings.morningHelloEnabled,settings.morningHelloTime,['claude',...current.accounts.map((a:any)=>a.id)].map((id:string)=>({id,state:current.providers[id],pending:current.auth[id]?.pending})),paused);}
     }, 5000);
   });
-  app.on('before-quit', () => { quitting = true; taskBubble?.close();taskMonitor?.close();clearInterval(interval);clearInterval(topTimer); clearTimeout(dragTimer); accounts?.close();providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
+  app.on('before-quit', () => { quitting = true;petMessageWindow?.close();petMessages?.close(); taskBubble?.close();taskMonitor?.close();clearInterval(interval);clearInterval(topTimer); clearTimeout(dragTimer); accounts?.close();providers?.close(); globalShortcut.unregisterAll(); saveSettings(); });
   app.on('window-all-closed', () => { if (quitting) app.quit(); });
 }

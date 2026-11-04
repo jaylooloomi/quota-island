@@ -445,7 +445,8 @@ function render(next){
   window.QuotaI18n.localizeDocument(document,state.settings.locale);
   window.TaskPanel.update(state,currentView==='tasks'&&!settingsOpen&&!quotaDetailsOpen);
   document.querySelector('.panel-header .segmented')?.classList.toggle('tasks-mode-hidden',currentView==='tasks');
-  window.QuotaPets.update(state);
+  window.QuotaPets.update(state);window.CompanionSettings.update(state);
+  const growth=$('pet-growth');if(growth){const labels={'zh-TW':['成長','小蛋','幼幼','夥伴','星際','以週配額增量記錄經驗，每日最多 20 XP；不用刻意增加用量。'],en:['Growth','Egg','Little one','Companion','Space friend','Weekly quota increases earn XP, capped at 20 daily. No extra usage needed.'],ja:['成長','たまご','ちび','仲間','宇宙の友','週間利用枠の増加で経験値を記録。1日最大20 XP。無理に使う必要はありません。'],ko:['성장','알','아기','친구','우주 친구','주간 할당량 증가로 경험치를 기록하며 하루 최대 20 XP입니다. 추가 사용은 필요 없습니다.']}[state.settings.locale]||[];growth.replaceChildren();const role=state.settings.petCharacter==='random'?'claude':state.settings.petCharacter,g=state.petGrowth?.[role];if(g){const name=document.createElement('span');name.textContent=labels[0]+' · Lv.'+g.level+' '+labels[g.level]+' · '+g.xp+' XP';const bar=document.createElement('progress');bar.max=100;bar.value=g.progress;bar.setAttribute('aria-label',labels[0]);growth.append(name,bar);growth.title=labels[5];}}
   if(state.settings.locale==='en')$('compact-mode').textContent=state.settings.remaining?'Left':'Used';
   requestAnimationFrame(()=>{
     if(state.expanded&&!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider){
@@ -528,6 +529,7 @@ $('morningHelloEnabled').addEventListener('change',event=>api.settings({morningH
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
 for(const input of document.querySelectorAll('[data-visible]'))input.addEventListener('change',()=>api.settings({visible:{[input.dataset.visible]:input.checked}}));
 document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(footerPopover){closeFooterPopover(true);event.preventDefault();}else if(window.UsageTrends.active){window.UsageTrends.close();render(state);}else if(paceDetailsProvider){paceDetailsProvider=null;render(state);}else if(quotaDetailsOpen){quotaDetailsOpen=false;render(state);}else if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
+window.addEventListener('companion-layout-change',()=>{if(state&&settingsOpen)render(state);});
 window.addEventListener('task-layout-change',()=>{if(state&&currentView==='tasks')render(state);});
 api.subscribe(render);api.getState().then(render);setInterval(()=>{if(state)render(state);},15000);
 

@@ -62,6 +62,8 @@
           <button id="pet-action-preview" type="button">預覽</button><button id="pet-action-apply" type="button">套用</button>
           </div>
           <p>剩餘 20%、5% 與用盡時提醒；同一帳號與配額週期不重複。遵循系統減少動態設定。</p>
+          <div id="pet-growth" class="pet-growth" data-localized-text></div>
+          <details id="pet-feeds" data-localized-text><summary id="feed-heading"></summary><div class="feed-input-row"><input id="feed-url" type="url" placeholder="https://example.com/feed.xml" maxlength="2048" aria-label="RSS URL"><button id="feed-add" type="button"></button></div><p id="feed-error" hidden></p><div id="feed-sources"></div><div class="feed-input-row"><label id="feed-mute-label"><span></span><input id="feed-mute" type="checkbox" role="switch"></label><button id="feed-preview" type="button"></button></div><p id="feed-help"></p></details>
           <div class="settings-title sources-title">自動 Hello</div>
           <label>閒置時啟動 Claude 5 小時視窗<input type="checkbox" id="morningHelloEnabled" role="switch"></label>
           <div class="settings-title sources-title">顯示服務</div>
@@ -110,6 +112,6 @@
     </article>
   </template>
   <template id="window-template"><div class="quota-row"><div class="quota-label"><span class="window-label"></span><span class="quota-number"></span></div><div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="fill"></div></div><div class="reset"></div></div></template>
-  <script src="presentation.js"></script><script src="i18n.js"></script><script src="pet-policy.js"></script><script src="pet-animation.js"></script><script src="pet-wander.js"></script><script src="pet-behavior.js"></script><script src="pet-theater.js"></script><script src="trend-series.js"></script><script src="trend-tooltip.js"></script><script src="trend-events.js"></script><script src="usage-trends.js"></script><script src="task-filters.js"></script><script src="task-panel.js"></script><script src="app.js"></script>
+  <script src="companion-settings.js"></script><script src="presentation.js"></script><script src="i18n.js"></script><script src="pet-policy.js"></script><script src="pet-animation.js"></script><script src="pet-wander.js"></script><script src="pet-behavior.js"></script><script src="pet-theater.js"></script><script src="trend-series.js"></script><script src="trend-tooltip.js"></script><script src="trend-events.js"></script><script src="usage-trends.js"></script><script src="task-filters.js"></script><script src="task-panel.js"></script><script src="app.js"></script>
 </body>
 </html>

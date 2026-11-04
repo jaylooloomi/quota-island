@@ -62,3 +62,5 @@ antigravity-trajectory-extractor
 as references for native registry metadata and local RPC discovery. Pebble's
 read-only collectors are independently implemented. Their runtimes, Hook
 integrations, transcript exporters and assets are not bundled.
+
+fast-xml-parser (https://github.com/NaturalIntelligence/fast-xml-parser), MIT, is bundled for bounded RSS/Atom parsing. Its license and those of its production dependencies are retained in node_modules inside the package.
