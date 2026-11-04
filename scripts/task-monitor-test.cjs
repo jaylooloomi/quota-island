@@ -20,7 +20,7 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
       data.settings.locale=locale;await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);await page.waitForTimeout(100);
       assert.equal(await page.locator('#tab-tasks svg use').getAttribute('href'),'#i-tasks',locale+' task icon survives translation');
       assert.equal(await page.locator('#task-panel').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,locale+' panel fits');
-      const toolbar=await page.locator('.task-controls').evaluate(e=>{const a=e.querySelector('button').getBoundingClientRect(),b=e.querySelector('.task-summary-setting').getBoundingClientRect();return Math.abs(a.top-b.top)<1&&Math.abs(a.height-b.height)<1&&e.scrollWidth<=e.clientWidth+1;});assert.equal(toolbar,true,locale+' task controls share one row');
+      assert.equal(await page.locator('.task-controls,.task-summary-setting').count(),0,locale+' task controls removed');
       assert.equal(await page.locator('.task-host-badge').count(),3);assert.equal(await page.locator('.task-host-badge').last().getAttribute('title').then(t=>t.includes('Very long remote host')),true);
       assert.equal(await page.locator('.task-meta').evaluateAll(ns=>ns.every(n=>n.scrollWidth<=n.clientWidth+1)),true,locale+' host badges and timestamps fit');
       assert.equal(await page.locator('.task-counts>div').count(),3);assert.equal(await page.locator('.task-counts>div').last().locator('.task-stat-label').textContent(),({'zh-TW':'閒置',en:'Idle',ja:'待機中',ko:'대기 중'})[locale],'third counter is idle');
@@ -57,7 +57,7 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);await page.locator('#tab-tasks').click();assert.equal(await page.locator('.task-counts strong').first().innerText(),'—');assert.equal(await page.locator('.task-footnote').count(),0);assert.match(await page.locator('.task-empty').innerText(),/本機.*記錄/);
     await page.screenshot({path:output+'/source-unconnected.png'});
     await app.evaluate(({BrowserWindow})=>{BrowserWindow.getAllWindows()[0].webContents.send=global.taskFixtureSend;});
-    await page.locator('.task-summary-setting input').check();
+    assert.equal((await page.evaluate(()=>quota.getState())).settings.compactTaskSummary,true);
     await page.evaluate(()=>quota.settings({petRoam:true,petPlacement:'stage'}));
     const compactGeometry=()=>page.locator('.compact-provider').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height}}));
     await page.locator('#collapse').click();await page.waitForTimeout(100);await page.locator('#roam-pet').waitFor({state:'visible',timeout:20000});assert.equal((await page.evaluate(()=>quota.getState())).settings.petRoam,true,'stage companion preference preserved');const compact=await compactGeometry();assert.equal(await page.locator('.compact-task-summary').isVisible(),true);
@@ -76,7 +76,7 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     await page.screenshot({path:output+'/compact-title-pet.png'});
     await page.evaluate(()=>quota.settings({petPlacement:'stage'}));
     await page.locator('.compact-task-summary').waitFor({state:'visible'});
-    await page.locator('#toggle').click();await page.locator('.task-summary-setting input').uncheck();await page.locator('#collapse').click();await page.waitForTimeout(100);const original=await compactGeometry();for(let i=0;i<compact.length;i++)for(const k of ['x','y','w','h'])assert.ok(Math.abs(compact[i][k]-original[i][k])<1,'compact summary fixed '+k);
+    await page.locator('#toggle').click();await page.evaluate(()=>quota.settings({compactTaskSummary:false}));assert.equal((await page.evaluate(()=>quota.getState())).settings.compactTaskSummary,true,'summary cannot be disabled');await page.locator('#collapse').click();await page.waitForTimeout(100);const original=await compactGeometry();for(let i=0;i<compact.length;i++)for(const k of ['x','y','w','h'])assert.ok(Math.abs(compact[i][k]-original[i][k])<1,'compact summary fixed '+k);
     assert.deepEqual(errors,[]);console.log('PASS task UI: real Electron, local event fixtures, four locales, XSS, keyboard, fixed geometry and no quota calls');
   }finally{if(app)await app.close();await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

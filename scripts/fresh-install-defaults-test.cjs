@@ -21,14 +21,15 @@ const vm = require('node:vm');
     let state = await p.evaluate(() => quota.getState());
     assert.equal(state.settings.petPlacement, 'stage');
     assert.equal(state.settings.autoStart, true);
-    await p.locator('#toggle').click();await p.locator('#tab-tasks').click();assert.equal(await p.locator('.task-summary-setting input').isChecked(),true,'fresh task summary checkbox is checked');
+    await p.locator('#toggle').click();await p.locator('#tab-tasks').click();assert.equal(await p.locator('.task-controls,.task-summary-setting').count(),0,'summary controls removed');
     assert.equal(state.settings.notifications, true);
     await p.evaluate(() => quota.settings({compactTaskSummary:false,autoStart:false,notifications:false,alwaysOnTop:false,petIdle:false,petAlerts:false,petRoam:false,morningHelloEnabled:false,petPlacement:'title'}));
     await app.close(); app=null;
     p=await launch(); state=await p.evaluate(() => quota.getState());
-    for (const key of ['compactTaskSummary','autoStart','alwaysOnTop','notifications','petIdle','petAlerts','petRoam','morningHelloEnabled']) assert.equal(state.settings[key],false,key+' persisted');
+    assert.equal(state.settings.compactTaskSummary,true,'summary stays enabled');
+    for (const key of ['autoStart','alwaysOnTop','notifications','petIdle','petAlerts','petRoam','morningHelloEnabled']) assert.equal(state.settings[key],false,key+' persisted');
     assert.equal(state.settings.petPlacement,'title');
-    await p.locator('#toggle').click();await p.locator('#tab-tasks').click();assert.equal(await p.locator('.task-summary-setting input').isChecked(),false,'existing opt-out stays unchecked');await p.locator('.task-summary-setting input').check();await app.close();app=null;p=await launch();assert.equal((await p.evaluate(()=>quota.getState())).settings.compactTaskSummary,true,'explicit opt-in persists too');
+    assert.equal(await p.locator('.task-summary-setting').count(),0);await app.close();app=null;const prefsFile=path.join(dir,'preferences.json'),prefs=JSON.parse(await fs.readFile(prefsFile,'utf8'));prefs.compactTaskSummary=false;await fs.writeFile(prefsFile,JSON.stringify(prefs));p=await launch();assert.equal((await p.evaluate(()=>quota.getState())).settings.compactTaskSummary,true,'legacy opt-out is ignored');
     console.log('PASS: fresh-install defaults and existing preferences preserved across restart; no live calls or OS startup changes');
   } finally {if(app) await app.close(); await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
 })().catch(e => { console.error(e); process.exitCode=1; });

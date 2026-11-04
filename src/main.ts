@@ -84,7 +84,7 @@ function readSettings() {
     for(const id of providerIds){if(typeof s.reservePercent?.[id]==='number'&&Number.isFinite(s.reservePercent[id])&&s.reservePercent[id]>=0&&s.reservePercent[id]<=100)settings.reservePercent[id]=s.reserveDefaultsVersion===2&&s.reservePercent[id]===5?10:s.reservePercent[id];if(typeof s.paceWindows?.[id]==='string'&&s.paceWindows[id].length<=160)settings.paceWindows[id]=s.paceWindows[id];}
     for (const id of providerIds) if (typeof s.visible?.[id] === 'boolean') settings.visible[id] = s.visible[id];
     if (s.googleSource === 'antigravity' || s.googleSource === 'code_assist') settings.googleSource=s.googleSource;
-    for (const key of ['taskCompletionNotifications','compactTaskSummary','autoStart','remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof s[key] === 'boolean' && (key!=='remaining'||s.presentationVersion===2)) settings[key] = s[key];
+    for (const key of ['taskCompletionNotifications','autoStart','remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof s[key] === 'boolean' && (key!=='remaining'||s.presentationVersion===2)) settings[key] = s[key];
     for (const id of providerIds) if (typeof s.enabled?.[id] === 'boolean') settings.enabled[id] = s.enabled[id];
     if (Number.isFinite(s.x) && Number.isFinite(s.y)) { settings.x = s.x; settings.y = s.y; }
   } catch { /* First run or invalid preferences: use defaults. */ }
@@ -197,7 +197,7 @@ function installHandlers() {
       if (validOrder(patch.order)&&patch.order.every((id:string)=>providerIds.includes(id as ProviderId)||accounts.has(id))) settings.order = [...patch.order];
       const sourceChanged = !connections.states.gemini?.pending && (patch.googleSource === 'antigravity' || patch.googleSource === 'code_assist') && patch.googleSource !== settings.googleSource;
       if (sourceChanged) { settings.googleSource=patch.googleSource; delete connections.states.gemini; }
-      for (const key of ['taskCompletionNotifications','compactTaskSummary','autoStart','remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof patch[key] === 'boolean') settings[key] = patch[key];
+      for (const key of ['taskCompletionNotifications','autoStart','remaining', 'pacing', 'alwaysOnTop', 'notifications','petIdle','petAlerts','petRoam'] as const) if (typeof patch[key] === 'boolean') settings[key] = patch[key];
       if (patch.enabled && typeof patch.enabled === 'object') for (const id of providerIds) if (typeof patch.enabled[id] === 'boolean') {
         if(settings.enabled[id]!==patch.enabled[id])diagnostics?.sourceToggle(id,patch.enabled[id]);
         settings.enabled[id] = patch.enabled[id]; poller.setEnabled(id, patch.enabled[id]);
