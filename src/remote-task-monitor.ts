@@ -1,3 +1,4 @@
+import {retryDelay} from './http';
 import {CompletionTracker,TaskCompletion} from './task-completion';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -8,6 +9,8 @@ const WebSocket:any=require('ws');
 const ORIGIN='https://chatgpt.com',BASE=ORIGIN+'/backend-api';
 const clean=(v:any,n=160)=>typeof v==='string'?v.replace(/[\u0000-\u001f\u007f]/g,' ').slice(0,n):'';
 const hash=(v:string)=>crypto.createHash('sha256').update(v).digest('base64url');
+export const remoteErrorCode=(error:unknown)=>error instanceof Error&&/^[A-Z_0-9]+$/.test(error.message)?error.message:(error as any)?.code==='ENOENT'?'LOCAL_STATE_MISSING':(error as any)?.code==='EACCES'?'LOCAL_STATE_DENIED':'REMOTE_UNAVAILABLE';
+export type RemoteHostHealth={id:string;name:string;online:boolean;state:'ready'|'unconfirmed'|'offline'|'error';error:string;counts:Record<TaskStatus,number>;checkedAt:number};
 function readJson(file:string,max:number){if(fs.statSync(file).size>max)throw Error('LOCAL_STATE_LIMIT');return JSON.parse(fs.readFileSync(file,'utf8'));}
 export function remoteStatus(value:any):TaskStatus {
   if(value?.type==='idle')return 'idle';
@@ -62,7 +65,7 @@ export class Controller {
   async request(route:string,method='GET',body?:any){
     if(!(method==='GET'&&route==='/codex/remote/control/environments?limit=100')&&!(method==='POST'&&['/codex/remote/control/client/refresh/start','/codex/remote/control/client/refresh/finish'].includes(route)))throw Error('INVALID_ROUTE');
     const response=await fetch(BASE+route,{method,headers:this.headers,...(body?{body:JSON.stringify(body)}:{}),redirect:'error',signal:AbortSignal.timeout(12000)});
-    if(!response.ok){await response.body?.cancel();throw Error('REMOTE_HTTP_'+response.status);}
+    if(!response.ok){const wait=response.status===429?retryDelay(response.headers.get('retry-after')):0;await response.body?.cancel();throw Object.assign(Error('REMOTE_HTTP_'+response.status),{retryAfterMs:wait});}
     const reader=response.body?.getReader();if(!reader)throw Error('EMPTY_RESPONSE');let length=0;const chunks:Uint8Array[]=[];
     for(;;){const v=await reader.read();if(v.done)break;length+=v.value.length;if(length>2097152){await reader.cancel();throw Error('RESPONSE_LIMIT');}chunks.push(v.value);}return JSON.parse(Buffer.concat(chunks).toString('utf8'));
   }
@@ -73,8 +76,9 @@ export class Controller {
     if(this.authFingerprint&&fingerprint!==this.authFingerprint)this.lost();this.disconnect();this.closed=false;
     const state=readJson(path.join(this.root,'.codex-global-state.json'),8388608);
     const claims=JSON.parse(Buffer.from(auth.access_token.split('.')[1],'base64url').toString()),ids=claims['https://api.openai.com/auth']||{};
-    this.enrollment=Object.values(state['electron-remote-control-client-enrollments']||{}).find((e:any)=>[ids.chatgpt_account_user_id,ids.account_user_id,ids.user_id,claims.sub].filter(Boolean).includes(e?.accountUserId));
-    const e=this.enrollment;if(!e||e.algorithm!=='ecdsa_p256_sha256'||e.protectionClass!=='os_protected_nonextractable'||!/^dk_osn_[A-Za-z0-9_-]{43}$/.test(e.keyId))throw Error('ENROLLMENT_REQUIRED');
+    const enrollments=Object.values(state['electron-remote-control-client-enrollments']||{});this.enrollment=enrollments.find((e:any)=>[ids.chatgpt_account_user_id,ids.account_user_id,ids.user_id,claims.sub].filter(Boolean).includes(e?.accountUserId));
+    if(!this.enrollment)throw Error(enrollments.length?'ACCOUNT_NOT_ENROLLED':'ENROLLMENT_REQUIRED');
+    const e=this.enrollment;if(e.algorithm!=='ecdsa_p256_sha256'||e.protectionClass!=='os_protected_nonextractable'||!/^dk_osn_[A-Za-z0-9_-]{43}$/.test(e.keyId))throw Error('ENROLLMENT_REQUIRED');
     const pub=await cng(e);if(pub.exportPolicy!==0||publicSpki(pub.publicBlobBase64)!==e.publicKeySpkiDerBase64)throw Error('PUBLIC_KEY_MISMATCH');
     if(this.closed)throw Error('CLOSED');
     this.headers={Authorization:'Bearer '+auth.access_token,'ChatGPT-Account-ID':auth.account_id,'User-Agent':'Quota-Pebble','originator':'quota_pebble','Content-Type':'application/json'};
@@ -126,28 +130,34 @@ export class Controller {
   disconnect(){this.closed=true;this.authenticated=false;this.rejectReady?.(Error('DISCONNECTED'));this.rejectReady=undefined;this.resolveReady=undefined;for(const p of this.pending.values()){clearTimeout(p.timer);p.reject(Error('DISCONNECTED'));}this.pending.clear();this.chunks.clear();const ws=this.ws;this.ws=undefined;if(ws?.readyState===1){try{for(const s of this.streams.values())ws.send(JSON.stringify({type:'client_closed',client_id:this.enrollment.clientId,env_id:s.env,stream_id:s.id,seq_id:++s.seq}));ws.close();setTimeout(()=>ws.terminate(),500).unref();}catch{ws.terminate();}}else ws?.terminate();this.streams.clear();}
 }
 export class RemoteTaskMonitor {
-  private completions=new CompletionTracker();private controller:Controller;private rows:TaskRow[]=[];private busy=false;private closed=false;private timer?:NodeJS.Timeout;private retryAt=0;private failures=0;private checkedAt:number|null=null;private available=false;private partial=false;private error='';
+  private completions=new CompletionTracker();private controller:Controller;private rows:TaskRow[]=[];private hosts:RemoteHostHealth[]=[];private busy=false;private closed=false;private timer?:NodeJS.Timeout;private retryAt=0;private failures=0;private checkedAt:number|null=null;private available=false;private partial=false;private error='';
   constructor(private root:string,private changed:()=>void,private completed?:(value:TaskCompletion)=>void){this.controller=new Controller(root,()=>{this.invalidate();this.changed();});}
-  private invalidate(){this.completions.reset();this.available=false;this.rows=this.rows.map(r=>({...r,status:'unknown'}));}
-  snapshot(){if(this.checkedAt&&Date.now()-this.checkedAt>65000)this.invalidate();const now=Date.now();return {rows:this.rows.map(r=>r.observedAt&&now-r.observedAt>65000?{...r,status:'unknown' as const}:r),available:this.available,partial:this.partial,checkedAt:this.checkedAt,error:this.error};}
-  start(){if(this.closed)return;if(!this.timer){this.timer=setInterval(()=>void this.tick(),30000);this.timer.unref();}void this.tick();}
-  async tick(){
-    if(this.closed||this.busy||Date.now()<this.retryAt)return;this.busy=true;
+  private counts(rows:TaskRow[]){return Object.fromEntries(['running','waiting','idle','unknown'].map(s=>[s,rows.filter(r=>r.status===s).length])) as Record<TaskStatus,number>;}
+  private invalidate(reason='DISCONNECTED'){this.completions.reset();this.available=false;this.rows=this.rows.map(r=>({...r,status:'unknown'}));this.hosts=this.hosts.map(h=>({...h,state:'error',error:reason,counts:{running:0,waiting:0,idle:0,unknown:Object.values(h.counts).reduce((a,b)=>a+b,0)}}));}
+  snapshot(){if(this.checkedAt&&Date.now()-this.checkedAt>65000)this.invalidate('STALE');const now=Date.now();return {rows:this.rows.map(r=>r.observedAt&&now-r.observedAt>65000?{...r,status:'unknown' as const}:r),available:this.available,controllerConnected:this.controller.usable,partial:this.partial,checkedAt:this.checkedAt,error:this.error,retryAt:this.retryAt,checking:this.busy,hosts:this.hosts.map(h=>({...h,counts:{...h.counts}}))};}
+  start(force=false){if(this.closed)return Promise.resolve();if(!this.timer){this.timer=setInterval(()=>void this.tick(),30000);this.timer.unref();}return this.tick(force);}
+  async tick(force=false){
+    // User recheck may re-read repaired local authorization, but never skip server rate-limit cooldown.
+    if(this.closed||this.busy||Date.now()<this.retryAt&&(!force||this.error==='REMOTE_HTTP_429'))return;this.busy=true;
     try{
       await this.controller.connect();if(this.closed)return;
       const state=readJson(path.join(this.root,'.codex-global-state.json'),8388608),local=state['electron-local-remote-control-environment-id'];
       const catalog=await this.controller.request('/codex/remote/control/environments?limit=100'),environments=(catalog.items||[]).filter((e:any)=>e.env_id!==local&&/^env_[-\w]+$/.test(e.env_id));
-      const rows:TaskRow[]=[];let partial=!!catalog.cursor||environments.length>5;
+      const rows:TaskRow[]=[],hosts:RemoteHostHealth[]=[];let partial=!!catalog.cursor||environments.length>5;
       for(const env of environments.slice(0,5)){
         if(this.closed)return;
+        const host:RemoteHostHealth={id:env.env_id,name:clean(env.display_name||env.host_name||env.name,80)||'Codex PC',online:env.online===true,state:'ready',error:'',counts:{running:0,waiting:0,idle:0,unknown:0},checkedAt:Date.now()},hostRows:TaskRow[]=[];
         const previous=this.rows.filter(r=>r.id.startsWith(env.env_id+':'));
-        if(!env.online){this.completions.reset();rows.push(...previous.map(r=>({...r,status:'unknown' as const})));continue;}
-        try{
+        if(!env.online){this.completions.reset();hostRows.push(...previous.map(r=>({...r,status:'unknown' as const})));host.state='offline';host.error='HOST_OFFLINE';partial=true;}
+        else try{
           const list=await this.controller.rpc(env.env_id,'thread/list',{limit:30,sortKey:'updated_at',sortDirection:'desc'});partial=partial||!!list.nextCursor;
-          const deadline=Date.now()+20000;for(const t of (list.data||[]).slice(0,30)){
+          if(!Array.isArray(list.data))throw Error('UNSUPPORTED_SCHEMA');
+          const deadline=Date.now()+20000;
+          const candidates=[...list.data].sort((a,b)=>Number(['active'].includes(b.status?.type))-Number(['active'].includes(a.status?.type))).slice(0,30);
+          for(const t of candidates){
             if(this.closed)return;
-            let row=remoteRow(t,env.env_id,env.display_name||env.host_name||env.name,Date.now());if(!row)continue;
-            try{if(Date.now()>deadline)throw Error('SCAN_BUDGET');const read=await this.controller.rpc(env.env_id,'thread/read',{threadId:t.id,includeTurns:false});row=remoteRow(read.thread,env.env_id,row.host||'',Date.now());}catch{if(row)row={...row,status:'unknown'};partial=true;}
+            let row=remoteRow(t,env.env_id,host.name,Date.now());if(!row)continue;
+            try{if(Date.now()>deadline)throw Error('SCAN_BUDGET');const read=await this.controller.rpc(env.env_id,'thread/read',{threadId:t.id,includeTurns:false});row=remoteRow(read.thread,env.env_id,host.name,Date.now());if(!row)throw Error('UNSUPPORTED_SCHEMA');}catch(e){if(row)row={...row,status:'unknown'};partial=true;host.error=remoteErrorCode(e);}
             if(row){
               const prior=previous.find(r=>r.id===row!.id);
               if(row.status==='unknown')this.completions.reset();
@@ -156,15 +166,17 @@ export class RemoteTaskMonitor {
                   if(typeof turn?.id==='string'&&/^[\w-]{1,128}$/.test(turn.id)&&['inProgress','completed','interrupted','failed'].includes(turn.status)){
                     const item=this.completions.observe(row,turn.id,turn.status,Date.now());if(item&&!this.closed)this.completed(item);
                   }
-                }catch{this.completions.reset();/* Missing completion proof must not affect runtime status. */}
+                }catch{this.completions.reset();}
               }
-              rows.push(row);
+              hostRows.push(row);
             }
           }
-        }catch{rows.push(...previous.map(r=>({...r,status:'unknown' as const})));partial=true;}
+          if(host.error||hostRows.length&&hostRows.every(r=>r.status==='unknown')){host.state='unconfirmed';host.error=host.error||'RUNTIME_UNAVAILABLE';partial=true;}
+        }catch(e){hostRows.push(...previous.map(r=>({...r,status:'unknown' as const})));host.state='error';host.error=remoteErrorCode(e);partial=true;}
+        host.counts=this.counts(hostRows);host.checkedAt=Date.now();hosts.push(host);rows.push(...hostRows);
       }
-      if(!this.closed){this.rows=rows.slice(0,100);this.available=this.controller.usable;this.partial=partial;this.checkedAt=Date.now();this.error='';this.failures=0;this.retryAt=0;this.controller.heartbeat();}
-    }catch(e){this.invalidate();this.controller.disconnect();this.error=e instanceof Error&&/^[A-Z_0-9]+$/.test(e.message)?e.message:'REMOTE_UNAVAILABLE';this.failures++;this.retryAt=Date.now()+Math.min(300000,30000*2**Math.min(3,this.failures-1))+Math.random()*3000;}
+      if(!this.closed){this.rows=rows.slice(0,100);this.hosts=hosts;this.available=this.controller.usable&&hosts.some(h=>h.state==='ready'||h.state==='unconfirmed');this.partial=partial;this.checkedAt=Date.now();this.error=hosts.length?this.available?(hosts.some(h=>h.error)?'PARTIAL_HOSTS':''):hosts[0]!.error:'NO_REMOTE_HOSTS';this.failures=0;this.retryAt=0;this.controller.heartbeat();}
+    }catch(e){this.error=remoteErrorCode(e);this.invalidate(this.error);this.controller.disconnect();this.failures++;this.retryAt=Date.now()+Math.max(Number((e as any)?.retryAfterMs)||0,Math.min(300000,30000*2**Math.min(3,this.failures-1)))+Math.random()*3000;}
     finally{this.busy=false;if(!this.closed)this.changed();}
   }
   close(){this.closed=true;clearInterval(this.timer);this.invalidate();this.controller.disconnect();}

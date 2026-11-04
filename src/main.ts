@@ -1,3 +1,4 @@
+import {taskSourceDiagnostics} from './task-source-diagnostics';
 import {PetMessages} from './pet-messages';
 import {PetMessageWindow} from './pet-message-window';
 import {PetGrowth} from './pet-growth';
@@ -7,7 +8,7 @@ import {IdleTracker} from './task-idle';
 import {TaskPeak} from './task-peak';
 import {UsageHistory} from './usage-history';
 import {AutoReconnect} from './auto-reconnect';
-import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray, globalShortcut, powerMonitor, Notification, safeStorage } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray, globalShortcut, powerMonitor, Notification, safeStorage, clipboard } from 'electron';
 import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'node:fs';
 import path from 'node:path';
 import {syncLoginStartup} from './login-startup';
@@ -166,7 +167,8 @@ function installHandlers() {
     'pet-message-preview':()=>petMessages.preview(),
     'pet-message-present':(_event:any,id:unknown,anchor:unknown)=>{if(typeof anchor!=='number'||!Number.isFinite(anchor))return;const message=petMessages.snapshot().items[0];petMessageWindow.show(message&&message.id===id?message:null,Math.max(0,Math.min(464,anchor)),expanded||paused||taskBubble.isVisible);},
     'task-bubble-anchor':(_event:any,x:unknown)=>taskBubble?.setAnchor(x),
-    'tasks-start':async()=>{await taskMonitor.start();return taskMonitor.snapshot();},
+    'tasks-start':async()=>{await taskMonitor.refresh();return taskMonitor.snapshot();},
+    'task-diagnostics-copy':async()=>{await clipboard.writeText(JSON.stringify(taskSourceDiagnostics(taskMonitor.snapshot(),app.getVersion(),require('node:os').hostname()),null,2));return{ok:true};},
     'history-query': (_event:any,id:unknown,window:unknown,days:unknown)=>{if(typeof id!=='string'||!providerIds.includes(id as ProviderId)&&!accounts.has(id))throw new Error('Unknown account');return usageHistory.query(id,window,days);},
     'history-clear':()=>({ok:usageHistory.clear()}),
     'pet-height': (_event:any,value:unknown)=>{if(value!==0&&value!==112)return;petHeight=value;reposition();},

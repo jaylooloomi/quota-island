@@ -22,7 +22,7 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     }
     for(const [local,remote] of [[true,false],[false,true],[false,false],[true,true]]){
       await app.evaluate(({BrowserWindow},values)=>{const s=global.nativeLiveUI;s.tasks.localSource={available:values[0]};s.tasks.remote={connected:values[1]};BrowserWindow.getAllWindows()[0].webContents.send('state',s);},[local,remote]);
-      assert.equal(await page.locator('.task-source-health[data-provider="codex"]').getAttribute('data-connected'),String(local||remote),'Codex reflects its own local/remote sources');
+      assert.equal(await page.locator('.task-source-health[data-provider="codex"]').getAttribute('data-connected'),String(local),'Codex local badge must not hide remote failures');
       assert.ok((await page.locator('.task-source-health[data-provider="codex"]').getAttribute('title')).length>0,'local/remote tooltip exists');
     }
     // Separate deterministic UI regression, never reported as live task activity.

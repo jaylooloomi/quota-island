@@ -67,3 +67,14 @@ test('remote completion uses metadata-only matching successful turn; cancelled t
     active=true;turn='c';status='inProgress';await m.tick();m.invalidate();active=false;status='completed';await m.tick();assert.equal(events.length,1);
   }finally{m.close();assert.ok(root.startsWith(path.join(os.tmpdir(),'pebble-remote-completion-')));fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test('host query failure is visible even when controller and device are online; repair can be rechecked',async()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'pebble-source-health-'));fs.writeFileSync(path.join(root,'.codex-global-state.json'),'{}');const m=new RemoteTaskMonitor(root,()=>{});let fail=true;
+ m.controller={usable:true,connect:async()=>{},request:async()=>({items:[{env_id:'env_work',online:true,display_name:'Work PC'}]}),rpc:async(env,method)=>{if(fail)throw Error('RPC_TIMEOUT');return method==='thread/list'?{data:[{id:'t'}]}:{thread:{id:'t',status:{type:'active',activeFlags:[]}}};},heartbeat(){},disconnect(){}};
+ try{await m.tick();let s=m.snapshot();assert.equal(s.controllerConnected,true);assert.equal(s.available,false);assert.equal(s.error,'RPC_TIMEOUT');assert.equal(s.hosts[0].online,true);assert.equal(s.hosts[0].state,'error');fail=false;await m.tick(true);s=m.snapshot();assert.equal(s.available,true);assert.equal(s.hosts[0].counts.running,1);assert.equal(s.error,'');}finally{m.close();fs.rmSync(root,{recursive:true,force:true});}
+});
+test('unloaded remote runtime is unknown and server cooldown is never bypassed by recheck',async()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'pebble-source-cooldown-'));fs.writeFileSync(path.join(root,'.codex-global-state.json'),'{}');const m=new RemoteTaskMonitor(root,()=>{});let calls=0;
+ m.controller={usable:true,connect:async()=>{calls++;},request:async()=>({items:[{env_id:'env_work',online:true}]}),rpc:async(env,method)=>method==='thread/list'?{data:[{id:'t'}]}:{thread:{id:'t',status:{type:'notLoaded'}}},heartbeat(){},disconnect(){}};
+ try{await m.tick();assert.equal(m.snapshot().hosts[0].state,'unconfirmed');assert.equal(m.snapshot().hosts[0].counts.unknown,1);m.controller.connect=async()=>{calls++;throw Object.assign(Error('REMOTE_HTTP_429'),{retryAfterMs:180000});};await m.tick();const before=calls;assert.ok(m.snapshot().retryAt>=Date.now()+179000);await m.tick(true);assert.equal(calls,before); }finally{m.close();fs.rmSync(root,{recursive:true,force:true});}
+});
