@@ -47,8 +47,6 @@
     if(state.paused||!state.providers[active]?.enabled||state.providers[active]?.status!=='ready')section.append(el('p','trend-warning',t('stale')));
     if(series.summary){const summary=el('div','trend-change-card'),labels=el('div','trend-change-labels'),a=el('span','trend-start',t(series.summary.resetBaseline?'resetBase':'baseline')+' '+series.summary.baseline+'%'),b=el('span','trend-current',t('current')+' '+series.summary.last.used+'%');a.title=fmt(series.summary.baselineTime,true);b.title=fmt(series.summary.last.time,true);labels.append(a,b);const value=el('strong','trend-change-value'),change=series.summary.change;value.append(el('span','trend-change-number',change===null?'—':(change>=0?'+':'')+change.toFixed(change!==0&&Math.abs(change)<0.1?2:1)),el('span','trend-change-unit',' '+t('points')));if(change===null)value.title=t('pending');summary.append(labels,value);section.append(summary);}
     if(data.lastSync)section.append(el('div','trend-summary',t('last')+' '+fmt(data.lastSync)));
-    section.append(el('p','trend-note',t(relative?'relativeNote':'note')+(series.summary?.hasGaps?' · '+t('netGap'):'')));
-    if(data.oldest)section.append(el('p','trend-note',t('range')+' '+fmt(data.oldest,true)));
     if(section._focus){const f=section._focus,target=f.kind==='svg'?section.querySelector('svg'):f.kind==='select'?section.querySelector('select'):section.querySelectorAll(f.kind==='mode'?'.trend-modes button':'.trend-ranges button')[f.index];if(target){if(f.kind==='svg')target.dataset.restoreTime=f.time;target.focus({preventScroll:true});}section._focus=null;}
   }
   function graph(section,data,series){
