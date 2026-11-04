@@ -54,7 +54,7 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     const after=await page.locator('.card[data-provider="claude"]').boundingBox();for(const key of ['x','y','width','height'])assert.ok(Math.abs(after[key]-quotaPosition[key])<=1,'quota geometry '+key);
     assert.equal((await page.evaluate(()=>quota.getState())).providers.codex.updatedAt,quotaTime,'task monitor never refreshes quota');
     data.settings.locale='zh-TW';data.tasks.liveCoverage=false;data.tasks.connection='unavailable';data.tasks.rows=data.tasks.rows.map(r=>({...r,status:'unknown'}));data.tasks.counts={running:0,waiting:0,idle:0,unknown:data.tasks.rows.length};
-    await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);await page.locator('#tab-tasks').click();assert.equal(await page.locator('.task-counts strong').first().innerText(),'—');assert.match(await page.locator('.task-notice').first().innerText(),/本機.*記錄/);
+    await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);await page.locator('#tab-tasks').click();assert.equal(await page.locator('.task-counts strong').first().innerText(),'—');assert.equal(await page.locator('.task-footnote').count(),0);assert.match(await page.locator('.task-empty').innerText(),/本機.*記錄/);
     await page.screenshot({path:output+'/source-unconnected.png'});
     await app.evaluate(({BrowserWindow})=>{BrowserWindow.getAllWindows()[0].webContents.send=global.taskFixtureSend;});
     await page.locator('.task-summary-setting input').check();
