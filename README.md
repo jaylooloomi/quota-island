@@ -3,20 +3,46 @@
 <!-- project-badges -->
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-3b82f6?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/releases/tag/v1.16.10"><img alt="Released version v1.16.10" src="https://img.shields.io/badge/release-v1.16.10-8b87de?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/releases/latest"><img alt="Windows and macOS releases" src="https://img.shields.io/badge/platform-Windows%20%2B%20macOS-64748b?style=flat"></a>
+  <a href="https://github.com/jaylooloomi/quota-pebble/releases/latest"><img alt="Latest GitHub release" src="https://img.shields.io/github/v/release/jaylooloomi/quota-pebble?style=flat&color=8b87de"></a>
+  <a href="https://github.com/jaylooloomi/quota-pebble/releases/latest"><img alt="Windows and macOS releases" src="https://img.shields.io/badge/platform-Windows%20%2B%20macOS-64748b?style=flat"></a>
   <a href="#run-from-source"><img alt="Built with Electron and TypeScript" src="https://img.shields.io/badge/built%20with-Electron%20%2B%20TypeScript-487fa8?style=flat"></a>
   <a href="#desktop-controls"><img alt="Interface languages: Traditional Chinese, English, Japanese, Korean" src="https://img.shields.io/badge/UI-%E7%B9%81%E4%B8%AD%20%2F%20EN%20%2F%20%E6%97%A5%E6%9C%AC%E8%AA%9E%20%2F%20%ED%95%9C%EA%B5%AD%EC%96%B4-637e64?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/actions/workflows/build.yml"><img alt="View actual GitHub Actions results" src="https://img.shields.io/badge/CI-view%20runs-64748b?style=flat"></a>
+  <a href="https://github.com/jaylooloomi/quota-pebble/actions/workflows/build.yml"><img alt="View actual GitHub Actions results" src="https://img.shields.io/badge/CI-view%20runs-64748b?style=flat"></a>
 </p>
 <!-- /project-badges -->
-<p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">Download Windows / macOS</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="LICENSE">MIT</a></p>
+<p align="center"><a href="#keep-remote-tasks-on-your-radar"><img src="docs/remote/remote-badge.svg" width="202" height="38" alt="Remote task monitoring · Claude Code, Codex, Antigravity · Windows"></a></p>
+
+> Windows v1.29.4 adds Antigravity remote task monitoring through Google's official relay ([verification and limits](docs/antigravity-remote-research.md)), alongside Codex and Claude Code Remote Control. Uses existing local sign-in; no CLI, Hooks or private relay. Antigravity remote status refreshes at most once per minute; unsupported states remain unknown. Native macOS ARM64 / Intel release assets remain at v1.28.2.
+
+<p align="center"><a href="https://github.com/jaylooloomi/quota-pebble/releases/latest">Download Windows / macOS</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="LICENSE">MIT</a></p>
 
 <p align="center"><img src="docs/readme-v1.16.10/stage-en.png" alt="Your quotas above. A little companion below." width="464"><br><b>Your quotas above. A little companion below.</b><br><sub>Actual app screenshot · demo data</sub></p>
 
 ![Quota Pebble illustrated feature overview](docs/readme-v1.16.10/overview-en.png)
 
 *Illustrated overview updated using actual v1.16.10 screenshots. All pictured percentages are demo data.*
+
+## Keep remote tasks on your radar
+
+**Leave the work on another computer. Keep its progress in sight.** Quota Pebble supports **remote task monitoring for Claude Code, Codex and Antigravity**. Check authorized work-computer tasks from your home desktop, with less window switching and fewer forgotten follow-ups.
+
+<img src="docs/remote/remote-overview-en.svg" width="920" alt="Remote Supported feature badge for Claude Code, Codex and Antigravity; feature illustration">
+
+| Tool | Remote source | Refresh and status |
+|---|---|---|
+| Claude Code | Official Remote Control, including connected Claude Desktop Code sessions | About once a minute; running, waiting and idle; unconfirmed states stay unknown |
+| Codex | Official relay for already-authorized devices | About every 30 seconds; remote runtime states; disconnects become unknown |
+| Antigravity | Google's official Remote Control relay | About once a minute; running and idle verified; other unconfirmed states stay unknown |
+
+AI icons identify the tool, while source labels help identify the computer. When Claude supplies no reliable host name, Pebble shows Remote Control and the account label. Supported completion evidence and stable idle transitions produce different notification bubbles to bring your attention back to work; **idle does not mean successfully completed**.
+
+**Available on Windows v1.29.4 and later.** Source computers must remain running, online and authorized through each tool's official remote feature. Pebble also needs the matching existing sign-in / device authorization. Monitoring has bounded coverage and refresh intervals: it cannot guarantee every device, historical task or brief state transition is captured. Disconnected or stale data stays unknown. Claude support covers Code, not general Chat or Cowork.
+
+[Codex verification and limits](docs/windows-remote-controller-research.md) · [Claude Code verification and limits](docs/claude-remote-tasks.md) · [Antigravity verification and limits](docs/antigravity-remote-research.md)
+
+### Local tasks, too
+
+Read existing local events and native states without launching a CLI, using Hooks or running a private receiver. Inferred local Codex states are labeled; unknown is not running. Identifiable local/remote copies are deduplicated. The three-row scrollable list and optional compact summary keep the island small. [Local monitoring scope](docs/design/task-monitor/LOCAL-SESSIONS.zh-TW.md).
 
 ## A quick introduction
 
@@ -29,6 +55,7 @@ AI-generated promotional videos, not recordings of the running app. Video 01 is 
 | Situation | What you do | What Pebble shows |
 |---|---|---|
 | Coding with several AI subscriptions | Keep the compact island nearby | Separate Claude, Codex and Gemini / Antigravity quotas |
+| Running work on another computer | Open Tasks | Authorized remote tasks from all three tools, with source labels and status reminders |
 | Planning work before the reset | Switch to Pacing | Suggested daily usage and an adjustable reserve |
 | Using several Claude accounts | Add an account in the panel | Independent account cards; accounts are not added together |
 | Needing a quiet desktop | Collapse, drag, or hide to the tray | A small, movable quota display |
@@ -79,7 +106,7 @@ Pet growth and token-based XP are not implemented.
 
 ## Get started
 
-1. **Download** from [Releases](https://github.com/jaylooloomi/quota-island/releases/latest): Windows x64 portable EXE, macOS Apple Silicon (`arm64`) ZIP, or macOS Intel (`x64`) ZIP. Verify downloads with `SHA256SUMS.txt`. Run the EXE on Windows; on Mac, unzip and move `Quota Pebble.app` to Applications. Windows is unsigned; Mac builds are ad-hoc signed, without Developer ID or Apple notarization. For first-launch restrictions, follow [Apple’s instructions](https://support.apple.com/102445).
+1. **Download** from [Releases](https://github.com/jaylooloomi/quota-pebble/releases/latest): Windows x64 portable EXE, macOS Apple Silicon (`arm64`) ZIP, or macOS Intel (`x64`) ZIP. Verify downloads with `SHA256SUMS.txt`. Run the EXE on Windows; on Mac, unzip and move `Quota Pebble.app` to Applications. Windows is unsigned; Mac builds are ad-hoc signed, without Developer ID or Apple notarization. For first-launch restrictions, follow [Apple’s instructions](https://support.apple.com/102445).
 2. **Connect** the provider accounts you want to monitor, using the table below.
 3. **Choose your view**: quotas or accounts, Remaining / Used / Pacing, visible services, language and pet position.
 
@@ -140,10 +167,10 @@ Released under the [MIT License](LICENSE). You are welcome to use, modify, share
 
 If Pebble becomes part of your own work, a credit in your README, About page or article would also be appreciated. This is a friendly request, not an additional MIT license condition:
 
-> Quota Pebble, created by Arthur Wang ([@jaylooloomi](https://github.com/jaylooloomi)), licensed under MIT. [Original project](https://github.com/jaylooloomi/quota-island).
+> Quota Pebble, created by Arthur Wang ([@jaylooloomi](https://github.com/jaylooloomi)), licensed under MIT. [Original project](https://github.com/jaylooloomi/quota-pebble).
 
 ## Meet the author
 
 Hi, I'm Arthur Wang (jaylooloomi), the creator of Quota Pebble. I enjoy turning small everyday frustrations into useful, playful tools, and I'm always happy to meet people with similar interests.
 
-Whether you have feedback, a feature idea, a technical question, or simply want to say hello, you're welcome to connect through [GitHub](https://github.com/jaylooloomi), [Issues](https://github.com/jaylooloomi/quota-island/issues), or a pull request. I hope this little tool makes your work easier—and gives us a chance to exchange ideas and become friends.
+Whether you have feedback, a feature idea, a technical question, or simply want to say hello, you're welcome to connect through [GitHub](https://github.com/jaylooloomi), [Issues](https://github.com/jaylooloomi/quota-pebble/issues), or a pull request. I hope this little tool makes your work easier—and gives us a chance to exchange ideas and become friends.
