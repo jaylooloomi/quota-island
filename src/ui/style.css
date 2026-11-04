@@ -562,3 +562,5 @@ html:not([lang="zh-TW"]) .bar .mini-value.unknown,html:not([lang="zh-TW"]) .bar 
 
 /* RSS opens as a settings subview so long source lists never clip the footer. */
 .settings:has(#pet-feeds[open])>:not(#pet-feeds):not(.settings-title:first-child){display:none!important}#pet-feeds[open]{min-height:250px}#pet-feeds summary{list-style-position:inside}
+/* Keep all settings actions reachable on shorter desktop work areas. */
+@media(max-height:950px){.settings .settings-service-grid label{min-height:32px;padding:3px 5px;font-size:10px;line-height:12px}.settings .sources-title{margin-top:6px}.settings>label{padding:3px 0}.settings .settings-pet-selectors label{font-size:10px}.settings>p{margin:3px 0;font-size:9px}.settings #pet-feeds{margin:3px 0}.settings .pet-growth{margin:4px 0}.settings label>select{height:28px;min-height:28px}.settings .settings-pet-selectors select,.settings .pet-action-row select,.settings .pet-action-row #pet-action-preview,.settings .pet-action-row #pet-action-apply{height:28px;min-height:28px}}

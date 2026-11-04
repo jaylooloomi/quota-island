@@ -1,4 +1,6 @@
-# 任務完成訊息泡（02）
+# 任務完成訊息泡（02，歷史初版）
+
+目前版本請以 [合併通知](batched-task-inbox.md)、[三來源完成證據](native-completion-notifications.md) 及 [閒置提醒](task-idle-notifications.md) 為準。下方保留初版設計；佇列上限、隱藏行為、定位與來源範圍已更新。
 
 目標：Codex 成功結束一個回合後，讓使用者知道完成了哪個任務、來自哪台主機；不改動動態島及寵物舞台的尺寸。
 
