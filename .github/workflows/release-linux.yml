@@ -1,5 +1,8 @@
 name: Linux native package verification
 on:
+  push:
+    branches: ['codex/**']
+    paths: [.github/workflows/release-linux.yml]
   workflow_dispatch:
 permissions:
   contents: read
