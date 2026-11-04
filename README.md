@@ -11,7 +11,7 @@
 </p>
 <!-- /project-badges -->
 
-> Windows v1.29.3 adds cross-device Claude Code Remote Control task monitoring; see [evidence and limitations](docs/claude-remote-tasks.md). Companion growth and RSS/Atom messages arrived in v1.29.0. Native macOS ARM64 / Intel release assets remain at v1.28.2. Antigravity remote monitoring is not supported.
+> Windows v1.29.4 adds Antigravity remote task monitoring through Google's official relay ([verification and limits](docs/antigravity-remote-research.md)), alongside Codex and Claude Code Remote Control. Uses existing local sign-in; no CLI, Hooks or private relay. Remote status refreshes at most once per minute; unsupported states remain unknown. Native macOS ARM64 / Intel release assets remain at v1.28.2.
 
 <p align="center"><a href="https://github.com/jaylooloomi/quota-pebble/releases/latest">Download Windows / macOS</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="LICENSE">MIT</a></p>
 

@@ -6,6 +6,14 @@ test('diagnostic counters explain baseline suppression, pending gates, eligibili
  f.set(40000);t.observe([r('running')]);f.set(41000);t.completion('a');t.observe([r('idle')]);assert.equal(t.diagnostics().decisions['claude:completed_priority'],1);assert.equal(t.diagnostics().pending,0);
 });
 function fixture(){let now=base;const tracker=new IdleTracker(()=>now);const row=(status,id='a',provider='claude',extra={})=>({id,provider,title:'Test task',host:'PC',status,source:'claude-registry',observedAt:now,confirmedAt:now,...extra});return{tracker,row,set:n=>now=base+n,at:()=>now};}
+
+test('Antigravity remote minute polling requires two fresh idle observations and suppresses startup idle',()=>{
+ const f=fixture(),r=status=>f.row(status,'remote-a','antigravity',{source:'antigravity-remote'});
+ f.tracker.observe([r('idle')]);f.set(60000);assert.deepEqual(f.tracker.observe([r('idle')]),[]);
+ f.set(120000);f.tracker.observe([r('running')]);f.set(180000);const cached=r('idle');assert.deepEqual(f.tracker.observe([cached]),[]);
+ f.set(220000);assert.deepEqual(f.tracker.observe([cached]),[]);f.set(240000);assert.equal(f.tracker.observe([r('idle')]).length,1);
+ f.set(300000);assert.deepEqual(f.tracker.observe([r('idle')]),[]);
+});
 test('all three providers require a running → idle transition stable for 30s and two fresh observations',()=>{
  for(const provider of ['codex','claude','antigravity']){const f=fixture(),{tracker:t,row:r}=f;t.observe([r('running','a',provider)]);f.set(5000);assert.deepEqual(t.observe([r('idle','a',provider)]),[]);f.set(20000);t.observe([r('idle','a',provider)]);f.set(34999);assert.deepEqual(t.observe([r('idle','a',provider)]),[]);f.set(35000);const n=t.observe([r('idle','a',provider)]);assert.equal(n.length,1);assert.equal(n[0].kind,'idle');assert.equal(n[0].provider,provider);f.set(45000);assert.deepEqual(t.observe([r('idle','a',provider)]),[]);}
 });

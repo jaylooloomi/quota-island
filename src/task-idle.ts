@@ -18,7 +18,7 @@ export class IdleTracker {
     for(const row of rows){
       const provider=row.provider==='claude'?'claude':row.provider==='antigravity'||row.provider==='gemini'?'antigravity':'codex';
       const key=JSON.stringify([provider,row.host||'',row.id]);present.add(key);
-      const at=row.observedAt,ttl=row.source==='claude-remote'?150000:row.source==='remote'?65000:['claude-registry','antigravity-rpc'].includes(row.source)?25000:10000;
+      const at=row.observedAt,ttl=['claude-remote','antigravity-remote'].includes(row.source)?150000:row.source==='remote'?65000:['claude-registry','antigravity-rpc'].includes(row.source)?25000:10000;
       if(typeof at!=='number'||!Number.isFinite(at)||at>now+1000||now-at>ttl||row.status==='unknown'){if(this.states.has(key))this.audit(provider,'observation_lost');this.states.delete(key);continue;}
       let s=this.states.get(key);if(s&&at<=s.seen)continue;
       if(s&&at-s.seen>ttl){this.states.delete(key);s=undefined;}

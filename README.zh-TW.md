@@ -11,7 +11,7 @@
 </p>
 <!-- /project-badges -->
 
-> Windows v1.29.3 新增 Claude Code Remote Control 跨電腦任務讀取；[驗證與限制](docs/claude-remote-tasks.md)。寵物成長與 RSS／Atom 訊息自 v1.29.0 加入。macOS ARM64／Intel 成品目前為 v1.28.2；Antigravity 跨電腦仍未支援。
+> Windows v1.29.4 新增 Google 官方中繼的 Antigravity 遠端任務監控（[驗證與限制](docs/antigravity-remote-research.md)），與 Codex、Claude Code Remote Control 一起顯示。沿用本機既有登入，不啟動 CLI、不用 Hook、不架私人中繼；遠端最多每分鐘更新一次，無法確認的狀態顯示未知。macOS ARM64／Intel 成品仍為 v1.28.2。
 
 <p align="center"><a href="https://github.com/jaylooloomi/quota-pebble/releases/latest">下載 Windows / macOS</a> · <a href="README.md">English</a> · <a href="LICENSE">MIT</a></p>
 
