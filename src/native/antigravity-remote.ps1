@@ -50,6 +50,7 @@ try {
    $reply=Invoke-ReadRpc 'ProxyCommand' @($h.id,'/exa.language_server_pb.LanguageServerService/GetAllCascadeTrajectories','e30=')
    if($reply -isnot [array] -or $reply[0] -isnot [string]){throw 'UNSUPPORTED_PAYLOAD'}
    $data=Read-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($reply[0])));$summaries=$data.trajectorySummaries
+   if($data -is [System.Collections.IDictionary] -and $data.Count -eq 0){$summaries=@{}}
    if($summaries -isnot [System.Collections.IDictionary]){throw 'UNSUPPORTED_TASK_SCHEMA'}
    if($summaries.Count -gt 100){$partial=$true}
    foreach($key in @($summaries.Keys)|Select-Object -First 100){$v=$summaries[$key];$id=if($v.trajectoryId){$v.trajectoryId}else{$key};if($id -notmatch '^[A-Za-z0-9_-]{1,128}$'){$partial=$true;continue}

@@ -52,6 +52,9 @@ export async function readClaudeRegistry(root:string,probe=claudeProcessIdentiti
   }catch{return{rows:[],available:false,partial:false,checkedAt:now,error:'REGISTRY_UNAVAILABLE'};}
 }
 export function antigravityTaskRows(data:any,now=Date.now()):TaskRow[]{
+  // Protobuf JSON omits an empty map. A successful {} response is a reachable
+  // service with no loaded summaries, not a disconnected source.
+  if(data&&typeof data==='object'&&!Array.isArray(data)&&Object.keys(data).length===0)return[];
   const value=data?.trajectorySummaries;if(!value||typeof value!=='object')throw Error('UNSUPPORTED_TASK_SCHEMA');
   const entries=Array.isArray(value)?value:Object.values(value),rows:TaskRow[]=[];
   for(const v of entries.slice(0,100) as any[]){if(!validId(v?.trajectoryId))continue;

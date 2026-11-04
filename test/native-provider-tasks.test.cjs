@@ -28,7 +28,13 @@ test('combined monitor includes native providers in counts, sorts active first a
 test('Antigravity maps only known enum meanings, preserves metadata, and never interprets empty as global no-tasks',()=>{
   const task={trajectoryId:'t',summary:'Title',workspaces:[{workspaceFolderAbsoluteUri:'file:///D:/project'}],lastModifiedTime:new Date(now).toISOString(),steps:'SECRET',trajectoryMetadata:{prompt:'SECRET'}};
   for(const [status,mapped] of [['CASCADE_RUN_STATUS_RUNNING','running'],['CASCADE_RUN_STATUS_IDLE','idle'],['CASCADE_RUN_STATUS_CANCELING','unknown'],['CASCADE_RUN_STATUS_BUSY','unknown'],['NEW_ENUM','unknown']]){const row=antigravityTaskRows({trajectorySummaries:{a:{...task,status}}},now)[0];assert.equal(row.status,mapped);assert.equal(row.project,'file:///D:/project');assert.ok(!JSON.stringify(row).includes('SECRET'));}
-  assert.deepEqual(antigravityTaskRows({trajectorySummaries:{}}),[]);assert.throws(()=>antigravityTaskRows({}),/SCHEMA/);assert.deepEqual(antigravityTaskRows({trajectorySummaries:[{trajectoryId:'../bad'}]}),[]);
+  assert.deepEqual(antigravityTaskRows({trajectorySummaries:{}}),[]);assert.deepEqual(antigravityTaskRows({}),[]);assert.throws(()=>antigravityTaskRows({unexpected:true}),/SCHEMA/);assert.deepEqual(antigravityTaskRows({trajectorySummaries:[{trajectoryId:'../bad'}]}),[]);
+});
+
+test('reachable Antigravity empty protobuf response stays connected; malformed response does not',async()=>{
+ let data={};const reader=new AntigravityTaskReader(async()=>[{pid:42,token:'fixture',ports:[1]}],async()=>data);
+ const empty=await reader.read();assert.equal(empty.available,true);assert.equal(empty.partial,false);assert.deepEqual(empty.rows,[]);
+ data={unexpected:true};const invalid=await reader.read();assert.equal(invalid.available,false);assert.equal(invalid.error,'LOCAL_SERVICE_UNAVAILABLE');
 });
 test('Antigravity source only calls readonly method, caches valid listener and rediscovers after failure',async()=>{
   let fail=false,discover=0;const calls=[];let time=now;
