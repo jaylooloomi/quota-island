@@ -37,7 +37,7 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     data.tasks.rows.forEach((r,i)=>r.confirmedAt=dateTimes[i]??null);
     await app.evaluate(({BrowserWindow},data)=>BrowserWindow.getAllWindows()[0].webContents.send('state',data),data);
     assert.deepEqual(await page.locator('.task-filters button').evaluateAll(ns=>ns.map(n=>n.dataset.taskFilter)),['running','today','threeDays','fiveDays','week','idle','waiting','unknown','all']);
-    for(const [f,n] of [['today',1],['threeDays',3],['fiveDays',5],['week',6],['idle',0],['waiting',1],['unknown',5],['all',7]]){await page.locator('[data-task-filter='+f+']').click();assert.equal(await page.locator('.task-row').count(),n,'date/status filter '+f);}
+    for(const [f,n] of [['today',1],['threeDays',3],['fiveDays',5],['week',6],['idle',0],['waiting',1],['unknown',5],['all',7]]){await page.locator('[data-task-filter='+f+']').click();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));assert.equal(await page.locator('.task-row').count(),n,'date/status filter '+f);}
     const scrolling=await page.locator('.task-list').evaluate(e=>{const r=e.getBoundingClientRect(),rows=[...e.querySelectorAll('.task-row')].map(n=>n.getBoundingClientRect());return{height:r.height,overflows:e.scrollHeight>e.clientHeight,thirdBottom:rows[2].bottom,bottom:r.bottom,fourthTop:rows[3].top,overflowY:getComputedStyle(e).overflowY};});
     assert.ok(Math.abs(scrolling.height-308)<1);assert.ok(scrolling.overflows);assert.ok(scrolling.thirdBottom<=scrolling.bottom+1);assert.ok(scrolling.fourthTop>=scrolling.bottom);assert.equal(scrolling.overflowY,'auto');
     await page.locator('.task-list').evaluate(e=>e.scrollTop=e.scrollHeight);assert.ok(await page.locator('.task-list').evaluate(e=>e.lastElementChild.getBoundingClientRect().bottom<=e.getBoundingClientRect().bottom+1));
@@ -46,7 +46,7 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
     const nativeHeight=()=>app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].getBounds().height);
     await page.waitForTimeout(100);const allHeight=await nativeHeight();const filterStarted=Date.now();
     await page.locator('[data-task-filter=running]').click();assert.equal(await page.locator('.task-row').count(),1);
-    await page.waitForTimeout(150);const runningHeight=await nativeHeight();assert.ok(runningHeight<allHeight,'filter shrinks native window without next monitor publish');
+    await page.waitForTimeout(150);const runningHeight=await nativeHeight();assert.equal(runningHeight,allHeight,'filter keeps native height stable');
     await page.locator('[data-task-filter=all]').click();await page.waitForTimeout(150);assert.equal(await nativeHeight(),allHeight,'all filter expands immediately');
     console.log('PASS immediate filter sizing; running height '+runningHeight+', all height '+allHeight+', round trip '+(Date.now()-filterStarted)+'ms');
     await page.locator('[data-task-filter=running]').click();

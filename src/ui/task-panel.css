@@ -55,3 +55,6 @@
 .task-remote-health{font-size:10px;color:var(--muted,#aeb7c5);margin:6px 0}.task-remote-health summary{cursor:pointer;padding:5px 0}.task-remote-host{display:flex;gap:8px;justify-content:space-between;padding:5px 0;overflow-wrap:anywhere}.task-remote-host b{color:#9ddfce}.task-diagnostics-copy{margin-top:5px}
 
 .task-remote-health .task-diagnostics-copy{border:1px solid #465166;border-radius:6px;background:#242b35;color:#dbe4ef;font:inherit;padding:5px 9px;cursor:pointer}.task-remote-health p{margin:4px 0;line-height:1.5}
+
+/* Filtering only changes rows; keep native window geometry stable. */
+.task-list.task-list-virtual{height:308px;min-height:308px;max-height:308px;contain:layout paint style}

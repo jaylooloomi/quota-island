@@ -32,6 +32,10 @@ jobs:
       - if: runner.os == 'Windows'
         run: npm run test:tasks
       - if: runner.os == 'Windows'
+        run: node scripts/task-filter-fast-test.cjs
+        env:
+          QUOTA_TEST_CPU_RATE: '4'
+      - if: runner.os == 'Windows'
         run: npm run test:sessions
       - run: npm audit --omit=dev
       - if: runner.os == 'Linux'
