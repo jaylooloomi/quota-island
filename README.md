@@ -10,8 +10,9 @@
   <a href="https://github.com/jaylooloomi/quota-pebble/actions/workflows/build.yml"><img alt="View actual GitHub Actions results" src="https://img.shields.io/badge/CI-view%20runs-64748b?style=flat"></a>
 </p>
 <!-- /project-badges -->
+<p align="center"><a href="#keep-remote-tasks-on-your-radar"><img src="docs/remote/remote-badge.svg" width="202" height="38" alt="Remote task monitoring · Claude Code, Codex, Antigravity · Windows"></a></p>
 
-> Windows v1.29.4 adds Antigravity remote task monitoring through Google's official relay ([verification and limits](docs/antigravity-remote-research.md)), alongside Codex and Claude Code Remote Control. Uses existing local sign-in; no CLI, Hooks or private relay. Remote status refreshes at most once per minute; unsupported states remain unknown. Native macOS ARM64 / Intel release assets remain at v1.28.2.
+> Windows v1.29.4 adds Antigravity remote task monitoring through Google's official relay ([verification and limits](docs/antigravity-remote-research.md)), alongside Codex and Claude Code Remote Control. Uses existing local sign-in; no CLI, Hooks or private relay. Antigravity remote status refreshes at most once per minute; unsupported states remain unknown. Native macOS ARM64 / Intel release assets remain at v1.28.2.
 
 <p align="center"><a href="https://github.com/jaylooloomi/quota-pebble/releases/latest">Download Windows / macOS</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="LICENSE">MIT</a></p>
 
@@ -21,14 +22,27 @@
 
 *Illustrated overview updated using actual v1.16.10 screenshots. All pictured percentages are demo data.*
 
-### Local Codex tasks
+## Keep remote tasks on your radar
 
-The **Tasks** tab reads existing local Codex Desktop session events directly: no CLI process, inference or Hook setup. Running/waiting status is explicitly **inferred**; stale or insufficient evidence remains Unknown. Clear terminal events mark the last turn idle. Cloud-only sessions may be missing. The three-row scrollable list and optional compact summary preserve the island layout. [Design, tested scope and limits](docs/design/task-monitor/LOCAL-SESSIONS.zh-TW.md).
+**Leave the work on another computer. Keep its progress in sight.** Quota Pebble supports **remote task monitoring for Claude Code, Codex and Antigravity**. Check authorized work-computer tasks from your home desktop, with less window switching and fewer forgotten follow-ups.
 
+<img src="docs/remote/remote-overview-en.svg" width="920" alt="Remote Supported feature badge for Claude Code, Codex and Antigravity; feature illustration">
 
-Windows can also read already-authorized remote Codex hosts through the official relay, using current-user Windows CNG signing without exporting private keys. It requires a compatible existing Desktop enrollment; it does not pair new devices. Remote runtime states are separate from inferred local events, and disconnects become Unknown. Polling is every 30 seconds, bounded to 30 recent threads per remote host (five hosts / 100 displayed rows overall); older tasks may be omitted. [Verification and limitations](docs/windows-remote-controller-research.md).
+| Tool | Remote source | Refresh and status |
+|---|---|---|
+| Claude Code | Official Remote Control, including connected Claude Desktop Code sessions | About once a minute; running, waiting and idle; unconfirmed states stay unknown |
+| Codex | Official relay for already-authorized devices | About every 30 seconds; remote runtime states; disconnects become unknown |
+| Antigravity | Google's official Remote Control relay | About once a minute; running and idle verified; other unconfirmed states stay unknown |
 
-Claude Desktop Code sessions already connected through official Remote Control can be read from another PC using the existing account / workspace authorization. Pebble polls read-only metadata once a minute, without starting a CLI, using Hooks or running a private relay. Disconnected states remain unknown; host names are not guessed. [Claude remote monitoring](docs/claude-remote-tasks.md).
+AI icons identify the tool, while source labels help identify the computer. When Claude supplies no reliable host name, Pebble shows Remote Control and the account label. Supported completion evidence and stable idle transitions produce different notification bubbles to bring your attention back to work; **idle does not mean successfully completed**.
+
+**Available on Windows v1.29.4 and later.** Source computers must remain running, online and authorized through each tool's official remote feature. Pebble also needs the matching existing sign-in / device authorization. Monitoring has bounded coverage and refresh intervals: it cannot guarantee every device, historical task or brief state transition is captured. Disconnected or stale data stays unknown. Claude support covers Code, not general Chat or Cowork.
+
+[Codex verification and limits](docs/windows-remote-controller-research.md) · [Claude Code verification and limits](docs/claude-remote-tasks.md) · [Antigravity verification and limits](docs/antigravity-remote-research.md)
+
+### Local tasks, too
+
+Read existing local events and native states without launching a CLI, using Hooks or running a private receiver. Inferred local Codex states are labeled; unknown is not running. Identifiable local/remote copies are deduplicated. The three-row scrollable list and optional compact summary keep the island small. [Local monitoring scope](docs/design/task-monitor/LOCAL-SESSIONS.zh-TW.md).
 
 ## A quick introduction
 
@@ -41,6 +55,7 @@ AI-generated promotional videos, not recordings of the running app. Video 01 is 
 | Situation | What you do | What Pebble shows |
 |---|---|---|
 | Coding with several AI subscriptions | Keep the compact island nearby | Separate Claude, Codex and Gemini / Antigravity quotas |
+| Running work on another computer | Open Tasks | Authorized remote tasks from all three tools, with source labels and status reminders |
 | Planning work before the reset | Switch to Pacing | Suggested daily usage and an adjustable reserve |
 | Using several Claude accounts | Add an account in the panel | Independent account cards; accounts are not added together |
 | Needing a quiet desktop | Collapse, drag, or hide to the tray | A small, movable quota display |

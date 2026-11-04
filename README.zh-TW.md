@@ -10,8 +10,9 @@
   <a href="https://github.com/jaylooloomi/quota-pebble/actions/workflows/build.yml"><img alt="View actual GitHub Actions results" src="https://img.shields.io/badge/CI-view%20runs-64748b?style=flat"></a>
 </p>
 <!-- /project-badges -->
+<p align="center"><a href="#遠端的任務也不讓它被遺忘"><img src="docs/remote/remote-badge.svg" width="202" height="38" alt="Remote task monitoring · Claude Code, Codex, Antigravity · Windows"></a></p>
 
-> Windows v1.29.4 新增 Google 官方中繼的 Antigravity 遠端任務監控（[驗證與限制](docs/antigravity-remote-research.md)），與 Codex、Claude Code Remote Control 一起顯示。沿用本機既有登入，不啟動 CLI、不用 Hook、不架私人中繼；遠端最多每分鐘更新一次，無法確認的狀態顯示未知。macOS ARM64／Intel 成品仍為 v1.28.2。
+> Windows v1.29.4 新增 Google 官方中繼的 Antigravity 遠端任務監控（[驗證與限制](docs/antigravity-remote-research.md)），與 Codex、Claude Code Remote Control 一起顯示。沿用本機既有登入，不啟動 CLI、不用 Hook、不架私人中繼；Antigravity 遠端最多每分鐘更新一次，無法確認的狀態顯示未知。macOS ARM64／Intel 成品仍為 v1.28.2。
 
 <p align="center"><a href="https://github.com/jaylooloomi/quota-pebble/releases/latest">下載 Windows / macOS</a> · <a href="README.md">English</a> · <a href="LICENSE">MIT</a></p>
 
@@ -21,14 +22,27 @@
 
 *以 v1.16.10 實際截圖更新的功能介紹圖；圖片中的百分比均為展示資料。*
 
-### Codex 本機任務
+## 遠端的任務，也不讓它被遺忘
 
-「任務」分頁直接讀取 Codex 桌面 App 的本機 session 事件，不啟動 CLI、不送推理、不使用 Hook。執行與等待狀態標示為「推定」；證據不足或過期時顯示未知，明確結束事件則顯示上一回合閒置。雲端未落地的任務可能缺漏。清單最多三筆高度、支援捲動與收合摘要。[設計、實測範圍與限制](docs/design/task-monitor/LOCAL-SESSIONS.zh-TW.md)。
+**工作留在另一台電腦，進度留在眼前。** Quota Pebble 已支援 **Claude Code、Codex、Antigravity 三家的遠端任務偵測**。在家用電腦開啟小島，也能查看已授權工作電腦的任務與狀態，減少切換視窗和忘記回頭查看的情況。
 
+<img src="docs/remote/remote-overview-zh-TW.svg" width="920" alt="三家工具皆支援遠端任務偵測，附 Remote Supported 貼章；功能示意">
 
-Windows 另可透過官方中繼讀取已授權的遠端 Codex 主機，使用目前使用者的 Windows CNG 簽章，不匯出私鑰；需要相容的既有桌面端登錄，不會自行配對新裝置。遠端即時狀態與本機推定狀態分開標示，斷線後顯示未知。每 30 秒更新，每台主機查最近 30 筆，最多五台主機、合計顯示 100 筆；較舊的任務可能不在範圍內。[驗證與限制](docs/windows-remote-controller-research.md)。
+| 工具 | 遠端來源 | 更新與狀態 |
+|---|---|---|
+| Claude Code | 官方 Remote Control；包含已接入的 Claude Desktop Code 任務 | 約每分鐘；執行中／等待確認／閒置，無法確認時顯示未知 |
+| Codex | 已授權裝置的官方中繼 | 約每 30 秒；讀取遠端原生狀態，斷線轉未知 |
+| Antigravity | Google 官方 Remote Control 中繼 | 約每分鐘；已驗證執行中／閒置，其餘未確認狀態保留未知 |
 
-Claude Desktop 的 Code 分頁只要已接入官方 Remote Control，家用 Pebble 可用現有同帳號／工作區授權讀取任務狀態；不啟動 CLI、不使用 Hook、不架私人接收端。每分鐘查詢，失聯顯示未知；來源尚未提供實際主機名稱時，不會自行猜測。[Claude 遠端驗證](docs/claude-remote-tasks.md)。
+任務清單以 AI 圖示區分工具，來源標籤協助辨識電腦；Claude 尚未提供可靠主機名稱時，顯示 Remote Control 與帳號，不猜測裝置。支援的完成證據與穩定閒置狀態會觸發不同顏色的訊息泡，提醒你回來接續工作；**閒置不代表成功完成**。
+
+**目前適用 Windows v1.29.4 以上。** 來源電腦須保持運作、連網並完成各工具的官方遠端授權，Pebble 也需要對應的現有登入／裝置授權。這是有範圍與更新間隔的監控，不保證涵蓋所有裝置、歷史任務或每次短暫狀態；失聯與過期資料顯示未知。Claude 支援 Code，並非一般 Chat／Cowork。
+
+[Codex 驗證與範圍](docs/windows-remote-controller-research.md) · [Claude Code 驗證與範圍](docs/claude-remote-tasks.md) · [Antigravity 驗證與範圍](docs/antigravity-remote-research.md)
+
+### 本機任務也能一起看
+
+直接唯讀既有本機事件／原生狀態，不另啟動 CLI、不使用 Hook 或私人接收端。Codex 本機推定狀態會明確標示；未知不算執行中。本機與遠端可辨識的同一任務會去重。清單維持三列高度與捲軸，可選收合摘要。[本機監控範圍](docs/design/task-monitor/LOCAL-SESSIONS.zh-TW.md)。
 
 ## 10 秒認識 Quota Pebble
 
@@ -41,6 +55,7 @@ Claude Desktop 的 Code 分頁只要已接入官方 Remote Control，家用 Pebb
 | 什麼時候 | 怎麼使用 | 你會看到 |
 |---|---|---|
 | 同時使用多家 AI 寫程式 | 把收合小島放在桌面 | Claude、Codex、Gemini／Antigravity 各自的額度 |
+| 工作在另一台電腦執行 | 開啟「任務」分頁 | 三家工具的已授權遠端任務、來源與狀態提醒 |
 | 想把額度用到重置前 | 切到「配速」 | 每日建議用量與可調整的保留比例 |
 | 有多個 Claude 帳號 | 新增獨立帳號 | 各帳號分開顯示，不相加或平均 |
 | 不想讓監控視窗占空間 | 收合、拖曳或隱藏到系統匣 | 小巧的桌面膠囊 |
