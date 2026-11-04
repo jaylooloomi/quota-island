@@ -39,6 +39,17 @@ test('bounded bootstrap skips huge records, handles partial lines, replacement a
     await fs.rm(d.root,{recursive:true,force:true});await reader.scan();assert.equal(reader.available,false);
   }finally{await fs.rm(d.home,{recursive:true,force:true});}
 });
+
+test('large live appends jump to fresh metadata without replaying completions or retaining payloads',async()=>{
+ const d=await setup();let now=T;try{
+  const reader=new CodexSessionReader(d.root,()=>now);await fs.writeFile(d.file(A),meta(A)+event('task_started'));await reader.scan();
+  const huge=record('response_item',{type:'message',role:'user',content:'x'.repeat(8*1024*1024)},T+1);
+  now+=1000;await fs.appendFile(d.file(A),event('task_complete','turn-1',T+1)+huge+event('task_started','turn-2',T+2));await reader.scan();
+  assert.equal(reader.rows()[0].status,'running');assert.equal(reader.rows()[0].event,'turn-start');assert.ok(reader.bytesRead<400*1024);assert.deepEqual(reader.drainCompletions(),[]);
+  await fs.appendFile(d.file(A),event('task_complete','turn-2',T+3));await reader.scan();assert.equal(reader.rows()[0].status,'idle');assert.equal(reader.drainCompletions().length,1);
+  await fs.appendFile(d.file(A),huge);await reader.scan();assert.equal(reader.rows()[0].status,'unknown','skipped evidence cannot preserve an old running or idle state');
+ }finally{await fs.rm(d.home,{recursive:true,force:true});}
+});
 test('unknown schemas, malformed/future records and subagents do not invent running sessions',async()=>{
   const d=await setup();try{
     await fs.writeFile(d.file(A),meta(A)+'broken\n'+event('unknown-event')+event('task_started','turn-1',T+100000));

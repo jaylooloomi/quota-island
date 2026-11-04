@@ -90,6 +90,15 @@ export class CodexSessionReader{
           c.offset=stat.size-CHUNK;c.skip=true;
         }
       }
+      // A large append (images, compaction or tool output) must not leave the
+      // monitor minutes behind the live turn. Drop unobserved history and
+      // bootstrap a bounded latest tail; never emit completion from the gap.
+      if(stat.size-c.offset>CHUNK*2){
+        const previous=c.state;c.state=this.empty(previous.id);
+        c.state.project=previous.project;c.state.parent=previous.parent;
+        c.state.reason='backlog-skipped';c.offset=stat.size-CHUNK;c.skip=true;
+        this.readingBaseline=true;this.partial=true;
+      }
       for(let i=0;i<2&&c.offset<stat.size;i++){
         const b=Buffer.alloc(Math.min(CHUNK,stat.size-c.offset)),{bytesRead}=await handle.read(b,0,b.length,c.offset);this.bytesRead+=bytesRead;
         const next=this.lines(c,b.subarray(0,bytesRead),c.offset);if(next===c.offset)break;c.offset=next;
