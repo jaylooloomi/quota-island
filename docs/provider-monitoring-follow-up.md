@@ -41,6 +41,8 @@ resume、worker 註冊等介面。以 `connection_status` 與 `worker_status` �
 
 ## Antigravity 跨電腦
 
+> 2026-11-05 更新：已實際經 Google 官方 ListInstances／ProxyCommand 讀到公司主機 22 筆摘要及指定任務（IDLE）。尚未整合正式 App，參閱 [最新研究與可重跑腳本](antigravity-remote-research.md)。以下為先前未驗證的歷史快照。
+
 [官方 Remote Control](https://antigravity.google/docs/remote-control/) 確認官方網頁可連到
 已啟用的主機，但本次尚未找到／驗證可由 Pebble 獨立使用的唯讀裝置與任務介面。
 目前仍使用已有本機服務的 GetAllCascadeTrajectories，不能將它當成遠端所有裝置清單。
