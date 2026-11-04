@@ -3,20 +3,46 @@
 <!-- project-badges -->
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-3b82f6?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/releases/tag/v1.16.10"><img alt="Released version v1.16.10" src="https://img.shields.io/badge/release-v1.16.10-8b87de?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/releases/latest"><img alt="Windows and macOS releases" src="https://img.shields.io/badge/platform-Windows%20%2B%20macOS-64748b?style=flat"></a>
+  <a href="https://github.com/jaylooloomi/quota-pebble/releases/latest"><img alt="Latest GitHub release" src="https://img.shields.io/github/v/release/jaylooloomi/quota-pebble?style=flat&color=8b87de"></a>
+  <a href="https://github.com/jaylooloomi/quota-pebble/releases/latest"><img alt="Windows and macOS releases" src="https://img.shields.io/badge/platform-Windows%20%2B%20macOS-64748b?style=flat"></a>
   <a href="#從原始碼執行"><img alt="Built with Electron and TypeScript" src="https://img.shields.io/badge/built%20with-Electron%20%2B%20TypeScript-487fa8?style=flat"></a>
   <a href="#桌面操作"><img alt="Interface languages: Traditional Chinese, English, Japanese, Korean" src="https://img.shields.io/badge/UI-%E7%B9%81%E4%B8%AD%20%2F%20EN%20%2F%20%E6%97%A5%E6%9C%AC%E8%AA%9E%20%2F%20%ED%95%9C%EA%B5%AD%EC%96%B4-637e64?style=flat"></a>
-  <a href="https://github.com/jaylooloomi/quota-island/actions/workflows/build.yml"><img alt="View actual GitHub Actions results" src="https://img.shields.io/badge/CI-view%20runs-64748b?style=flat"></a>
+  <a href="https://github.com/jaylooloomi/quota-pebble/actions/workflows/build.yml"><img alt="View actual GitHub Actions results" src="https://img.shields.io/badge/CI-view%20runs-64748b?style=flat"></a>
 </p>
 <!-- /project-badges -->
-<p align="center"><a href="https://github.com/jaylooloomi/quota-island/releases/latest">下載 Windows / macOS</a> · <a href="README.md">English</a> · <a href="LICENSE">MIT</a></p>
+<p align="center"><a href="#遠端的任務也不讓它被遺忘"><img src="docs/remote/remote-badge.svg" width="202" height="38" alt="Remote task monitoring · Claude Code, Codex, Antigravity · Windows"></a></p>
+
+> Windows v1.29.4 新增 Google 官方中繼的 Antigravity 遠端任務監控（[驗證與限制](docs/antigravity-remote-research.md)），與 Codex、Claude Code Remote Control 一起顯示。沿用本機既有登入，不啟動 CLI、不用 Hook、不架私人中繼；Antigravity 遠端最多每分鐘更新一次，無法確認的狀態顯示未知。macOS ARM64／Intel 成品仍為 v1.28.2。
+
+<p align="center"><a href="https://github.com/jaylooloomi/quota-pebble/releases/latest">下載 Windows / macOS</a> · <a href="README.md">English</a> · <a href="LICENSE">MIT</a></p>
 
 <p align="center"><img src="docs/readme-v1.16.10/stage-zh-TW.png" alt="上面掌握額度，下面有個小夥伴。" width="464"><br><b>上面掌握額度，下面有個小夥伴。</b><br><sub>App 實際截圖 · 展示資料</sub></p>
 
 ![Quota Pebble 核心功能介紹圖](docs/readme-v1.16.10/overview-zh-TW.png)
 
 *以 v1.16.10 實際截圖更新的功能介紹圖；圖片中的百分比均為展示資料。*
+
+## 遠端的任務，也不讓它被遺忘
+
+**工作留在另一台電腦，進度留在眼前。** Quota Pebble 已支援 **Claude Code、Codex、Antigravity 三家的遠端任務偵測**。在家用電腦開啟小島，也能查看已授權工作電腦的任務與狀態，減少切換視窗和忘記回頭查看的情況。
+
+<img src="docs/remote/remote-overview-zh-TW.svg" width="920" alt="三家工具皆支援遠端任務偵測，附 Remote Supported 貼章；功能示意">
+
+| 工具 | 遠端來源 | 更新與狀態 |
+|---|---|---|
+| Claude Code | 官方 Remote Control；包含已接入的 Claude Desktop Code 任務 | 約每分鐘；執行中／等待確認／閒置，無法確認時顯示未知 |
+| Codex | 已授權裝置的官方中繼 | 約每 30 秒；讀取遠端原生狀態，斷線轉未知 |
+| Antigravity | Google 官方 Remote Control 中繼 | 約每分鐘；已驗證執行中／閒置，其餘未確認狀態保留未知 |
+
+任務清單以 AI 圖示區分工具，來源標籤協助辨識電腦；Claude 尚未提供可靠主機名稱時，顯示 Remote Control 與帳號，不猜測裝置。支援的完成證據與穩定閒置狀態會觸發不同顏色的訊息泡，提醒你回來接續工作；**閒置不代表成功完成**。
+
+**目前適用 Windows v1.29.4 以上。** 來源電腦須保持運作、連網並完成各工具的官方遠端授權，Pebble 也需要對應的現有登入／裝置授權。這是有範圍與更新間隔的監控，不保證涵蓋所有裝置、歷史任務或每次短暫狀態；失聯與過期資料顯示未知。Claude 支援 Code，並非一般 Chat／Cowork。
+
+[Codex 驗證與範圍](docs/windows-remote-controller-research.md) · [Claude Code 驗證與範圍](docs/claude-remote-tasks.md) · [Antigravity 驗證與範圍](docs/antigravity-remote-research.md)
+
+### 本機任務也能一起看
+
+直接唯讀既有本機事件／原生狀態，不另啟動 CLI、不使用 Hook 或私人接收端。Codex 本機推定狀態會明確標示；未知不算執行中。本機與遠端可辨識的同一任務會去重。清單維持三列高度與捲軸，可選收合摘要。[本機監控範圍](docs/design/task-monitor/LOCAL-SESSIONS.zh-TW.md)。
 
 ## 10 秒認識 Quota Pebble
 
@@ -29,6 +55,7 @@
 | 什麼時候 | 怎麼使用 | 你會看到 |
 |---|---|---|
 | 同時使用多家 AI 寫程式 | 把收合小島放在桌面 | Claude、Codex、Gemini／Antigravity 各自的額度 |
+| 工作在另一台電腦執行 | 開啟「任務」分頁 | 三家工具的已授權遠端任務、來源與狀態提醒 |
 | 想把額度用到重置前 | 切到「配速」 | 每日建議用量與可調整的保留比例 |
 | 有多個 Claude 帳號 | 新增獨立帳號 | 各帳號分開顯示，不相加或平均 |
 | 不想讓監控視窗占空間 | 收合、拖曳或隱藏到系統匣 | 小巧的桌面膠囊 |
@@ -79,7 +106,7 @@
 
 ## 三步開始
 
-1. **下載**：[Releases](https://github.com/jaylooloomi/quota-island/releases/latest) 提供 Windows x64 免安裝 EXE、macOS Apple Silicon（`arm64`）及 Intel（`x64`）ZIP，可使用 `SHA256SUMS.txt` 驗證。Windows 直接執行；Mac 解壓縮後將 `Quota Pebble.app` 移至「應用程式」。Windows 未簽章；Mac 為 ad-hoc 簽署，尚無 Developer ID 與 Apple 公證。首次開啟限制請依 [Apple 官方說明](https://support.apple.com/102445) 操作。
+1. **下載**：[Releases](https://github.com/jaylooloomi/quota-pebble/releases/latest) 提供 Windows x64 免安裝 EXE、macOS Apple Silicon（`arm64`）及 Intel（`x64`）ZIP，可使用 `SHA256SUMS.txt` 驗證。Windows 直接執行；Mac 解壓縮後將 `Quota Pebble.app` 移至「應用程式」。Windows 未簽章；Mac 為 ad-hoc 簽署，尚無 Developer ID 與 Apple 公證。首次開啟限制請依 [Apple 官方說明](https://support.apple.com/102445) 操作。
 2. **連接帳號**：依下表完成各來源設定。
 3. **選擇顯示方式**：配額／帳號、剩餘／已用／配速、服務顯示、語言與寵物位置。
 
@@ -140,10 +167,10 @@ v1.16.5 發布準備時 **117 項單元測試通過**。免安裝版實際啟動
 
 若你將它用於自己的作品，也歡迎在 README、關於頁面或介紹文章附上以下出處，讓更多人找到原始專案（這是額外的友善邀請，不增加 MIT 以外的授權限制）：
 
-> Quota Pebble，由 Arthur Wang（[@jaylooloomi](https://github.com/jaylooloomi)）創作，採 MIT 授權。[原始專案](https://github.com/jaylooloomi/quota-island)。
+> Quota Pebble，由 Arthur Wang（[@jaylooloomi](https://github.com/jaylooloomi)）創作，採 MIT 授權。[原始專案](https://github.com/jaylooloomi/quota-pebble)。
 
 ## 關於作者與交流
 
 嗨，我是 Arthur Wang（jaylooloomi），Quota Pebble 的作者。我喜歡把工作中的小困擾做成實用又有趣的工具，也很樂意認識有相同興趣的朋友。
 
-無論是使用心得、功能點子、技術討論，或只是想打聲招呼，都歡迎透過 [GitHub](https://github.com/jaylooloomi)、[Issues](https://github.com/jaylooloomi/quota-island/issues) 或 Pull Request 和我交流。希望這個小工具不只讓工作順一點，也能成為我們認識彼此的起點。
+無論是使用心得、功能點子、技術討論，或只是想打聲招呼，都歡迎透過 [GitHub](https://github.com/jaylooloomi)、[Issues](https://github.com/jaylooloomi/quota-pebble/issues) 或 Pull Request 和我交流。希望這個小工具不只讓工作順一點，也能成為我們認識彼此的起點。
