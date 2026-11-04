@@ -11,7 +11,7 @@
 </p>
 <!-- /project-badges -->
 
-> Development branch v1.29.0 adds [companion growth and RSS/Atom messages](docs/companion-growth-and-messages.md). The latest published v1.28.2 includes Windows x64 and verified native macOS ARM64 / Intel ZIPs (ad-hoc signed, not notarized). Task monitoring supports Codex local/authorized remote sources and Claude Code / Antigravity local sources; their cross-device integration is still under verification.
+> Windows v1.29.3 adds cross-device Claude Code Remote Control task monitoring; see [evidence and limitations](docs/claude-remote-tasks.md). Companion growth and RSS/Atom messages arrived in v1.29.0. Native macOS ARM64 / Intel release assets remain at v1.28.2. Antigravity remote monitoring is not supported.
 
 <p align="center"><a href="https://github.com/jaylooloomi/quota-pebble/releases/latest">Download Windows / macOS</a> · <a href="README.zh-TW.md">繁體中文</a> · <a href="LICENSE">MIT</a></p>
 
@@ -27,6 +27,8 @@ The **Tasks** tab reads existing local Codex Desktop session events directly: no
 
 
 Windows can also read already-authorized remote Codex hosts through the official relay, using current-user Windows CNG signing without exporting private keys. It requires a compatible existing Desktop enrollment; it does not pair new devices. Remote runtime states are separate from inferred local events, and disconnects become Unknown. Polling is every 30 seconds, bounded to 30 recent threads per remote host (five hosts / 100 displayed rows overall); older tasks may be omitted. [Verification and limitations](docs/windows-remote-controller-research.md).
+
+Claude Desktop Code sessions already connected through official Remote Control can be read from another PC using the existing account / workspace authorization. Pebble polls read-only metadata once a minute, without starting a CLI, using Hooks or running a private relay. Disconnected states remain unknown; host names are not guessed. [Claude remote monitoring](docs/claude-remote-tasks.md).
 
 ## A quick introduction
 

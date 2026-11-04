@@ -11,7 +11,7 @@
 </p>
 <!-- /project-badges -->
 
-> 開發分支 v1.29.0 新增[寵物成長與 RSS／Atom 訊息](docs/companion-growth-and-messages.md)。正式 v1.28.2 已提供 Windows x64，以及通過原生 CI 驗證的 macOS ARM64／Intel ZIP（ad-hoc 簽章，未公證）。任務來源支援 Codex 本機／已授權遠端、Claude Code／Antigravity 本機；後兩者的跨電腦介接仍在驗證。
+> Windows v1.29.3 新增 Claude Code Remote Control 跨電腦任務讀取；[驗證與限制](docs/claude-remote-tasks.md)。寵物成長與 RSS／Atom 訊息自 v1.29.0 加入。macOS ARM64／Intel 成品目前為 v1.28.2；Antigravity 跨電腦仍未支援。
 
 <p align="center"><a href="https://github.com/jaylooloomi/quota-pebble/releases/latest">下載 Windows / macOS</a> · <a href="README.md">English</a> · <a href="LICENSE">MIT</a></p>
 
@@ -27,6 +27,8 @@
 
 
 Windows 另可透過官方中繼讀取已授權的遠端 Codex 主機，使用目前使用者的 Windows CNG 簽章，不匯出私鑰；需要相容的既有桌面端登錄，不會自行配對新裝置。遠端即時狀態與本機推定狀態分開標示，斷線後顯示未知。每 30 秒更新，每台主機查最近 30 筆，最多五台主機、合計顯示 100 筆；較舊的任務可能不在範圍內。[驗證與限制](docs/windows-remote-controller-research.md)。
+
+Claude Desktop 的 Code 分頁只要已接入官方 Remote Control，家用 Pebble 可用現有同帳號／工作區授權讀取任務狀態；不啟動 CLI、不使用 Hook、不架私人接收端。每分鐘查詢，失聯顯示未知；來源尚未提供實際主機名稱時，不會自行猜測。[Claude 遠端驗證](docs/claude-remote-tasks.md)。
 
 ## 10 秒認識 Quota Pebble
 

@@ -1,5 +1,7 @@
 # Claude 漏抓與跨裝置後續驗證
 
+> 2026-11-05 更新：Claude 主要帳號已 HTTP 200，並讀到使用者指定公司任務的 running → idle；已接入 v1.29.3。以下 401 為先前測試快照，參閱 [最新驗證](claude-remote-tasks.md)。
+
 2026-11-04（台灣時間），`codex/remaining-work-roadmap`。
 
 ## 本機問題

@@ -18,7 +18,7 @@ export function claudeRegistryRow(v:any,identity:Identity|undefined,now=Date.now
   // unchanged status is valid only while the same OS process generation lives.
   const verified=identity?.claude&&identity.pid===v.pid&&identity.procStart===v.procStart&&(!v.pidDomain||typeof v.pidDomain==='string'&&v.pidDomain.split(':')[0]===process.platform);
   const status:TaskStatus=!verified?'unknown':v.status==='busy'?'running':v.status==='waiting'?'waiting':['idle','shell'].includes(v.status)?'idle':'unknown';
-  return{provider:'claude',id:'claude:'+v.sessionId+':'+v.pid,title:clean(v.name)||'Claude Code · '+v.sessionId.slice(0,8),project:clean(v.cwd,512),status,source:'claude-registry',host:hostname(),confirmedAt:timestamp(v.statusUpdatedAt,now)??timestamp(v.updatedAt,now),observedAt:now,activityKey:v.procStart,event:'registry-'+(verified?clean(v.status,32):'identity-unverified')};
+  return{provider:'claude',id:'claude:'+v.sessionId+':'+v.pid,title:clean(v.name)||'Claude Code · '+v.sessionId.slice(0,8),project:clean(v.cwd,512),status,source:'claude-registry',remoteSessionId:typeof v.bridgeSessionId==='string'&&/^(cse_|session_)[\w-]{1,128}$/.test(v.bridgeSessionId)?v.bridgeSessionId:undefined,host:hostname(),confirmedAt:timestamp(v.statusUpdatedAt,now)??timestamp(v.updatedAt,now),observedAt:now,activityKey:v.procStart,event:'registry-'+(verified?clean(v.status,32):'identity-unverified')};
 }
 export async function claudeProcessIdentities(pids:number[]):Promise<Identity[]> {
   const ids=[...new Set(pids)].filter(n=>Number.isInteger(n)&&n>0&&n<=2147483647).slice(0,100);if(!ids.length)return[];

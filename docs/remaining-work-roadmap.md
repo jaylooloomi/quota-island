@@ -17,10 +17,10 @@
 
 ## 尚未完成的原因與下一步
 
-第 1、2 項：本輪自然觀察僅見五筆 Claude idle、一筆 Antigravity idle，沒有轉換；
+第 1、2 項（2026-11-04 歷史）：當時自然觀察僅見五筆 Claude idle、一筆 Antigravity idle，沒有轉換；
 等待原本漏抓的同一任務自然執行時對照，不用測試推理冒充真實活動。
 
-第 3 項：找到 Claude Remote Control 唯讀清單的新開源參考，但現有兩份授權都 HTTP 401；
-需要使用者在 Pebble 完成網頁重新授權，才能繼續 HTTP 200 與 runtime 狀態對照。
+第 3 項（2026-11-05 更新）：Claude 主要帳號已 HTTP 200，並接入使用者指定公司任務的遠端狀態；個人帳號仍 HTTP 401。詳見 [Claude 遠端驗證](claude-remote-tasks.md)。先前測試兩份授權都 HTTP 401，
+目前僅個人帳號需要使用者重新授權；主要帳號已完成遠端 running → idle 自然對照。等待確認、公司離線及額外帳號仍須後續驗收。
 Antigravity 遠端獨立介面仍未驗證，不能以本機 RPC 或官方網頁能連線代替。
 詳細實測與安全的重跑入口：[監控後續驗證](provider-monitoring-follow-up.md)。
