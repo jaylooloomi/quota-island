@@ -12,6 +12,9 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
   assert.equal(await p.locator('#tab-messages').getAttribute('aria-selected'),'true');assert.equal(await p.locator('.feed-source').count(),3);
   const overflow=await p.locator('.context-line,.view-tabs,.view-tabs button,#messages-panel,.messages-toolbar,.feed-source').evaluateAll(ns=>ns.filter(n=>n.scrollWidth>n.clientWidth+1).map(n=>({class:n.className,width:n.clientWidth,scroll:n.scrollWidth})));
   assert.deepEqual(overflow,[],locale+' layout fits');assert.equal(await p.locator('#feed-mute').evaluate(e=>getComputedStyle(e).appearance),'none');
+  const buttons=p.locator('#feed-new,#feed-preview,.feed-toggle,.feed-remove');
+  assert.ok((await buttons.evaluateAll(ns=>ns.map(n=>n.getBoundingClientRect().height))).every(h=>h===30),locale+' consistent button heights');
+  await p.locator('.feed-remove').first().hover();assert.equal(await p.locator('.feed-remove').first().evaluate(n=>getComputedStyle(n).textDecorationLine),'none');
   await p.screenshot({path:'test-results/messages-tab/'+locale+'.png'});
   await p.locator('#tab-messages').focus();await p.keyboard.press('ArrowRight');assert.equal(await p.locator('#tab-quota').getAttribute('aria-selected'),'true');await p.keyboard.press('End');assert.equal(await p.locator('#tab-messages').getAttribute('aria-selected'),'true');
  }
