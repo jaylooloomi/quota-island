@@ -32,3 +32,30 @@ Update the work PC, open Tasks → Remote sources → Copy diagnostics, and shar
 - New local diagnostic metadata: default/custom root classification and one-way root fingerprint, indexed/candidate counts, subagent and missing-metadata exclusions, read failures, bytes read/backlog, and ten recent records selected by file modification time. Each record uses a one-way session fingerprint, event/state, timestamps and backlog only; no raw task ID, title, project, transcript or credential is exported.
 - Reader-only diagnostic updates are excluded from the task panel render signature, preserving the fast filter and scroll behavior.
 - Next evidence must come from the work PC while a natural Codex turn is active. No synthetic inference, CLI launch, Hook installation or pairing change was performed.
+# Windows TPM enrollment compatibility (2026-11-05)
+
+Company-side structural diagnostics confirmed an existing `ecdsa_p256_sha256`
+enrollment with `protectionClass: hardware_tpm`; all required public fields were
+present. The previous controller accepted only `os_protected_nonextractable`
+and the `dk_osn_` namespace. This rejected the TPM enrollment before any network
+request, incorrectly reporting `ENROLLMENT_REQUIRED`.
+
+The fix supports the matching `hardware_tpm` / `dk_tpm_` namespace through
+Microsoft Platform Crypto Provider. The provider's hardware implementation flag,
+non-export policy, P-256 algorithm, enrolled public key and returned signatures
+remain verified. There is no software downgrade or pairing mutation. Unsupported
+algorithm, protection and key format now have distinct error codes.
+
+The company also demonstrated that PowerShell `.ps1` execution is prohibited.
+Codex signing therefore uses a compiled, packaged CNG helper instead of a script;
+no PowerShell execution policy is changed. The helper opens existing user keys
+silently and cannot create/delete keys or export private material.
+
+Validation: unit tests cover both protection classes and reject cross-provider
+namespaces, unsupported protections and mutation requests. The native helper
+matched the existing home-PC software public key and completed a real official
+relay handshake and read-only task scan. This validates the software regression
+path, not company TPM hardware access. Company-side TPM signing and remote task
+reading require the updated build to be tested on that machine. This fix is
+separate from Claude local/remote duplicate task matching.
+

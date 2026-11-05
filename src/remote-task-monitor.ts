@@ -9,6 +9,14 @@ const WebSocket:any=require('ws');
 const ORIGIN='https://chatgpt.com',BASE=ORIGIN+'/backend-api';
 const clean=(v:any,n=160)=>typeof v==='string'?v.replace(/[\u0000-\u001f\u007f]/g,' ').slice(0,n):'';
 const hash=(v:string)=>crypto.createHash('sha256').update(v).digest('base64url');
+export function validateEnrollment(e:any){
+  if(e?.algorithm!=='ecdsa_p256_sha256')throw Error('ENROLLMENT_ALGORITHM_UNSUPPORTED');
+  const prefix=e.protectionClass==='hardware_tpm'?'tpm':e.protectionClass==='os_protected_nonextractable'?'osn':null;
+  if(!prefix)throw Error('ENROLLMENT_PROTECTION_UNSUPPORTED');
+  if(typeof e.keyId!=='string'||e.keyId.length!==50||!new RegExp('^dk_'+prefix+'_[A-Za-z0-9_-]{43}$').test(e.keyId))throw Error('ENROLLMENT_KEY_FORMAT_UNSUPPORTED');
+  if(typeof e.clientId!=='string'||!e.clientId||typeof e.accountUserId!=='string'||!e.accountUserId||typeof e.publicKeySpkiDerBase64!=='string'||!e.publicKeySpkiDerBase64)throw Error('ENROLLMENT_INVALID');
+  return e;
+}
 export const remoteErrorCode=(error:unknown)=>error instanceof Error&&/^[A-Z_0-9]+$/.test(error.message)?error.message:(error as any)?.code==='ENOENT'?'LOCAL_STATE_MISSING':(error as any)?.code==='EACCES'?'LOCAL_STATE_DENIED':'REMOTE_UNAVAILABLE';
 export type RemoteHostHealth={id:string;name:string;online:boolean;state:'ready'|'unconfirmed'|'offline'|'error';error:string;counts:Record<TaskStatus,number>;checkedAt:number};
 function readJson(file:string,max:number){if(fs.statSync(file).size>max)throw Error('LOCAL_STATE_LIMIT');return JSON.parse(fs.readFileSync(file,'utf8'));}
@@ -38,15 +46,14 @@ export function validateChallenge(c:any,e:any,phase:'refresh'|'socket',token?:st
   else {const expiry=typeof c.challenge_expires_at==='number'?c.challenge_expires_at*1000:Date.parse(c.challenge_expires_at);if(c.audience!=='remote_control_client_enrollment'||!Number.isFinite(expiry)||expiry<=Date.now()||expiry>Date.now()+600000)throw Error('CHALLENGE_EXPIRED');}
 }
 async function cng(e:any,payload?:Buffer){
-  const helper=path.join(__dirname,'native','enrolled-device-key.ps1').replace('app.asar'+path.sep,'app.asar.unpacked'+path.sep);
+  const helper=path.join(__dirname,'native','enrolled-device-key.exe').replace('app.asar'+path.sep,'app.asar.unpacked'+path.sep);
   return new Promise<any>((resolve,reject)=>{
-    const executable=path.join(process.env.SystemRoot||'C:/Windows','System32/WindowsPowerShell/v1.0/powershell.exe');
-    const child=spawn(executable,['-NoLogo','-NoProfile','-NonInteractive','-File',helper],{windowsHide:true,stdio:['pipe','pipe','pipe']});
+    const child=spawn(helper,[],{windowsHide:true,stdio:['pipe','pipe','pipe']});
     let output='',done=false;const finish=(error?:Error,value?:any)=>{if(done)return;done=true;clearTimeout(timer);error?reject(error):resolve(value);};
     const timer=setTimeout(()=>{child.kill();finish(Error('SIGNER_TIMEOUT'));},12000);child.stderr.resume();child.stdin.on('error',()=>{});
     child.stdout.on('data',b=>{output+=b;if(output.length>16384){child.kill();finish(Error('SIGNER_LIMIT'));}});
     child.on('error',()=>finish(Error('SIGNER_UNAVAILABLE')));child.on('close',code=>{if(code!==0)return finish(Error('SIGNER_FAILED'));try{finish(undefined,JSON.parse(output.replace(/^\uFEFF/,'')));}catch{finish(Error('SIGNER_RESPONSE'));}});
-    child.stdin.end(JSON.stringify({keyId:e.keyId,action:payload?'sign':'public',...(payload?{payloadBase64:payload.toString('base64')}:{})}));
+    child.stdin.end(JSON.stringify({keyId:e.keyId,protectionClass:e.protectionClass,action:payload?'sign':'public',...(payload?{payloadBase64:payload.toString('base64')}:{})}));
   });
 }
 async function sign(e:any,payload:any){
@@ -78,8 +85,8 @@ export class Controller {
     const claims=JSON.parse(Buffer.from(auth.access_token.split('.')[1],'base64url').toString()),ids=claims['https://api.openai.com/auth']||{};
     const enrollments=Object.values(state['electron-remote-control-client-enrollments']||{});this.enrollment=enrollments.find((e:any)=>[ids.chatgpt_account_user_id,ids.account_user_id,ids.user_id,claims.sub].filter(Boolean).includes(e?.accountUserId));
     if(!this.enrollment)throw Error(enrollments.length?'ACCOUNT_NOT_ENROLLED':'ENROLLMENT_REQUIRED');
-    const e=this.enrollment;if(e.algorithm!=='ecdsa_p256_sha256'||e.protectionClass!=='os_protected_nonextractable'||!/^dk_osn_[A-Za-z0-9_-]{43}$/.test(e.keyId))throw Error('ENROLLMENT_REQUIRED');
-    const pub=await cng(e);if(pub.exportPolicy!==0||publicSpki(pub.publicBlobBase64)!==e.publicKeySpkiDerBase64)throw Error('PUBLIC_KEY_MISMATCH');
+    const e=validateEnrollment(this.enrollment);
+    const pub=await cng(e);if(pub.exportPolicy!==0||pub.protectionClass!==e.protectionClass||pub.keyId!==e.keyId||publicSpki(pub.publicBlobBase64)!==e.publicKeySpkiDerBase64)throw Error('PUBLIC_KEY_MISMATCH');
     if(this.closed)throw Error('CLOSED');
     this.headers={Authorization:'Bearer '+auth.access_token,'ChatGPT-Account-ID':auth.account_id,'User-Agent':'Quota-Pebble','originator':'quota_pebble','Content-Type':'application/json'};
     const start=await this.request('/codex/remote/control/client/refresh/start','POST',{client_id:e.clientId}),c=start.device_key_challenge;

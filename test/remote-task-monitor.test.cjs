@@ -1,5 +1,16 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {remoteStatus,remoteRow,validateChallenge,Controller,RemoteTaskMonitor,derSignature,publicSpki}=require('../dist/remote-task-monitor');
+test('existing TPM and software enrollments use matching key namespaces without weakening protection',()=>{
+  const {validateEnrollment}=require('../dist/remote-task-monitor');
+  const e={algorithm:'ecdsa_p256_sha256',clientId:'fixture',accountUserId:'fixture',publicKeySpkiDerBase64:'fixture'};
+  for(const [protectionClass,prefix] of [['hardware_tpm','tpm'],['os_protected_nonextractable','osn']]){
+    const valid={...e,protectionClass,keyId:'dk_'+prefix+'_'+'A'.repeat(43)};assert.equal(validateEnrollment(valid),valid);
+    assert.throws(()=>validateEnrollment({...valid,keyId:'dk_'+(prefix==='tpm'?'osn':'tpm')+'_'+'A'.repeat(43)}),/KEY_FORMAT/);
+    assert.throws(()=>validateEnrollment({...valid,keyId:valid.keyId+'\n'}),/KEY_FORMAT/);
+    assert.throws(()=>validateEnrollment({...valid,algorithm:'rsa'}),/ALGORITHM/);
+  }
+  assert.throws(()=>validateEnrollment({...e,protectionClass:'plaintext'}),/PROTECTION/);
+});
 test('remote runtime status is authoritative; missing and unsupported states stay unknown',()=>{
   for(const [input,status] of [[{type:'active',activeFlags:[]},'running'],[{type:'active',activeFlags:['waitingOnApproval']},'waiting'],[{type:'active',activeFlags:['waitingOnUserInput']},'waiting'],[{type:'idle'},'idle'],[{type:'notLoaded'},'unknown'],[{type:'active'},'unknown'],[{type:'active',activeFlags:['futureFlag']},'unknown'],[null,'unknown']])assert.equal(remoteStatus(input),status);
 });
