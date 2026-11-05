@@ -406,7 +406,7 @@ function render(next){
   $('settings').hidden=!settingsOpen;
   $('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));
   $('cards').hidden=settingsOpen;
-  $('cards').hidden=settingsOpen||quotaDetailsOpen||currentView==='tasks';
+  $('cards').hidden=settingsOpen||quotaDetailsOpen||(currentView==='tasks'||currentView==='messages');
   $('quota-details').hidden=!quotaDetailsOpen||settingsOpen;
   $('pace-details').hidden=!paceDetailsProvider||settingsOpen;
   for(const id of ids){
@@ -416,7 +416,7 @@ function render(next){
   }
   if(paceDetailsProvider)cardNodes[paceDetailsProvider].append($('pace-details'));
   else if($('pace-details').parentElement!==document.querySelector('.panel-body'))document.querySelector('.panel-body').append($('pace-details'));
-  for(const view of ['quota','accounts','tasks']){$(`tab-${view}`).setAttribute('aria-selected',String(view===currentView));$(`tab-${view}`).tabIndex=view===currentView?0:-1;}
+  for(const view of ['quota','accounts','tasks','messages']){$(`tab-${view}`).setAttribute('aria-selected',String(view===currentView));$(`tab-${view}`).tabIndex=view===currentView?0:-1;}
   $('cards').setAttribute('role','tabpanel');$('cards').setAttribute('aria-labelledby',`tab-${currentView}`);
   const healthy=!state.paused&&ids.some(id=>ready(state.providers[id]));$('live-dot').classList.toggle('off',!healthy);
   document.querySelector('.footer-dot').classList.toggle('off',!healthy);$('footer-status').textContent=state.paused?'已暫停同步':'自動同步';
@@ -435,17 +435,17 @@ function render(next){
   const extraSettings=$('extra-account-settings');extraSettings.replaceChildren();
   for(const account of state.accounts??[]){const label=document.createElement('label'),name=document.createElement('span');name.textContent=account.label;name.setAttribute('data-localized-text','');const input=document.createElement('input');input.type='checkbox';input.setAttribute('role','switch');input.checked=state.settings.visible[account.id]!==false;input.addEventListener('change',()=>api.settings({visible:{[account.id]:input.checked}}));label.append(name,input);extraSettings.append(label);}
   renderCompactClaude();
-  $('add-account-area').hidden=settingsOpen||quotaDetailsOpen||currentView==='tasks';
+  $('add-account-area').hidden=settingsOpen||quotaDetailsOpen||(currentView==='tasks'||currentView==='messages');
   for(const input of document.querySelectorAll('[data-visible]'))input.checked=state.settings.visible?.[input.dataset.visible]!==false;
-  $('no-visible-providers').hidden=settingsOpen||quotaDetailsOpen||currentView==='tasks'||ids.some(id=>state.settings.visible?.[id]!==false);
+  $('no-visible-providers').hidden=settingsOpen||quotaDetailsOpen||(currentView==='tasks'||currentView==='messages')||ids.some(id=>state.settings.visible?.[id]!==false);
   renderPaceDetails();
   renderQuotaDetails();
   renderFooter();
   $('language').value=state.settings.locale??'zh-TW';
   window.QuotaI18n.localizeDocument(document,state.settings.locale);
   window.TaskPanel.update(state,currentView==='tasks'&&!settingsOpen&&!quotaDetailsOpen);
-  document.querySelector('.panel-header .segmented')?.classList.toggle('tasks-mode-hidden',currentView==='tasks');
-  window.QuotaPets.update(state);window.CompanionSettings.update(state);
+  document.querySelector('.panel-header .segmented')?.classList.toggle('tasks-mode-hidden',(currentView==='tasks'||currentView==='messages'));
+  window.QuotaPets.update(state);window.CompanionSettings.update(state,currentView==='messages'&&!settingsOpen&&!quotaDetailsOpen);
   const growth=$('pet-growth');if(growth){const labels={'zh-TW':['成長','小蛋','幼幼','夥伴','星際','以週配額增量記錄經驗，每日最多 20 XP；不用刻意增加用量。'],en:['Growth','Egg','Little one','Companion','Space friend','Weekly quota increases earn XP, capped at 20 daily. No extra usage needed.'],ja:['成長','たまご','ちび','仲間','宇宙の友','週間利用枠の増加で経験値を記録。1日最大20 XP。無理に使う必要はありません。'],ko:['성장','알','아기','친구','우주 친구','주간 할당량 증가로 경험치를 기록하며 하루 최대 20 XP입니다. 추가 사용은 필요 없습니다.']}[state.settings.locale]||[];growth.replaceChildren();const role=state.settings.petCharacter==='random'?'claude':state.settings.petCharacter,g=state.petGrowth?.[role];if(g){const name=document.createElement('span');name.textContent=labels[0]+' · Lv.'+g.level+' '+labels[g.level]+' · '+g.xp+' XP';const bar=document.createElement('progress');bar.max=100;bar.value=g.progress;bar.setAttribute('aria-label',labels[0]);growth.append(name,bar);growth.title=labels[5];}}
   if(state.settings.locale==='en')$('compact-mode').textContent=state.settings.remaining?'Left':'Used';
   requestAnimationFrame(()=>{
@@ -468,11 +468,11 @@ function render(next){
         card.style.minHeight=`${quotaCardHeights[id]??98}px`;
       }
     }
-    const content=(settingsOpen?$('settings'):quotaDetailsOpen?$('quota-details'):currentView==='tasks'?$('task-panel'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height+(!settingsOpen&&!quotaDetailsOpen?$('add-account-area').getBoundingClientRect().height:0);
+    const content=(settingsOpen?$('settings'):quotaDetailsOpen?$('quota-details'):currentView==='tasks'?$('task-panel'):currentView==='messages'?$('messages-panel'):$('cards')).getBoundingClientRect().height+document.querySelector('.context-line').getBoundingClientRect().height+(!settingsOpen&&!quotaDetailsOpen?$('add-account-area').getBoundingClientRect().height:0);
     const chrome=document.querySelector('.panel-header').getBoundingClientRect().height+document.querySelector('footer').getBoundingClientRect().height+18;
     const height=Math.max(480,Math.ceil(content+chrome+(settingsOpen?24:12)));
     if(!window.UsageTrends.active&&!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider&&currentView==='quota')quotaPanelHeight=height;
-    api.panelHeight(currentView!=='tasks'&&!window.UsageTrends.active&&!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider?quotaPanelHeight:height);
+    api.panelHeight(currentView!=='tasks'&&currentView!=='messages'&&!window.UsageTrends.active&&!settingsOpen&&!quotaDetailsOpen&&!activeDetail&&!paceDetailsProvider?quotaPanelHeight:height);
   });
 }
 makeCards();
@@ -504,8 +504,8 @@ $('pace-reserve').addEventListener('input',event=>{$('pace-reserve-value').textC
 $('pace-reserve').addEventListener('change',event=>{if(paceDetailsProvider)api.settings({reservePercent:{[paceDetailsProvider]:Number(event.target.value)}});});
 $('hide').addEventListener('click',()=>api.hide());$('quit').addEventListener('click',()=>api.quit());
 $('google-source').addEventListener('change',event=>api.settings({googleSource:event.target.value}));
-for(const view of ['quota','accounts','tasks'])$(`tab-${view}`).addEventListener('click',()=>setView(view));
-document.querySelector('.view-tabs').addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();const views=['quota','accounts','tasks'];const view=event.key==='Home'?'quota':event.key==='End'?'tasks':views[(views.indexOf(currentView)+(event.key==='ArrowRight'?1:2))%3];setView(view);$(`tab-${view}`).focus();}});
+for(const view of ['quota','accounts','tasks','messages'])$(`tab-${view}`).addEventListener('click',()=>setView(view));
+document.querySelector('.view-tabs').addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();const views=['quota','accounts','tasks','messages'];const view=event.key==='Home'?'quota':event.key==='End'?'messages':views[(views.indexOf(currentView)+(event.key==='ArrowRight'?1:3))%4];setView(view);$(`tab-${view}`).focus();}});
 $('language-shortcut').addEventListener('click',()=>openFooterPopover('language'));
 $('sync-shortcut').addEventListener('click',()=>openFooterPopover('sync'));
 for(const button of $('language-popover').querySelectorAll('[data-locale]'))button.addEventListener('click',async()=>{await api.settings({locale:button.dataset.locale});closeFooterPopover(true);});
@@ -529,7 +529,7 @@ $('morningHelloEnabled').addEventListener('change',event=>api.settings({morningH
 for(const input of document.querySelectorAll('[data-enable]'))input.addEventListener('change',()=>api.settings({enabled:{[input.dataset.enable]:input.checked}}));
 for(const input of document.querySelectorAll('[data-visible]'))input.addEventListener('change',()=>api.settings({visible:{[input.dataset.visible]:input.checked}}));
 document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(footerPopover){closeFooterPopover(true);event.preventDefault();}else if(window.UsageTrends.active){window.UsageTrends.close();render(state);}else if(paceDetailsProvider){paceDetailsProvider=null;render(state);}else if(quotaDetailsOpen){quotaDetailsOpen=false;render(state);}else if(confirmLogout){confirmLogout=null;render(state);}else if(activeDetail){activeDetail=null;render(state);}else if(settingsOpen){settingsOpen=false;$('settings-toggle').setAttribute('aria-expanded','false');render(state);}else api.expand(false);});
-window.addEventListener('companion-layout-change',()=>{if(state&&settingsOpen)render(state);});
+window.addEventListener('companion-layout-change',()=>{if(state&&(settingsOpen||currentView==='messages'))render(state);});
 window.addEventListener('task-layout-change',()=>{if(state&&currentView==='tasks')render(state);});
 api.subscribe(render);api.getState().then(render);setInterval(()=>{if(state)render(state);},15000);
 
