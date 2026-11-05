@@ -1,6 +1,7 @@
 import {open,readdir,lstat} from 'node:fs/promises';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
+import {homedir} from 'node:os';
 import type {TaskCompletion} from './task-completion';
 import type {TaskRow,TaskStatus} from './task-monitor';
 
@@ -16,8 +17,12 @@ export class CodexSessionReader{
   private files=new Map<string,Cursor>();private busy=false;private discovery=0;private candidates:string[]=[];private names=new Map<string,string>();
   private completedKeys=new Set<string>();private completions:TaskCompletion[]=[];private readingBaseline=true;
   drainCompletions(){return this.completions.splice(0);}
-  available=false;partial=false;bytesRead=0;
+  available=false;partial=false;bytesRead=0;private readFailures=0;
   constructor(private root:string,private now=Date.now){}
+  diagnostics(){
+    const cursors=[...this.files.values()],normalized=(v:string)=>path.resolve(v).replace(/\\/g,'/').replace(/^\/+\?\/+/,'').replace(/\/+/g,'/').replace(/\/$/,'').toLowerCase(),fingerprint=(v:string)=>createHash('sha256').update(v).digest('hex').slice(0,16);
+    return{rootKind:normalized(this.root)===normalized(path.join(homedir(),'.codex','sessions'))?'default':'custom',rootFingerprint:fingerprint(normalized(this.root)),indexedFiles:cursors.length,candidateFiles:this.candidates.length,excludedSubagents:cursors.filter(c=>c.state.parent).length,missingMetadata:cursors.filter(c=>!c.state.project).length,readFailures:this.readFailures,bytesRead:this.bytesRead,backlogBytes:cursors.reduce((n,c)=>n+Math.max(0,c.size-c.offset),0),recent:cursors.sort((a,b)=>b.mtime-a.mtime||b.state.time-a.state.time).slice(0,10).map(c=>({sessionFingerprint:fingerprint(c.state.id),kind:!c.state.project?'metadata-missing':c.state.parent?'subagent':'main',status:c.state.status,event:c.state.reason,lastEventAt:c.state.time,fileModifiedAt:c.mtime,terminal:c.state.terminal,backlogBytes:Math.max(0,c.size-c.offset)}))};
+  }
   private empty(id:string):State{return{id,project:'',parent:false,turn:'',retired:new Set(),terminal:false,status:'unknown',time:0,reason:'no-events'};}
   private consume(s:State,r:any){
     if(r?.type==='session_meta'){
@@ -122,10 +127,10 @@ export class CodexSessionReader{
     // Index contains names only; read a bounded tail and never derive liveness from it.
     this.names.clear();let h;try{h=await open(path.join(this.root,'..','session_index.jsonl'),'r');const s=await h.stat(),start=Math.max(0,s.size-1024*1024),b=Buffer.alloc(Math.min(s.size,1024*1024));await h.read(b,0,b.length,start);for(const line of b.toString('utf8').split('\n').slice(start?1:0)){try{const r=JSON.parse(line);if(validId(r.id))this.names.set(r.id,text(r.thread_name,160));}catch{}}}catch{}finally{await h?.close();}
   }
-  async scan(){if(this.busy)return;this.busy=true;this.bytesRead=0;
+  async scan(){if(this.busy)return;this.busy=true;this.bytesRead=0;this.readFailures=0;
     try{const s=await lstat(this.root);if(!s.isDirectory()||s.isSymbolicLink())throw Error('Missing session root');
       if(!this.discovery||this.now()-this.discovery>=10000){await this.discover();this.discovery=this.now();}
-      for(const file of this.candidates){if(this.bytesRead>=16*1024*1024){this.partial=true;break;}try{await this.read(file);}catch{this.files.delete(file);}}
+      for(const file of this.candidates){if(this.bytesRead>=16*1024*1024){this.partial=true;break;}try{await this.read(file);}catch{this.readFailures++;this.files.delete(file);}}
       this.available=true;
     }catch{this.available=false;this.files.clear();this.candidates=[];this.discovery=0;}finally{this.busy=false;}
   }

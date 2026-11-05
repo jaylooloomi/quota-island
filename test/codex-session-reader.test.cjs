@@ -11,7 +11,7 @@ test('local events independently detect concurrent running/idle sessions, names 
   const d=await setup();let now=T;try{
     await fs.writeFile(d.file(A),meta(A)+event('task_started'));await fs.writeFile(d.file(B),meta(B)+event('task_started')+event('task_complete','turn-1',T+1));
     await fs.writeFile(path.join(d.home,'session_index.jsonl'),JSON.stringify({id:A,thread_name:'Actual title'})+'\n');now++;
-    const reader=new CodexSessionReader(d.root,()=>now);await reader.scan();assert.equal(reader.rows().find(r=>r.id===A).status,'running');assert.equal(reader.rows().find(r=>r.id===A).title,'Actual title');assert.equal(reader.rows().find(r=>r.id===B).status,'idle');assert.equal(reader.rows()[0].evidence,'inferred');
+    const reader=new CodexSessionReader(d.root,()=>now);await reader.scan();assert.equal(reader.rows().find(r=>r.id===A).status,'running');assert.equal(reader.rows().find(r=>r.id===A).title,'Actual title');assert.equal(reader.rows().find(r=>r.id===B).status,'idle');assert.equal(reader.rows()[0].evidence,'inferred');const diag=reader.diagnostics();assert.equal(diag.indexedFiles,2);assert.equal(diag.missingMetadata,0);assert.match(diag.rootFingerprint,/^[a-f0-9]{16}$/);assert.ok(!JSON.stringify(diag).includes(d.home));assert.ok(!JSON.stringify(diag).includes(A));
     await reader.scan();assert.equal(reader.bytesRead,0,'unchanged complete files not reread');now+=SESSION_FRESH_MS+1;assert.equal(reader.rows().find(r=>r.id===A).status,'unknown');assert.equal(reader.rows().find(r=>r.id===B).status,'idle');
     await fs.appendFile(d.file(A),event('task_complete','turn-1',now));await reader.scan();assert.equal(reader.rows().find(r=>r.id===A).status,'idle');
   }finally{await fs.rm(d.home,{recursive:true,force:true});}

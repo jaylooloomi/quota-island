@@ -24,3 +24,11 @@ The home PC reader and existing app both observed three running local Codex chat
 ## Next evidence
 
 Update the work PC, open Tasks → Remote sources → Copy diagnostics, and share the report. The actual work-PC failure may be authorization, task-service connection, timeout or unsupported runtime state; do not assume which without its report.
+
+## Company evidence and diagnostic extension — v1.31.1
+
+- The work PC v1.30.1 report shows a readable local source with 17 idle / 0 running / 0 unknown, plus a remote controller error ENROLLMENT_REQUIRED. These are separate source conditions; remote pairing does not by itself explain missing local activity.
+- The home reader can read the already-authorized work host. A user-specified task was observed completed, then active on a later read. These are time-specific observations, not proof that the work PC reader is repaired.
+- New local diagnostic metadata: default/custom root classification and one-way root fingerprint, indexed/candidate counts, subagent and missing-metadata exclusions, read failures, bytes read/backlog, and ten recent records selected by file modification time. Each record uses a one-way session fingerprint, event/state, timestamps and backlog only; no raw task ID, title, project, transcript or credential is exported.
+- Reader-only diagnostic updates are excluded from the task panel render signature, preserving the fast filter and scroll behavior.
+- Next evidence must come from the work PC while a natural Codex turn is active. No synthetic inference, CLI launch, Hook installation or pairing change was performed.

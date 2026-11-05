@@ -24,7 +24,7 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
    for(const f of ['all','running','all','waiting'])document.querySelector('[data-task-filter='+f+']').click();await frame();
    if([...list.querySelectorAll('.task-row')].some(r=>r.dataset.status!=='waiting'))throw Error('Stale batch won rapid clicks');
    list.scrollTop=500;list.dispatchEvent(new Event('scroll'));await frame();const scroll=list.scrollTop;
-   for(let i=0;i<20;i++){s.tasks.checkedAt=now+i;s.tasks.rows=s.tasks.rows.map(r=>({...r,observedAt:now+i}));TaskPanel.update(s,true);}
+   for(let i=0;i<20;i++){s.tasks.checkedAt=now+i;s.tasks.localSource={...s.tasks.localSource,reader:{bytesRead:i}};s.tasks.rows=s.tasks.rows.map(r=>({...r,observedAt:now+i}));TaskPanel.update(s,true);}
    if(list!==document.querySelector('.task-list')||list.scrollTop!==scroll)throw Error('Heartbeat rebuilt list or lost scroll');
   }
   const sorted=samples.map(x=>x.handlerMs).sort((a,b)=>a-b),paints=samples.map(x=>x.paintMs).sort((a,b)=>a-b),p95=a=>a[Math.ceil(a.length*.95)-1];return{samples:samples.length,handlerP95Ms:p95(sorted),twoFrameP95Ms:p95(paints),maxFirstBatch:Math.max(...firstBatch),layoutEvents};
