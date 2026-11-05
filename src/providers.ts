@@ -53,6 +53,9 @@ export class Providers {
     }
     const oauth = credentials?.claudeAiOauth;
     if (!oauth?.accessToken) throw new ProviderError('auth', '請先登入 Claude Code，以讀取訂閱配額');
+    // The usage endpoint can report stale credentials as 429 rather than 401.
+    // Never spend its rate-limit budget on a token known to have expired.
+    if(typeof oauth.expiresAt==='number'&&Number.isFinite(oauth.expiresAt)&&oauth.expiresAt<=Date.now())throw new ProviderError('auth','Claude 授權已過期，請重新登入');
     let identity=oauth.accessToken;try{const config=JSON.parse(await readFile(this.claudeConfigDir||process.env.CLAUDE_CONFIG_DIR?path.join(dir,'.claude.json'):path.join(homedir(),'.claude.json'),'utf8'));identity=config.oauthAccount?.accountUuid||identity;}catch{}
     const data = await jsonRequest('https://api.anthropic.com/api/oauth/usage', {
       Authorization: `Bearer ${oauth.accessToken}`, Accept: 'application/json', 'anthropic-beta': 'oauth-2025-04-20', 'User-Agent': 'quota-island/0.1.0'

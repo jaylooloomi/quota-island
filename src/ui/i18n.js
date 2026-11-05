@@ -2,6 +2,8 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['Claude 授權已過期，請重新登入','Claude authorization has expired. Sign in again.','Claude の認証が期限切れです。再ログインしてください。','Claude 인증이 만료되었습니다. 다시 로그인하세요.'],
+    ['查看官方配額 ↗','View official usage ↗','公式の使用量を確認 ↗','공식 사용량 보기 ↗'],
     ['等待登入','Sign-in needed','ログイン待ち','로그인 대기'],['繼續登入','Continue sign-in','ログインを続行','로그인 계속'],['查看登入進度','Sign-in status','ログイン状況','로그인 진행'],
     ['任務完成／閒置提醒','Completion / idle alerts','完了・待機の通知','완료 / 유휴 알림'],
     ['預覽 3 分鐘，期間可隨時關閉','Preview for 3 minutes; dismiss at any time.','3分間プレビュー。いつでも閉じられます。','3분간 미리보기, 언제든 닫을 수 있습니다.'],

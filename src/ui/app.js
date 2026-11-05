@@ -157,9 +157,9 @@ function makeCards(){
     grip.addEventListener('keydown',event=>{if(!event.altKey||!['ArrowUp','ArrowDown'].includes(event.key))return;const order=state.settings.order,index=order.indexOf(id),target=order[index+(event.key==='ArrowUp'?-1:1)];if(target){event.preventDefault();moveProvider(id,target);grip.focus();}});
     card.querySelector('.connection-status').addEventListener('click',()=>{activeDetail=activeDetail===id?null:id;render(state);});
     card.querySelector('.close-connection').addEventListener('click',()=>{activeDetail=null;render(state);});
-      card.querySelector('.connect-primary').addEventListener('click',()=>{if(state.auth[id]?.pending){startLogin(id);return;}const s=state.providers[id];if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
+      card.querySelector('.connect-primary').addEventListener('click',()=>{if(state.auth[id]?.pending){startLogin(id);return;}const s=state.providers[id];if(baseId(id)==='claude'&&s.errorCode==='rate_limit'){void api.openProvider('claude');return;}if(s.status==='unavailable'&&!/429|限制查詢|查詢頻率/.test(s.error??''))void api.refresh();else startLogin(id);});
     card.querySelector('.continue-claude-login').addEventListener('click',()=>api.continueClaudeLogin(id));
-    card.querySelector('.login').addEventListener('click',()=>startLogin(id));
+    card.querySelector('.login').addEventListener('click',()=>{if(baseId(id)==='claude'&&state.providers[id].errorCode==='rate_limit'&&!state.auth[id]?.pending){void api.openProvider('claude');return;}startLogin(id);});
     card.querySelector('.quota-details-link').addEventListener('click',()=>{window.UsageTrends.close();quotaDetailsProvider=id;quotaDetailsOpen=true;activeDetail=null;settingsOpen=false;footerPopover=null;render(state);});
     card.querySelector('.pace-link').addEventListener('click',()=>{window.UsageTrends.close();paceDetailsProvider=paceDetailsProvider===id?null:id;quotaDetailsOpen=false;activeDetail=null;footerPopover=null;render(state);});
     card.querySelector('.account-switch').addEventListener('click',async()=>{
@@ -212,6 +212,7 @@ function renderConnection(id,s,auth){
   const limited=/429|限制查詢|查詢頻率/.test(s.error??'');
   card.querySelector('.connect-primary').hidden=false;
   if(limited&&!auth?.pending){for(const button of [card.querySelector('.login'),card.querySelector('.connect-primary')])button.textContent=`登入 ${id==='gemini'?'Google':names[id]}（管理授權） →`;}
+  if(limited&&!auth?.pending&&baseId(id)==='claude')for(const button of [card.querySelector('.login'),card.querySelector('.connect-primary')])button.textContent='查看官方配額 ↗';
   else if(s.status==='unavailable'&&!auth?.pending)card.querySelector('.connect-primary').textContent='重新同步';
   else if(s.status==='loading'&&!auth?.pending){card.querySelector('.connect-primary').textContent='同步中…';card.querySelector('.connect-primary').disabled=true;}
   card.querySelector('.connection-note').textContent=limited?`目前限制的是配額查詢，不代表已登出。可登入或更新授權；重新登入不會解除限流。${retryLabel(s)||'冷卻後自動重試'}。`:'登入完成後自動更新，不必手動查用量。';
