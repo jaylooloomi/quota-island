@@ -119,6 +119,13 @@ export class Controller {
       if([...a.parts.values()].reduce((n,b)=>n+b.length,0)>a.size)throw Error('CHUNK_LIMIT');if(a.parts.size!==a.count)return;
       const all=Buffer.concat(Array.from({length:a.count},(_,i)=>a.parts.get(i)!));this.chunks.delete(key);if(all.length!==a.size)throw Error('CHUNK_SIZE');v={...v,type:'server_message',message:JSON.parse(all.toString())};
     }
+    // A host can reject initialization via a notification instead of an RPC
+    // error response. Bind it to the exact environment/stream, and do not
+    // mistake ordinary task error notifications for transport failures.
+    if(v.type==='server_message'&&v.message?.method==='error'&&v.message.params?.error?.message==='Remote environment is not paired for this client'){
+      for(const [id,p] of this.pending)if(p.env===v.env_id&&p.stream===v.stream_id){this.pending.delete(id);clearTimeout(p.timer);p.reject(Error('REMOTE_HOST_NOT_PAIRED'));}
+      return;
+    }
     // Only RPC replies are retained. No transcript notifications, output logs or ack feedback loops.
     if(v.type!=='server_message')return;const m=v.message,p=this.pending.get(m?.id);if(!p||p.env!==v.env_id||p.stream!==v.stream_id)return;
     this.pending.delete(m.id);clearTimeout(p.timer);m.error?p.reject(Error('REMOTE_RPC_ERROR')):p.resolve(m.result);
@@ -129,7 +136,8 @@ export class Controller {
     if(method==='thread/turns/list'&&(params?.itemsView!=='notLoaded'||params?.limit!==1||params?.sortDirection!=='desc'))throw Error('INVALID_TURN_QUERY');
     if(!this.usable)throw Error('DISCONNECTED');let stream=this.streams.get(env);
     if(!stream){stream={env,id:crypto.randomUUID(),seq:0};this.streams.set(env,stream);try{await this.rpc(env,'initialize',{clientInfo:{name:'quota_pebble',version:'1.20.0'},capabilities:{experimentalApi:true}});this.send(stream,{method:'initialized',params:{}});}catch(e){this.streams.delete(env);throw e;}}
-    const id=++this.nextId;return new Promise<any>((resolve,reject)=>{const timer=setTimeout(()=>{this.pending.delete(id);reject(Error('RPC_TIMEOUT'));},12000);this.pending.set(id,{resolve,reject,timer,env,stream:stream!.id});try{this.send(stream!,{id,method,params});}catch{clearTimeout(timer);this.pending.delete(id);reject(Error('DISCONNECTED'));}});
+    const timeoutCode=({initialize:'RPC_INITIALIZE_TIMEOUT','thread/list':'RPC_LIST_TIMEOUT','thread/read':'RPC_READ_TIMEOUT','thread/turns/list':'RPC_TURN_METADATA_TIMEOUT'} as Record<string,string>)[method];
+    const id=++this.nextId;return new Promise<any>((resolve,reject)=>{const timer=setTimeout(()=>{this.pending.delete(id);reject(Error(timeoutCode));},12000);this.pending.set(id,{resolve,reject,timer,env,stream:stream!.id});try{this.send(stream!,{id,method,params});}catch{clearTimeout(timer);this.pending.delete(id);reject(Error('DISCONNECTED'));}});
   }
   private send(s:Stream,message:any){this.ws.send(JSON.stringify({type:'client_message',client_id:this.enrollment.clientId,env_id:s.env,stream_id:s.id,seq_id:++s.seq,skip_history:false,message}));}
   heartbeat(){if(this.usable)for(const s of this.streams.values())this.ws.send(JSON.stringify({type:'ping',client_id:this.enrollment.clientId,env_id:s.env,stream_id:s.id,seq_id:++s.seq,state:'foreground',skip_history:true}));}

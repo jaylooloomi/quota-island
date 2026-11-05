@@ -34,6 +34,21 @@ Update the work PC, open Tasks → Remote sources → Copy diagnostics, and shar
 - Next evidence must come from the work PC while a natural Codex turn is active. No synthetic inference, CLI launch, Hook installation or pairing change was performed.
 # Windows TPM enrollment compatibility (2026-11-05)
 
+Company v1.31.2 diagnostics subsequently confirmed `controllerConnected: true`
+and the home environment online, but a host RPC timeout prevented task reads.
+Thus the TPM authentication path has now passed on the actual company machine;
+end-to-end task visibility has not.
+
+A bounded independent probe found a separate transport error-handling defect:
+when the home controller queried its own home environment, that environment
+returned an `error` notification saying it was not paired for that client. The
+controller ignored this notification and waited until `RPC_TIMEOUT`. The probe
+is not evidence that the company's distinct controller has the same pairing
+error. The receive handler now maps this exact error to `REMOTE_HOST_NOT_PAIRED`
+immediately, only for matching client/environment/stream. Ordinary task errors
+remain separate. No pairing changes are performed. A new company-side response
+is needed to distinguish a true timeout from this explicit denial.
+
 Company-side structural diagnostics confirmed an existing `ecdsa_p256_sha256`
 enrollment with `protectionClass: hardware_tpm`; all required public fields were
 present. The previous controller accepted only `os_protected_nonextractable`

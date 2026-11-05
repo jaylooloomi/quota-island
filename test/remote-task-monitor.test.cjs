@@ -14,6 +14,22 @@ test('existing TPM and software enrollments use matching key namespaces without 
 test('remote runtime status is authoritative; missing and unsupported states stay unknown',()=>{
   for(const [input,status] of [[{type:'active',activeFlags:[]},'running'],[{type:'active',activeFlags:['waitingOnApproval']},'waiting'],[{type:'active',activeFlags:['waitingOnUserInput']},'waiting'],[{type:'idle'},'idle'],[{type:'notLoaded'},'unknown'],[{type:'active'},'unknown'],[{type:'active',activeFlags:['futureFlag']},'unknown'],[null,'unknown']])assert.equal(remoteStatus(input),status);
 });
+test('host pairing denial is surfaced immediately and bound to client/environment/stream',async()=>{
+  const c=new Controller('',()=>{});c.ws={readyState:1,send(){},terminate(){}};c.enrollment={clientId:'client'};c.expiry=Date.now()+60000;c.authenticated=true;c.closed=false;c.streams.set('env_a',{env:'env_a',id:'stream',seq:0});
+  const denied={type:'server_message',client_id:'client',env_id:'env_a',stream_id:'stream',message:{method:'error',params:{error:{message:'Remote environment is not paired for this client'}}}};
+  const response=c.rpc('env_a','thread/list',{}),rejected=assert.rejects(response,/REMOTE_HOST_NOT_PAIRED/);
+  for(const delta of [{client_id:'other'},{env_id:'env_other'},{stream_id:'other'}]){c.receive({...denied,...delta});assert.equal(c.pending.size,1);}
+  c.receive({...denied,message:{method:'error',params:{error:{message:'Ordinary task failure'}}}});assert.equal(c.pending.size,1);
+  c.receive(denied);await rejected;assert.equal(c.pending.size,0);c.disconnect();
+});
+test('remote RPC timeouts identify the failed stage without task contents',async t=>{
+  t.mock.timers.enable({apis:['setTimeout']});
+  const c=new Controller('',()=>{});c.ws={readyState:1,send(){},terminate(){}};c.enrollment={clientId:'client'};c.expiry=Date.now()+60000;c.authenticated=true;c.closed=false;c.streams.set('env_a',{env:'env_a',id:'stream',seq:0});
+  for(const [method,code] of [['initialize','RPC_INITIALIZE_TIMEOUT'],['thread/list','RPC_LIST_TIMEOUT'],['thread/read','RPC_READ_TIMEOUT']]){
+    const rejected=assert.rejects(c.rpc('env_a',method,{}),new RegExp(code));t.mock.timers.tick(12001);await rejected;assert.equal(c.pending.size,0);
+  }
+  c.disconnect();
+});
 test('remote rows retain metadata only and namespace identities across devices',()=>{
   const t={id:'task-1',name:'Name\ntext',cwd:'D:/project',updatedAt:100,status:{type:'active',activeFlags:[]},preview:'private',turns:[{items:'private'}]};
   const a=remoteRow(t,'env_a','PC',101000),b=remoteRow(t,'env_b','Other PC',101000);
