@@ -34,6 +34,30 @@ Update the work PC, open Tasks → Remote sources → Copy diagnostics, and shar
 - Next evidence must come from the work PC while a natural Codex turn is active. No synthetic inference, CLI launch, Hook installation or pairing change was performed.
 # Windows TPM enrollment compatibility (2026-11-05)
 
+## Follow-up: company v1.31.4 initialization timeout (2026-11-06)
+
+The company snapshot captured at 2026-11-05T17:19Z reports successful controller
+authentication and an online home environment, but `RPC_INITIALIZE_TIMEOUT`.
+The task-list RPC has not been reached. Re-pairing is not justified by this
+evidence. Read-only backend checks show that the other enrolled desktop client's
+visible-environment list includes the home environment; both hosts advertise
+the same app-server version. This does not prove the host's task transport is
+responsive.
+
+Bounded home official-App connection logs also show remote stream sequence-gap
+recovery events. Those events concern home-to-company connections and do not
+prove the reverse direction has the same defect. They warrant transport review,
+not a claim that increasing timeouts or changing pairing will repair it.
+
+Primary source review: OpenAI's
+[client tracker](https://github.com/openai/codex/blob/main/codex-rs/app-server-transport/src/transport/remote_control/client_tracker.rs)
+starts a transport connection from `initialize` and tracks client/stream pairs;
+the [protocol](https://github.com/openai/codex/blob/main/codex-rs/app-server-transport/src/transport/remote_control/protocol.rs)
+separates acknowledgements, pings and RPC envelopes. Do not acknowledge arbitrary
+frames or change global client sequence counters speculatively. The next control
+comparison is whether the official company App can actually load current home
+task metadata, rather than merely showing the home environment as connected.
+
 Company v1.31.2 diagnostics subsequently confirmed `controllerConnected: true`
 and the home environment online, but a host RPC timeout prevented task reads.
 Thus the TPM authentication path has now passed on the actual company machine;
