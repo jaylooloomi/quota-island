@@ -6,6 +6,8 @@ const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=
  for(const locale of ['zh-TW','en','ja','ko'])for(const available of [false,true]){
  await app.evaluate(async(_,input)=>{const state=await global.healthWeb.executeJavaScript('quota.getState()');state.settings.locale=input.locale;state.tasks={...state.tasks,healthFixture:true,native:{claude:{available:input.available,count:input.available?1:0},antigravity:{available:false,count:0}}};global.healthOriginalSend('state',state);},{locale,available});
  const badge=page.locator('[data-provider=claude].task-source-health');const text=await badge.textContent();assert.equal(await badge.getAttribute('data-connected'),String(available));
+ assert.ok(text.startsWith('Claude · '));assert.ok(!text.includes('Claude Code'));
+ const order=await page.locator('.task-native-sources .task-source-health').evaluateAll(nodes=>nodes.map(node=>node.dataset.provider));const expected=['codex','codex-remote','claude','claude-remote','antigravity','antigravity-remote'].filter(id=>order.includes(id));assert.deepEqual(order,expected,'group each AI with local before remote');
  if(!available)assert.ok(text.includes({'zh-TW':'本機任務未偵測',en:'No local tasks detected',ja:'ローカルタスク未検出',ko:'로컬 작업 미감지'}[locale]),'local observation must not imply sign-out');
  assert.equal(await page.locator('#task-panel').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,locale+' local badge fits');
  }

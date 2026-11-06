@@ -15,6 +15,7 @@ export class Diagnostics {
   }
   startup(version:string,enabled:Record<string,boolean>){this.write({event:'startup',version:version.replace(/[^0-9.]/g,'').slice(0,24),enabled:{claude:enabled.claude,codex:enabled.codex,gemini:enabled.gemini}});}
   sourceToggle(provider:string,enabled:boolean){if(['claude','codex','gemini'].includes(provider))this.write({event:'source_toggle',origin:'settings',provider,enabled});}
+  webMigration(stage:string){if(['already-bound','missing-transfer','invalid-transfer','decrypt-failed','imported','failed'].includes(stage))this.write({event:'claude_web_migration',stage});}
   taskNotice(kind:string,provider:string,stage:string){if(['idle','completed'].includes(kind)&&['codex','claude','antigravity'].includes(provider)&&['eligible','queued','shown','hidden','closed','viewed','expired','cleared'].includes(stage))this.write({event:'task_notice',kind,provider,stage});}
   taskMonitor(tasks:any,tracker:any,flags:{enabled:boolean;paused:boolean;visible:boolean}){
     const counts=Object.fromEntries(['codex','claude','antigravity'].map(provider=>[provider,Object.fromEntries(['running','waiting','idle','unknown'].map(status=>[status,(tasks?.rows??[]).filter((r:any)=>(r.provider??'codex')===provider&&r.status===status).length]))]));

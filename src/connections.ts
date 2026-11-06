@@ -8,11 +8,11 @@ export interface ConnectionState {
 export class Connections {
   states: Partial<Record<ProviderId, ConnectionState>> = {};
   private urls = new Map<ProviderId, string>();
-  constructor(private service: { login(id: ProviderId, open: (url: string) => Promise<void>, progress: (value: LoginProgress) => void): Promise<void>; submitCode(id: ProviderId, code: unknown): void },
+  constructor(private service: { usesClaudeWeb?:boolean;prepareClaudeWeb?():Promise<boolean>;reopenClaudeWeb?():void;cancelLogin?(id:ProviderId):void;login(id: ProviderId, open: (url: string) => Promise<void>, progress: (value: LoginProgress) => void): Promise<void>; submitCode(id: ProviderId, code: unknown): void },
     private poller: Poller, private open: (url: string) => Promise<void>, private changed: () => void, private focus: () => void) {}
-  async prepareClaude(){if(this.states.claude?.pending)return;this.states.claude={pending:true,phase:'web_login',canReopen:true,message:'先在 Claude 網頁登入要監控的帳號，再按「已登入正確帳號，繼續授權」。'};this.urls.set('claude','https://claude.ai/new');this.changed();try{await this.open('https://claude.ai/new');}catch{this.cancelPreparation();}}
+  async prepareClaude(){if(this.states.claude?.pending){this.service.reopenClaudeWeb?.();return;}this.states.claude={pending:true,phase:'web_login',canReopen:true,message:this.service.usesClaudeWeb?'請在獨立視窗登入 Claude，再按「已登入正確帳號，繼續授權」確認組織並同步。':'先在 Claude 網頁登入要監控的帳號，再按「已登入正確帳號，繼續授權」。'};this.changed();try{if(this.service.usesClaudeWeb){await this.service.prepareClaudeWeb?.();return;}this.urls.set('claude','https://claude.ai/new');await this.open('https://claude.ai/new');}catch{this.cancelPreparation();}}
   continueClaude(){if(this.states.claude?.phase!=='web_login')return;this.states.claude.pending=false;return this.login('claude');}
-  cancelPreparation(){if(this.states.claude?.phase!=='web_login')return false;delete this.states.claude;this.urls.delete('claude');this.changed();return true;}
+  cancelPreparation(){if(this.states.claude?.phase!=='web_login')return false;if(this.service.usesClaudeWeb)this.service.cancelLogin?.('claude');delete this.states.claude;this.urls.delete('claude');this.changed();return true;}
   async login(id: ProviderId) {
     if (this.states[id]?.pending) return;
     this.states[id] = { pending: true, phase: 'authorizing', message: '等待瀏覽器授權，完成後會自動同步配額…' };
@@ -41,7 +41,7 @@ export class Connections {
       this.focus();
     } finally { this.urls.delete(id); this.changed(); }
   }
-  async reopen(id: ProviderId) { const url = this.urls.get(id); if (url && this.states[id]?.pending) await this.open(url); }
+  async reopen(id: ProviderId) {if(id==='claude'&&this.service.usesClaudeWeb){this.service.reopenClaudeWeb?.();return;}const url = this.urls.get(id); if (url && this.states[id]?.pending) await this.open(url); }
   submitCode(id: ProviderId, code: unknown) {
     try { this.service.submitCode(id, code); const s = this.states[id]; if (s) { s.codeRequired = false; s.phase = 'verifying'; s.message = '正在驗證授權碼，最多等待 60 秒；可取消後重新登入。'; } }
     catch (e) { const s = this.states[id]; if (s) s.message = e instanceof ProviderError ? e.message : '授權碼無法送出'; }

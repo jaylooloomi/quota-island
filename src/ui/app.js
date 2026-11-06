@@ -122,7 +122,7 @@ function tone(w){return w.usedPercent>=95?'danger':w.usedPercent>=80?'warning':'
 function ready(s){return s.enabled&&s.status==='ready'&&s.reading&&(!s.updatedAt||Date.now()-Date.parse(s.updatedAt)<24*3600000);}
 function sourceFor(id){
   if(id==='gemini')return state.settings.googleSource==='antigravity'?'Antigravity 本機服務的 Gemini 模型配額；沿用 Antigravity 帳號，需保持 Antigravity 執行。這不是 Gemini 網頁版或企業 Code Assist 額度。':'企業 Code Assist OAuth 配額；個人版請選擇 Antigravity 來源。';
-  return id==='codex'?'官方 Codex app-server · account/rateLimits/read。由 Codex CLI 管理 ChatGPT 帳號授權。':'官方 Claude Code 管理登入，讀取本機授權後查詢 Claude OAuth 用量端點。';
+  return id==='codex'?'官方 Codex app-server · account/rateLimits/read。由 Codex CLI 管理 ChatGPT 帳號授權。':state.claudeQuotaSource==='web'?'獨立的 Claude 網頁登入；每 15 分鐘查詢配額，帳號與組織分開保存。':'官方 Claude Code 管理登入，讀取本機授權後查詢 Claude OAuth 用量端點。';
 }
 function startLogin(id){activeDetail=id;settingsOpen=false;render(state);if(!state.auth[id]?.pending)void api.login(id);}
 function makeCards(){

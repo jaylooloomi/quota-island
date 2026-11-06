@@ -53,6 +53,8 @@ jobs:
       - if: runner.os == 'Windows'
         run: npm run test:auth
       - if: runner.os == 'Windows'
+        run: npm run test:claude-web
+      - if: runner.os == 'Windows'
         run: npm run test:order
       - if: runner.os == 'Windows'
         run: npm run test:design

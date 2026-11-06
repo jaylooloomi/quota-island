@@ -1,4 +1,5 @@
 import {taskSourceDiagnostics} from './task-source-diagnostics';
+import {ClaudeWebSession} from './claude-web-session';
 import {PetMessages} from './pet-messages';
 import {PetMessageWindow} from './pet-message-window';
 import {PetGrowth} from './pet-growth';
@@ -57,7 +58,8 @@ const warned = new Map<string, string>();
 let savedRateLimits='';
 function persistRateLimits(){
   if(!poller||demo)return;
-  const serialized=JSON.stringify(poller.rateLimits());if(serialized===savedRateLimits)return;
+  const limits:any=poller.rateLimits();if(limits.claude&&providers?.usesClaudeWeb)limits.claude.source='claude-web-v1';
+  const serialized=JSON.stringify(limits);if(serialized===savedRateLimits)return;
   try{const file=path.join(app.getPath('userData'),'provider-cooldowns.json');mkdirSync(app.getPath('userData'),{recursive:true});writeFileSync(file+'.tmp',serialized,{mode:0o600});renameSync(file+'.tmp',file);savedRateLimits=serialized;}catch{/* A cache write must never stop quota updates. */}
 }
 function saveSettings() {
@@ -93,7 +95,7 @@ let accounts:Accounts;
 let autoReconnect:AutoReconnect|undefined;
 let diagnostics:Diagnostics|undefined;
 let morningHello:MorningHello|undefined;
-function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, tasks:taskMonitor?{...taskMonitor.snapshot(),peak:taskPeak?.snapshot()}:undefined, petMessages:petMessages?.snapshot(), petGrowth:petGrowth?.snapshot(), morningHello:morningHello?.snapshot()??{}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, version: app.getVersion(), platform: process.platform }; }
+function snapshot() { const extra=accounts?.snapshot();return { providers: {...poller.states,...extra?.providers}, settings:{...settings,order:[...settings.order.filter(id=>providerIds.includes(id as ProviderId)||accounts?.has(id)),...(extra?.accounts??[]).map(a=>a.id).filter(id=>!settings.order.includes(id))],enabled:{...settings.enabled,...extra?.enabled},visible:{...settings.visible,...extra?.visible},reservePercent:{...settings.reservePercent,...extra?.reservePercent},paceWindows:{...settings.paceWindows,...extra?.paceWindows}}, tasks:taskMonitor?{...taskMonitor.snapshot(),peak:taskPeak?.snapshot()}:undefined, petMessages:petMessages?.snapshot(), petGrowth:petGrowth?.snapshot(), morningHello:morningHello?.snapshot()??{}, accounts:extra?.accounts??[], auth:{...connections?.states,...extra?.auth}, expanded, paused, demo, claudeQuotaSource:providers?.usesClaudeWeb?'web':'oauth', version: app.getVersion(), platform: process.platform }; }
 function publish() {
   persistRateLimits();
   if(taskMonitor)taskPeak?.observe(taskMonitor.snapshot(),!paused);
@@ -276,14 +278,16 @@ else {
     taskPeak=new TaskPeak(path.join(app.getPath('userData'),demo?'demo-task-peak.json':'task-peak.json'));
     taskMonitor=new TaskMonitor(testing?(process.env.QUOTA_TEST_SESSION_ROOT||path.join(app.getPath('userData'),'codex-sessions')):path.join(process.env.CODEX_HOME||path.join(homedir(),'.codex'),'sessions'),publish,!demo&&!testing,item=>{diagnostics?.taskNotice('completed',item.provider,'eligible');idleTracker.completion(item.id);if(settings.taskCompletionNotifications&&!paused)taskBubble?.enqueue(item);},()=>{const dir=process.env.CLAUDE_CONFIG_DIR||path.join(homedir(),'.claude');return [...(settings.enabled.claude?[{directory:dir,config:process.env.CLAUDE_CONFIG_DIR?path.join(dir,'.claude.json'):path.join(homedir(),'.claude.json'),label:'Claude'}]:[]),...(accounts?.snapshot().accounts||[]).filter((a:any)=>accounts.snapshot().enabled[a.id]).map((a:any)=>({directory:path.join(app.getPath('userData'),'claude-accounts',a.id),config:path.join(app.getPath('userData'),'claude-accounts',a.id,'.claude.json'),label:a.label}))];});
     diagnostics=new Diagnostics(path.join(app.getPath('userData'),demo?'demo-logs':'logs'));diagnostics.startup(app.getVersion(),settings.enabled);
-    providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource);
-    poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish,Date.now,(id,reading,time)=>{usageHistory.record(id,reading,time,id==='claude'?600000:120000);petGrowth.record(id,reading,time);});if(!demo)poller.setMinimumInterval('claude',600000);
-    if(!demo){try{poller.restoreRateLimits(JSON.parse(readFileSync(path.join(app.getPath('userData'),'provider-cooldowns.json'),'utf8')));}catch{/* No prior cooldowns. */}}
+    const web=demo?undefined:new ClaudeWebSession(path.join(app.getPath('userData'),'claude-web','primary'),t);
+    if(web&&!testing)diagnostics.webMigration(await web.importValidation(path.join(app.getPath('appData'),'quota-pebble-web-validation','verified-session.bin')).catch(()=>'failed'));
+    providers = new Providers(new Gemini(new GeminiVault(app.getPath('userData'), safeStorage)), () => settings.googleSource,undefined,web);
+    poller = new Poller(id => demo ? Promise.resolve(demoReading(id)) : providers.read(id), publish,Date.now,(id,reading,time)=>{usageHistory.record(id,reading,time,id==='claude'?600000:120000);petGrowth.record(id,reading,time);});if(!demo)poller.setMinimumInterval('claude',900000);
+    if(!demo){try{const limits=JSON.parse(readFileSync(path.join(app.getPath('userData'),'provider-cooldowns.json'),'utf8'));if(web&&limits.claude?.source!=='claude-web-v1')delete limits.claude;poller.restoreRateLimits(limits);}catch{/* No prior cooldowns. */}}
     connections = new Connections(providers, poller, openAuthUrl, publish, () => {
       if (!quitting && win && !win.isDestroyed()) { setExpanded(true); win.show(); win.focus(); }
     });
     accounts=new Accounts(path.join(app.getPath('userData'),demo?'demo-claude-accounts':'claude-accounts'),directory=>{
-      const service=new Providers(new Gemini(new GeminiVault(app.getPath('userData'),safeStorage)),()=>settings.googleSource,directory);
+      const service=new Providers(new Gemini(new GeminiVault(app.getPath('userData'),safeStorage)),()=>settings.googleSource,directory,demo?undefined:new ClaudeWebSession(path.join(directory,'web-quota'),t));
       if(demo)service.read=async()=>demoReading('claude');
       return service;
     },openAuthUrl,publish,()=>{if(!quitting&&win&&!win.isDestroyed()){setExpanded(true);win.show();win.focus();}},(id,reading,time)=>{usageHistory.record(id,reading,time,600000);petGrowth.record(id,reading,time);});
