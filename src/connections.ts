@@ -3,14 +3,14 @@ import { Poller } from './poller';
 import { LoginProgress } from './claude-login';
 export interface ConnectionState {
   pending: boolean; phase: 'web_login' | 'authorizing' | 'connecting' | 'code' | 'verifying' | 'syncing' | 'cooldown' | 'waiting' | 'ready' | 'error'; message: string;
-  codeRequired?: boolean; canReopen?: boolean;
+  codeRequired?: boolean; canReopen?: boolean; automatic?:boolean;
 }
 export class Connections {
   states: Partial<Record<ProviderId, ConnectionState>> = {};
   private urls = new Map<ProviderId, string>();
-  constructor(private service: { usesClaudeWeb?:boolean;prepareClaudeWeb?():Promise<boolean>;reopenClaudeWeb?():void;cancelLogin?(id:ProviderId):void;login(id: ProviderId, open: (url: string) => Promise<void>, progress: (value: LoginProgress) => void): Promise<void>; submitCode(id: ProviderId, code: unknown): void },
+  constructor(private service: { usesClaudeWeb?:boolean;prepareClaudeWeb?():Promise<boolean>;reopenClaudeWeb?():void;waitClaudeWeb?():Promise<void>|undefined;cancelLogin?(id:ProviderId):void;login(id: ProviderId, open: (url: string) => Promise<void>, progress: (value: LoginProgress) => void): Promise<void>; submitCode(id: ProviderId, code: unknown): void },
     private poller: Poller, private open: (url: string) => Promise<void>, private changed: () => void, private focus: () => void) {}
-  async prepareClaude(){if(this.states.claude?.pending){this.service.reopenClaudeWeb?.();return;}this.states.claude={pending:true,phase:'web_login',canReopen:true,message:this.service.usesClaudeWeb?'請在獨立視窗登入 Claude，再按「已登入正確帳號，繼續授權」確認組織並同步。':'先在 Claude 網頁登入要監控的帳號，再按「已登入正確帳號，繼續授權」。'};this.changed();try{if(this.service.usesClaudeWeb){await this.service.prepareClaudeWeb?.();return;}this.urls.set('claude','https://claude.ai/new');await this.open('https://claude.ai/new');}catch{this.cancelPreparation();}}
+  async prepareClaude(){if(this.states.claude?.pending){this.service.reopenClaudeWeb?.();return;}this.states.claude={pending:true,phase:'web_login',canReopen:true,automatic:!!this.service.usesClaudeWeb,message:this.service.usesClaudeWeb?'請在 Chrome 登入 Claude；登入完成後關閉這個專用視窗，App 會自動同步配額。':'先在 Claude 網頁登入要監控的帳號，再按「已登入正確帳號，繼續授權」。'};this.changed();try{if(this.service.usesClaudeWeb){await this.service.prepareClaudeWeb?.();const preparation=this.states.claude;void this.service.waitClaudeWeb?.()?.then(()=>{if(this.states.claude===preparation&&preparation?.phase==='web_login')return this.continueClaude();}).catch(error=>{if(this.states.claude!==preparation||preparation?.phase!=='web_login')return;this.states.claude={pending:false,phase:'error',message:error instanceof ProviderError?error.message:'Chrome 登入未完成，請重試'};this.changed();});return;}this.urls.set('claude','https://claude.ai/new');await this.open('https://claude.ai/new');}catch(error){this.service.cancelLogin?.('claude');this.states.claude={pending:false,phase:'error',message:error instanceof ProviderError?error.message:'Chrome 登入未完成，請重試'};this.changed();}}
   continueClaude(){if(this.states.claude?.phase!=='web_login')return;this.states.claude.pending=false;return this.login('claude');}
   cancelPreparation(){if(this.states.claude?.phase!=='web_login')return false;if(this.service.usesClaudeWeb)this.service.cancelLogin?.('claude');delete this.states.claude;this.urls.delete('claude');this.changed();return true;}
   async login(id: ProviderId) {

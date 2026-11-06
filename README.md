@@ -52,6 +52,12 @@ AI-generated promotional videos, not recordings of the running app. Video 01 is 
 
 ## Use cases
 
+### Claude sign-in in Chrome (source build v1.32.1)
+
+Click Claude sign-in to open a real Chrome window with a Pebble-only profile. Sign in, then close that dedicated window: Pebble verifies the account and organization and syncs quota automatically. No extension or pasted cookie is required; your normal Chrome profiles are untouched. A saved login can be reused after restarting Pebble. Google Chrome must be installed; the flow has been verified on Windows.
+
+Quota refreshes every 15 minutes through Claude's internal web endpoint. This is separate from task monitoring, and website verification, expired sessions or rate limits can still prevent a refresh. Existing working web connections remain connected when upgrading.
+
 | Situation | What you do | What Pebble shows |
 |---|---|---|
 | Coding with several AI subscriptions | Keep the compact island nearby | Separate Claude, Codex and Gemini / Antigravity quotas |

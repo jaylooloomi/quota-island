@@ -2,6 +2,13 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['請在 Chrome 登入 Claude；登入完成後關閉這個專用視窗，App 會自動同步配額。','Sign in to Claude in Chrome, then close this dedicated window. The app will sync your quota automatically.','Chrome で Claude にログインした後、この専用ウィンドウを閉じると使用量を自動同期します。','Chrome에서 Claude에 로그인한 후 이 전용 창을 닫으면 할당량이 자동으로 동기화됩니다.'],
+    ['使用 Chrome 登入；關閉專用登入視窗後自動同步，每 15 分鐘更新配額。','Sign in with Chrome; close the dedicated sign-in window to sync. Quota updates every 15 minutes.','Chrome でログインし、専用画面を閉じると同期します。使用量は15分ごとに更新します。','Chrome에서 로그인한 후 전용 창을 닫으면 동기화됩니다. 할당량은 15분마다 업데이트됩니다.'],
+    ['請在 Chrome 登入 Claude，完成後會自動確認帳號並同步配額。','Sign in to Claude in Chrome. Your account and quota will sync automatically.','Chrome で Claude にログインすると、アカウントと使用量を自動同期します。','Chrome에서 Claude에 로그인하면 계정과 할당량이 자동으로 동기화됩니다.'],
+    ['請先在 Chrome 完成 Claude 登入','Finish signing in to Claude in Chrome first','先に Chrome で Claude にログインしてください','먼저 Chrome에서 Claude 로그인을 완료하세요'],
+    ['找不到 Google Chrome，請先安裝 Chrome','Google Chrome was not found. Install Chrome first.','Google Chrome が見つかりません。Chrome をインストールしてください。','Google Chrome을 찾을 수 없습니다. Chrome을 설치하세요.'],
+    ['Chrome 登入視窗已關閉','Chrome sign-in window was closed','Chrome ログイン画面が閉じられました','Chrome 로그인 창이 닫혔습니다'],
+    ['Chrome 登入逾時，請重試','Chrome sign-in timed out. Try again.','Chrome ログインがタイムアウトしました。再試行してください。','Chrome 로그인 시간이 초과되었습니다. 다시 시도하세요.'],
     ['Claude 網頁登入','Claude web sign-in','Claude Web ログイン','Claude 웹 로그인'],
     ['選擇要監控的 Claude 組織','Choose the Claude organization to monitor','監視する Claude 組織を選択','모니터링할 Claude 조직 선택'],
     ['獨立的 Claude 網頁登入；每 15 分鐘查詢配額，帳號與組織分開保存。','Dedicated Claude web sign-in; quota refreshes every 15 minutes, with separate accounts and organizations.','専用の Claude Web ログイン。15分ごとに取得し、アカウントと組織を分離します。','별도의 Claude 웹 로그인. 15분마다 할당량을 조회하며 계정과 조직을 구분합니다.'],

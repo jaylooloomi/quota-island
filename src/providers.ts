@@ -28,6 +28,7 @@ export class Providers {
   get usesClaudeWeb(){return !!this.claudeWeb;}
   async prepareClaudeWeb(){if(!this.claudeWeb)return false;await this.claudeWeb.prepare();return true;}
   reopenClaudeWeb(){this.claudeWeb?.reopen();}
+  waitClaudeWeb(){return this.claudeWeb?.waitForChromeLogin?.();}
   private claudeCommand(){
     const command=findCli('claude');if(!this.claudeConfigDir)return command;
     const env={...command.env,CLAUDE_CONFIG_DIR:this.claudeConfigDir};

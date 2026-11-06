@@ -122,7 +122,7 @@ function tone(w){return w.usedPercent>=95?'danger':w.usedPercent>=80?'warning':'
 function ready(s){return s.enabled&&s.status==='ready'&&s.reading&&(!s.updatedAt||Date.now()-Date.parse(s.updatedAt)<24*3600000);}
 function sourceFor(id){
   if(id==='gemini')return state.settings.googleSource==='antigravity'?'Antigravity 本機服務的 Gemini 模型配額；沿用 Antigravity 帳號，需保持 Antigravity 執行。這不是 Gemini 網頁版或企業 Code Assist 額度。':'企業 Code Assist OAuth 配額；個人版請選擇 Antigravity 來源。';
-  return id==='codex'?'官方 Codex app-server · account/rateLimits/read。由 Codex CLI 管理 ChatGPT 帳號授權。':state.claudeQuotaSource==='web'?'獨立的 Claude 網頁登入；每 15 分鐘查詢配額，帳號與組織分開保存。':'官方 Claude Code 管理登入，讀取本機授權後查詢 Claude OAuth 用量端點。';
+  return id==='codex'?'官方 Codex app-server · account/rateLimits/read。由 Codex CLI 管理 ChatGPT 帳號授權。':state.claudeQuotaSource==='web'?'使用 Chrome 登入；關閉專用登入視窗後自動同步，每 15 分鐘更新配額。':'官方 Claude Code 管理登入，讀取本機授權後查詢 Claude OAuth 用量端點。';
 }
 function startLogin(id){activeDetail=id;settingsOpen=false;render(state);if(!state.auth[id]?.pending)void api.login(id);}
 function makeCards(){
@@ -195,7 +195,7 @@ function renderConnection(id,s,auth){
   card.querySelector('.connection-description').textContent=id==='codex'?'登入要監控的 ChatGPT 訂閱帳號，可與 Claude、Gemini 使用不同帳號。':antigravity?'沿用 Antigravity 的 Google 帳號，讀取 Gemini 配額資訊。':`連接你的 ${id==='gemini'?'Google':names[id]} 帳號以讀取配額資訊。`;
   card.querySelector('.connection-account h4').textContent=baseId(id)==='claude'?'Claude Code':id==='codex'?'Codex':antigravity?'Antigravity · Gemini':'Google Code Assist';
   const phase=auth?.phase;
-  card.querySelector('.continue-claude-login').hidden=phase!=='web_login';
+  card.querySelector('.continue-claude-login').hidden=phase!=='web_login'||!!auth?.automatic;
   const step=connected?4:phase==='syncing'||phase==='cooldown'||phase==='waiting'?2:phase==='connecting'||phase==='verifying'?1:0;
   card.querySelector('.connection-steps').style.setProperty('--progress',`${Math.min(100,step/3*100)}%`);
   for(const node of card.querySelectorAll('.connection-steps li')){
