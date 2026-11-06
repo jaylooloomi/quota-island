@@ -4,6 +4,7 @@ import path from 'node:path';
 import {homedir} from 'node:os';
 const WebSocket=require('ws');
 import {ProviderError} from './model';
+import {ownedChromeHasSession,ownedChromeShowsSignedIn,closeOwnedChromeWindow} from './chrome-login-presence';
 
 export function findChrome(){
   const candidates=process.platform==='win32'?[path.join(process.env.PROGRAMFILES||'C:/Program Files','Google/Chrome/Application/chrome.exe'),path.join(process.env['PROGRAMFILES(X86)']||'C:/Program Files (x86)','Google/Chrome/Application/chrome.exe'),path.join(process.env.LOCALAPPDATA||path.join(homedir(),'AppData/Local'),'Google/Chrome/Application/chrome.exe')]:process.platform==='darwin'?['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome']:['/usr/bin/google-chrome','/usr/bin/google-chrome-stable'];
@@ -63,7 +64,16 @@ export class ClaudeChromeLogin {
   }
   async waitForLogin(){
     if(!this.headless){
-      if(this.child?.exitCode===null)await new Promise<void>((resolve,reject)=>{const timer=setTimeout(()=>reject(new ProviderError('auth','Chrome 登入逾時，請重試')),10*60000);this.child!.once('exit',()=>{clearTimeout(timer);resolve();});this.child!.once('error',()=>{clearTimeout(timer);reject(new ProviderError('auth','無法啟動 Chrome 登入工作階段'));});});
+      let observedAt=0,closeRequested=false;
+      for(let n=0;this.child?.exitCode===null&&!this.closed&&!this.cancelled;n++){
+        if(n>=300)throw new ProviderError('auth','Chrome 登入逾時，請重試');
+        const loginSignal=!closeRequested&&(process.platform==='win32'&&this.child.pid?await ownedChromeShowsSignedIn(this.child.pid,this.directory,findChrome()):ownedChromeHasSession(this.directory));
+        if(loginSignal){
+          if(!observedAt)observedAt=Date.now();
+          if(Date.now()-observedAt>=8000&&this.child.pid){closeRequested=true;await closeOwnedChromeWindow(this.child.pid,this.directory,findChrome());}
+        }else if(!closeRequested)observedAt=0;
+        await new Promise(resolve=>setTimeout(resolve,2000));
+      }
       if(this.cancelled)throw new ProviderError('auth','Chrome 登入視窗已關閉');this.closed=false;this.headless=true;await this.start();
     }
     for(let n=0;n<180&&!this.closed;n++){const {cookies}=await this.capture();if(cookies.some((cookie:any)=>cookie.name==='sessionKey'&&cookie.value))return;await new Promise(resolve=>setTimeout(resolve,2000));}

@@ -2,6 +2,8 @@
   'use strict';
   const locales=['zh-TW','en','ja','ko'];
   const rows=[
+    ['請在 Chrome 登入 Claude；完成後會自動關閉專用視窗並同步配額。若未自動關閉，可手動關窗。','Sign in to Claude in Chrome. The dedicated window closes automatically before quota sync. If it stays open, close it manually.','Chrome で Claude にログインすると専用画面を自動で閉じて同期します。閉じない場合は手動で閉じてください。','Chrome에서 Claude에 로그인하면 전용 창이 자동으로 닫히고 동기화됩니다. 닫히지 않으면 직접 닫으세요.'],
+    ['使用 Chrome 登入，完成後自動關閉專用視窗並同步；每 15 分鐘更新配額。','Sign in with Chrome; the dedicated window closes automatically to sync. Quota refreshes every 15 minutes.','Chrome ログイン後、専用画面を自動で閉じて同期します。使用量は15分ごとに更新します。','Chrome 로그인 후 전용 창이 자동으로 닫히고 동기화됩니다. 할당량은 15분마다 업데이트됩니다.'],
     ['請在 Chrome 登入 Claude；登入完成後關閉這個專用視窗，App 會自動同步配額。','Sign in to Claude in Chrome, then close this dedicated window. The app will sync your quota automatically.','Chrome で Claude にログインした後、この専用ウィンドウを閉じると使用量を自動同期します。','Chrome에서 Claude에 로그인한 후 이 전용 창을 닫으면 할당량이 자동으로 동기화됩니다.'],
     ['使用 Chrome 登入；關閉專用登入視窗後自動同步，每 15 分鐘更新配額。','Sign in with Chrome; close the dedicated sign-in window to sync. Quota updates every 15 minutes.','Chrome でログインし、専用画面を閉じると同期します。使用量は15分ごとに更新します。','Chrome에서 로그인한 후 전용 창을 닫으면 동기화됩니다. 할당량은 15분마다 업데이트됩니다.'],
     ['請在 Chrome 登入 Claude，完成後會自動確認帳號並同步配額。','Sign in to Claude in Chrome. Your account and quota will sync automatically.','Chrome で Claude にログインすると、アカウントと使用量を自動同期します。','Chrome에서 Claude에 로그인하면 계정과 할당량이 자동으로 동기화됩니다.'],

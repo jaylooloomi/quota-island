@@ -52,9 +52,9 @@
 
 ## 使用情境
 
-### 使用 Chrome 登入 Claude（原始碼版本 v1.32.1）
+### 使用 Chrome 登入 Claude（原始碼版本 v1.32.2）
 
-點選 Claude 登入後，會開啟真正的 Chrome 與 Pebble 專用設定檔。登入後關閉這個專用視窗，Pebble 就會確認帳號、組織並自動同步配額。不需要擴充套件或貼 Cookie，也不改動你平常的 Chrome 設定檔；已保存的登入可在重啟 Pebble 後沿用。需要安裝 Google Chrome，目前已在 Windows 驗證。
+點選 Claude 登入後，會開啟真正的 Chrome 與 Pebble 專用設定檔。Windows 辨識到登入完成畫面後會自動關閉專用視窗，再確認帳號、組織並同步配額；若視窗沒有自動關閉，仍可手動關閉來接續同步。不需要擴充套件或貼 Cookie，也不改動你平常的 Chrome 設定檔；已保存的登入可在重啟 Pebble 後沿用。需要安裝 Google Chrome，目前已在 Windows 驗證。
 
 配額透過 Claude 非公開網頁端點每 15 分鐘更新，與任務監控分開；網站安全驗證、登入過期或限流仍可能阻止更新。升級時會保留原本可用的網頁連線。
 

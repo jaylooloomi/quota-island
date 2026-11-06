@@ -52,9 +52,9 @@ AI-generated promotional videos, not recordings of the running app. Video 01 is 
 
 ## Use cases
 
-### Claude sign-in in Chrome (source build v1.32.1)
+### Claude sign-in in Chrome (source build v1.32.2)
 
-Click Claude sign-in to open a real Chrome window with a Pebble-only profile. Sign in, then close that dedicated window: Pebble verifies the account and organization and syncs quota automatically. No extension or pasted cookie is required; your normal Chrome profiles are untouched. A saved login can be reused after restarting Pebble. Google Chrome must be installed; the flow has been verified on Windows.
+Click Claude sign-in to open a real Chrome window with a Pebble-only profile. On Windows, a recognized signed-in page closes the dedicated window automatically, then Pebble verifies the account and organization and syncs quota. If the window stays open, close it manually to continue. No extension or pasted cookie is required; your normal Chrome profiles are untouched. A saved login can be reused after restarting Pebble. Google Chrome must be installed; the flow has been verified on Windows.
 
 Quota refreshes every 15 minutes through Claude's internal web endpoint. This is separate from task monitoring, and website verification, expired sessions or rate limits can still prevent a refresh. Existing working web connections remain connected when upgrading.
 
