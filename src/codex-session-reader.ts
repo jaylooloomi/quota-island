@@ -13,6 +13,8 @@ const validId=(s:unknown):s is string=>typeof s==='string'&&/^[\w-]{1,128}$/.tes
 const text=(s:unknown,n=512)=>typeof s==='string'?s.replace(/[\u0000-\u001f\u007f]/g,' ').slice(0,n):'';
 type State={id:string;project:string;parent:boolean;turn:string;retired:Set<string>;terminal:boolean;status:TaskStatus;time:number;reason:string;waitingCall?:string};
 type Cursor={state:State;offset:number;size:number;mtime:number;identity:string;prefix:string;prefixLength:number;skip:boolean};
+// A continued rollout can append a segment UUID after the thread UUID.
+const ROLLOUT_NAME=/^rollout-.*-([0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12})(?:_[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12})?\.jsonl$/i;
 export class CodexSessionReader{
   private files=new Map<string,Cursor>();private busy=false;private discovery=0;private candidates:string[]=[];private names=new Map<string,string>();
   private completedKeys=new Set<string>();private completions:TaskCompletion[]=[];private readingBaseline=true;
@@ -87,7 +89,7 @@ export class CodexSessionReader{
       const prefix=Buffer.alloc(Math.min(c?.prefixLength??1024,stat.size));await handle.read(prefix,0,prefix.length,0);this.bytesRead+=prefix.length;
       const digest=createHash('sha256').update(prefix).digest('hex');
       if(!c||c.identity!==identity||stat.size<c.offset||c.prefix!==digest||stat.size===c.size&&stat.mtimeMs!==c.mtime){
-        const id=/rollout-.*-([0-9a-f]{8}-[0-9a-f-]{27})\.jsonl$/i.exec(path.basename(file))?.[1];if(!id)return;
+        const id=ROLLOUT_NAME.exec(path.basename(file))?.[1];if(!id)return;
         this.readingBaseline=true;c={state:this.empty(id),offset:0,size:0,mtime:0,identity,prefix:digest,prefixLength:prefix.length,skip:false};this.files.set(file,c);
         if(stat.size>HEAD+CHUNK){
           const head=Buffer.alloc(HEAD);await handle.read(head,0,head.length,0);this.bytesRead+=head.length;
@@ -134,9 +136,20 @@ export class CodexSessionReader{
       this.available=true;
     }catch{this.available=false;this.files.clear();this.candidates=[];this.discovery=0;}finally{this.busy=false;}
   }
-  rows():TaskRow[]{const now=this.now();return [...this.files.values()].flatMap(c=>{
-    const s=c.state;if(s.parent||!s.project)return[];
-    const fresh=now-s.time<=SESSION_FRESH_MS;
-    return[{provider:'codex',id:s.id,title:this.names.get(s.id)||'Codex session',project:s.project,status:c.size-c.offset>CHUNK?'unknown':s.status==='idle'?'idle':fresh?s.status:'unknown',source:'rollout',confirmedAt:s.time||null,event:s.reason,evidence:'inferred'} as TaskRow];
-  });}
+  rows():TaskRow[]{
+    const now=this.now(),latest=new Map<string,Cursor>();
+    for(const cursor of this.files.values()){
+      const state=cursor.state;
+      if(state.parent||!state.project)continue;
+      const previous=latest.get(state.id);
+      // File modification time can lag the events recorded by Codex.
+      if(!previous||state.time>previous.state.time||state.time===previous.state.time&&state.terminal&&!previous.state.terminal){
+        latest.set(state.id,cursor);
+      }
+    }
+    return [...latest.values()].map(c=>{
+      const s=c.state,fresh=now-s.time<=SESSION_FRESH_MS;
+      return{provider:'codex',id:s.id,title:this.names.get(s.id)||'Codex session',project:s.project,status:c.size-c.offset>CHUNK?'unknown':s.status==='idle'?'idle':fresh?s.status:'unknown',source:'rollout',confirmedAt:s.time||null,event:s.reason,evidence:'inferred'};
+    });
+  }
 }

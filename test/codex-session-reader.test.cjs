@@ -16,6 +16,22 @@ test('local events independently detect concurrent running/idle sessions, names 
     await fs.appendFile(d.file(A),event('task_complete','turn-1',now));await reader.scan();assert.equal(reader.rows().find(r=>r.id===A).status,'idle');
   }finally{await fs.rm(d.home,{recursive:true,force:true});}
 });
+test('continued rollouts use the thread ID and show one row with the newest event',async()=>{
+  const d=await setup();try{
+    const reader=new CodexSessionReader(d.root,()=>T+100);
+    const continuation=d.file(`${A}_${B}`);
+    await fs.writeFile(continuation,meta(A)+event('task_started','turn-2',T+2));
+    await fs.writeFile(d.file(A),meta(A)+event('task_started')+event('task_complete','turn-1',T+1));
+    await fs.utimes(d.file(A),new Date(T+5000),new Date(T+5000));
+    await reader.scan();
+    assert.deepEqual(reader.rows().map(({id,status})=>({id,status})),[{id:A,status:'running'}]);
+
+    await fs.appendFile(continuation,event('task_complete','turn-2',T+3));
+    await reader.scan();
+    assert.deepEqual(reader.rows().map(({id,status})=>({id,status})),[{id:A,status:'idle'}]);
+    assert.equal(reader.drainCompletions().length,1);
+  }finally{await fs.rm(d.home,{recursive:true,force:true});}
+});
 test('waiting survives token activity; matching tool result resolves it; late old turns cannot change new ones',async()=>{
   const d=await setup();try{
     let now=T+100;const reader=new CodexSessionReader(d.root,()=>now);
